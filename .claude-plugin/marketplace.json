@@ -1,0 +1,32 @@
+{
+  "name": "research-harness",
+  "owner": {
+    "name": "zircote"
+  },
+  "metadata": {
+    "description": "Bundled packs for the research harness. Each pack is a Claude Code plugin under packs/<name>/; the harness.config.json packs[] control plane enables or disables each one.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "market-research",
+      "source": "./packs/market-research",
+      "description": "Methodology pack: sizing, Porter's, personas, financial, regulatory. Disabled by default."
+    },
+    {
+      "name": "trend-modeling",
+      "source": "./packs/trend-modeling",
+      "description": "Methodology pack: three-valued INC/DEC/CONST trend logic under data scarcity."
+    },
+    {
+      "name": "reports",
+      "source": "./packs/reports",
+      "description": "Genre pack: exec-summary, academic, engineering, trend-analysis, briefing deliverable templates."
+    },
+    {
+      "name": "channels",
+      "source": "./packs/channels",
+      "description": "Channel pack: notebooklm, pdf, github-discuss, github-issues render adapters."
+    }
+  ]
+}

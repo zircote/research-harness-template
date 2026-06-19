@@ -1,0 +1,14 @@
+{
+  // Lint config for the research harness (G5). Disables rules that conflict with
+  // the doc set's conventions; everything else stays on.
+  "config": {
+    "default": true,
+    "MD013": false, // line length — prose and tables run long by design
+    "MD033": false, // inline HTML — graph visualizations and details/summary
+    "MD041": false  // first-line-heading — files with frontmatter or intros
+  },
+  "ignores": [
+    "node_modules/**",
+    "**/node_modules/**"
+  ]
+}

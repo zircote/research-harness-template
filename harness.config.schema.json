@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.dev/schema/harness.config.schema.json",
+  "title": "Research Harness Configuration Manifest",
+  "description": "THE deploy contract (SPEC §7): the one file a clone edits to declare its topics, research dimensions, output targets, and packs. Modeled on langgraph.json's role as the single declarative manifest (SPEC §4).",
+  "type": "object",
+  "required": ["version", "topics", "dimensions", "packs"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Manifest schema version (semver)."
+    },
+    "mifConformanceLevel": {
+      "type": "integer",
+      "enum": [1, 2, 3],
+      "description": "Minimum MIF conformance level the harness emits. SPEC §10 fixes this at Level 3 (provenance + citations + entities + extensions)."
+    },
+    "topics": {
+      "type": "array",
+      "description": "The multi-topic registry. Each topic maps to one MIF namespace under reports/<topic>/.",
+      "items": {
+        "type": "object",
+        "required": ["id", "namespace"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "title": { "type": "string" },
+          "namespace": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$",
+            "description": "MIF namespace path that owns this topic's memory units."
+          },
+          "status": { "type": "string", "enum": ["active", "paused", "archived"] }
+        }
+      }
+    },
+    "dimensions": {
+      "type": "array",
+      "description": "Config-declared, domain-general research dimensions the dimension-analyst fans out across (SPEC §4a). Not the fixed market-research set.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+          "description": { "type": "string" },
+          "pack": {
+            "type": "string",
+            "description": "Optional: the methodology pack that contributes this dimension (omit for core dimensions)."
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "description": "Enabled output channels. blog and book are always-on first-class outputs (SPEC §6d); others arrive via the channels pack.",
+      "items": {
+        "type": "object",
+        "required": ["channel"],
+        "additionalProperties": false,
+        "properties": {
+          "channel": { "type": "string", "pattern": "^[a-z][a-z0-9:-]*$" },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "packs": {
+      "type": "array",
+      "description": "The pack control plane (SPEC §7b): each entry enables/disables a pack and declares its source. Materialized into Claude Code's enabledPlugins at instantiation.",
+      "items": {
+        "type": "object",
+        "required": ["name", "enabled", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "enabled": { "type": "boolean" },
+          "source": {
+            "oneOf": [
+              {
+                "const": "bundled",
+                "description": "Vendored under packs/, listed in .claude-plugin/marketplace.json."
+              },
+              {
+                "type": "object",
+                "description": "An external or private plugin the clone is entitled to.",
+                "required": ["type", "url"],
+                "additionalProperties": false,
+                "properties": {
+                  "type": { "type": "string", "enum": ["git", "marketplace"] },
+                  "url": { "type": "string", "format": "uri" },
+                  "ref": { "type": "string" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

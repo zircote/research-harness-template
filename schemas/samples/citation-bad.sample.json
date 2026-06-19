@@ -1,0 +1,28 @@
+{
+  "@context": "https://mif-spec.dev/schema/context.jsonld",
+  "@type": "Concept",
+  "@id": "urn:mif:concept:harness:citation-bad-0001",
+  "conceptType": "semantic",
+  "title": "Claim with no live, well-formed citation",
+  "content": "An assertion that lacks any traceable primary source and carries a citation with a malformed URL.",
+  "created": "2026-06-19T12:00:00Z",
+  "citations": [
+    {
+      "@type": "Citation",
+      "citationType": "website",
+      "citationRole": "supports",
+      "title": "Broken reference",
+      "url": "not-a-real-url"
+    }
+  ],
+  "extensions": {
+    "harness": {
+      "dimension": "landscape",
+      "verification": {
+        "verdict": "falsified",
+        "verdict_basis": "Disconfirming search produced direct counterevidence."
+      },
+      "citationStatus": { "deadUrls": ["not-a-real-url"] }
+    }
+  }
+}
