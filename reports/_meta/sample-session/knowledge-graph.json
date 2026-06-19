@@ -1,0 +1,120 @@
+{
+  "@type": "KnowledgeGraph",
+  "generator": "build-graph.sh (MIF-native; SPEC §6c)",
+  "nodes": [
+    {
+      "id": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "kind": "concept",
+      "label": "Cookiecutter instantiation is a one-time snapshot with no upstream path",
+      "dimension": "landscape"
+    },
+    {
+      "id": "urn:mif:concept:harness:kg-copier-0001",
+      "kind": "concept",
+      "label": "Copier provides update propagation to instantiated projects",
+      "dimension": "technical"
+    },
+    {
+      "id": "urn:mif:concept:harness:kg-distribution-0003",
+      "kind": "concept",
+      "label": "A living template is mandatory for a harness that keeps gaining capability",
+      "dimension": "trajectory"
+    },
+    {
+      "id": "urn:mif:entity:concept:living-template",
+      "kind": "entity",
+      "label": "living template",
+      "entityType": "Concept"
+    },
+    {
+      "id": "urn:mif:entity:concept:update-propagation",
+      "kind": "entity",
+      "label": "update propagation",
+      "entityType": "Concept"
+    },
+    {
+      "id": "urn:mif:entity:technology:cookiecutter",
+      "kind": "entity",
+      "label": "Cookiecutter",
+      "entityType": "Technology"
+    },
+    {
+      "id": "urn:mif:entity:technology:copier",
+      "kind": "entity",
+      "label": "Copier",
+      "entityType": "Technology"
+    }
+  ],
+  "edges": [
+    {
+      "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "target": "urn:mif:concept:harness:kg-copier-0001",
+      "type": "contradicts",
+      "strength": 0.7,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-copier-0001",
+      "target": "urn:mif:concept:harness:kg-distribution-0003",
+      "type": "supports",
+      "strength": 0.9,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:concept:harness:kg-copier-0001",
+      "type": "derived-from",
+      "strength": 0.8,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "type": "derived-from",
+      "strength": 0.6,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "target": "urn:mif:entity:technology:cookiecutter",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "target": "urn:mif:entity:concept:update-propagation",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-copier-0001",
+      "target": "urn:mif:entity:technology:copier",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-copier-0001",
+      "target": "urn:mif:entity:concept:update-propagation",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:entity:concept:update-propagation",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:entity:concept:living-template",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Knowledge graph (MIF-native)</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+  h1 { font-size: 1.2rem; }
+  .concept { color: #0b5; } .entity { color: #06c; }
+  li { margin: .2rem 0; } code { background: #f4f4f4; padding: 0 .2rem; }
+</style>
+</head>
+<body>
+<h1>Knowledge graph — 7 nodes, 10 edges (built from MIF entities and relations)</h1>
+<h2>Nodes</h2>
+<ul id="nodes"></ul>
+<h2>Edges (typed MIF relationships and entity mentions)</h2>
+<ul id="edges"></ul>
+<script id="graph" type="application/json">{
+  "@type": "KnowledgeGraph",
+  "generator": "build-graph.sh (MIF-native; SPEC §6c)",
+  "nodes": [
+    {
+      "id": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "kind": "concept",
+      "label": "Cookiecutter instantiation is a one-time snapshot with no upstream path",
+      "dimension": "landscape"
+    },
+    {
+      "id": "urn:mif:concept:harness:kg-copier-0001",
+      "kind": "concept",
+      "label": "Copier provides update propagation to instantiated projects",
+      "dimension": "technical"
+    },
+    {
+      "id": "urn:mif:concept:harness:kg-distribution-0003",
+      "kind": "concept",
+      "label": "A living template is mandatory for a harness that keeps gaining capability",
+      "dimension": "trajectory"
+    },
+    {
+      "id": "urn:mif:entity:concept:living-template",
+      "kind": "entity",
+      "label": "living template",
+      "entityType": "Concept"
+    },
+    {
+      "id": "urn:mif:entity:concept:update-propagation",
+      "kind": "entity",
+      "label": "update propagation",
+      "entityType": "Concept"
+    },
+    {
+      "id": "urn:mif:entity:technology:cookiecutter",
+      "kind": "entity",
+      "label": "Cookiecutter",
+      "entityType": "Technology"
+    },
+    {
+      "id": "urn:mif:entity:technology:copier",
+      "kind": "entity",
+      "label": "Copier",
+      "entityType": "Technology"
+    }
+  ],
+  "edges": [
+    {
+      "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "target": "urn:mif:concept:harness:kg-copier-0001",
+      "type": "contradicts",
+      "strength": 0.7,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-copier-0001",
+      "target": "urn:mif:concept:harness:kg-distribution-0003",
+      "type": "supports",
+      "strength": 0.9,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:concept:harness:kg-copier-0001",
+      "type": "derived-from",
+      "strength": 0.8,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "type": "derived-from",
+      "strength": 0.6,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "target": "urn:mif:entity:technology:cookiecutter",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "target": "urn:mif:entity:concept:update-propagation",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-copier-0001",
+      "target": "urn:mif:entity:technology:copier",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-copier-0001",
+      "target": "urn:mif:entity:concept:update-propagation",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:entity:concept:update-propagation",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    },
+    {
+      "source": "urn:mif:concept:harness:kg-distribution-0003",
+      "target": "urn:mif:entity:concept:living-template",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    }
+  ]
+}</script>
+<script>
+  const g = JSON.parse(document.getElementById('graph').textContent);
+  const nl = document.getElementById('nodes');
+  for (const n of g.nodes) {
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="' + n.kind + '">' + n.kind + '</span> — <strong>' +
+      n.label + '</strong> <code>' + n.id + '</code>';
+    nl.appendChild(li);
+  }
+  const el = document.getElementById('edges');
+  for (const e of g.edges) {
+    const li = document.createElement('li');
+    li.innerHTML = '<code>' + e.source + '</code> —<strong>' + e.type +
+      '</strong>&rarr; <code>' + e.target + '</code>';
+    el.appendChild(li);
+  }
+</script>
+</body>
+</html>

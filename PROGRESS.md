@@ -9,8 +9,8 @@ milestones of `IMPLEMENTATION-PLAN.md` / GitHub milestones #1–#8.
 | --- | --- | --- | --- | --- |
 | 1 — Contracts | done | #39 | PASS | 2026-06-19 |
 | 2 — Scaffold | done | #40 | PASS | 2026-06-19 |
-| 3 — Engine | in_progress | — | — | 2026-06-19 |
-| 4 — Harness services | pending | — | — | — |
+| 3 — Engine | done | #41 | PASS | 2026-06-19 |
+| 4 — Harness services | in_progress | — | — | 2026-06-19 |
 | 5 — Packs | pending | — | — | — |
 | 6 — Outputs | pending | — | — | — |
 | 7 — Distribution | pending | — | — | — |
@@ -72,3 +72,24 @@ Acceptance gate: the smoke test runs the orchestrator pipeline toward the sample
 session goal on a fixture, runs exactly one falsification gate, and emits a
 finding that validates against the MIF-backed findings schema. Asserted by
 `gate_m3` in `scripts/verify.sh`.
+
+**Completed** 2026-06-19 via PR #41 (squash-merged). Acceptance gate PASS:
+`verify.sh` 16 checks incl. the smoke test; CI green; code review (neutralized a
+market-research pack example, completed the ajv verify recipes). Closed #10–#19.
+
+## Milestone 4 — Harness services
+
+**Started** 2026-06-19. Branch `milestone-4-services`.
+
+Delivers the MIF-native knowledge graph (`scripts/build-graph.sh` derives nodes
+from MIF EntityReferences + concepts and edges from typed MIF `relationships[]`,
+never tags; `scripts/assert-graph-mif.sh` proves every node/edge is a `urn:mif:`
+id), the incremental index (`scripts/build-index.sh`), the graph visualization
+(`scripts/build-graph-viz.sh`), the five service skills (search, discover, lab,
+graph, topics) operating over the MIF substrate, and a three-finding MIF sample
+corpus that exercises entities and typed relationships.
+
+Acceptance gate: search, discover, lab, graph, and topics each operate over the
+MIF sample; the knowledge graph is built from MIF entities and relations, not
+tags, and `assert-graph-mif.sh` asserts nodes/edges derive from MIF ids.
+Asserted by `gate_m4` in `scripts/verify.sh`.
