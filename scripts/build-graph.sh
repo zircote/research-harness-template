@@ -42,10 +42,19 @@ jq -s '
   | ( [ .[] | .["@id"] as $src | (.entities // [])[]
         | { source: $src, target: .entity["@id"], type: "mentions",
             strength: null, via: "entity" } ] ) as $mentions
+  # In-corpus nodes so far.
+  | ( $concepts + $entities | unique_by(.id) ) as $known
+  | ( $known | map(.id) ) as $knownids
+  # A relationship can point at a concept outside this corpus (cross-topic or an
+  # external reference). Materialize those targets as external stub nodes so the
+  # graph stays referentially closed (every edge target resolves to a node).
+  | ( [ $reledges[].target ] | unique
+        | map(select(. as $t | $knownids | index($t) | not))
+        | map({ id: ., kind: "concept", label: ., external: true }) ) as $stubs
   | {
       "@type": "KnowledgeGraph",
       generator: "build-graph.sh (MIF-native; SPEC §6c)",
-      nodes: ($concepts + $entities | unique_by(.id)),
+      nodes: ($known + $stubs),
       edges: ($reledges + $mentions)
     }
 ' $FILES > "$OUT"

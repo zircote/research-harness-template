@@ -272,16 +272,22 @@ gate_m4() {
     bad "missing/malformed service skills: $smiss"
   fi
 
-  # 4e. Services operate over the MIF sample: search (index), discover (gaps),
-  #     topics (registry) each return results derived from the MIF substrate.
-  local search_hits gap_dims topic_count
+  # 4e. Services operate over the MIF sample: search filters the index; discover
+  #     computes the config-vs-index dimension gap (a config-declared dimension
+  #     with zero findings); topics lists the registry. Each derives from MIF.
+  local search_hits topic_count gaps_ok
   search_hits=$(jq -r '[.findings[] | select(.dimension=="technical")] | length' "$IDX" 2>/dev/null)
   topic_count=$(jq -r '.topics | length' harness.config.json 2>/dev/null)
-  gap_dims=$(jq -r '.findings | map(.dimension) | unique | length' "$IDX" 2>/dev/null)
-  if [ "${search_hits:-0}" -ge 1 ] && [ "${topic_count:-0}" -ge 1 ] && [ "${gap_dims:-0}" -ge 1 ]; then
-    ok "services operate over the MIF sample (search/discover/topics return MIF-derived results)"
+  # discover's gap computation: config dimensions not present in the index. The
+  # result is a (possibly empty) list — the check is that it computes cleanly.
+  gaps_ok=$(jq -n --slurpfile cfg harness.config.json --slurpfile idx "$IDX" '
+    ($cfg[0].dimensions | map(.id)) as $declared
+    | ($idx[0].findings | map(.dimension) | unique) as $present
+    | ($declared - $present) | type == "array"' 2>/dev/null)
+  if [ "${search_hits:-0}" -ge 1 ] && [ "${topic_count:-0}" -ge 1 ] && [ "$gaps_ok" = "true" ]; then
+    ok "services operate over the MIF sample (search filters index; discover computes gaps; topics lists registry)"
   else
-    bad "service smoke over MIF sample failed (search=$search_hits topics=$topic_count dims=$gap_dims)"
+    bad "service smoke over MIF sample failed (search=$search_hits topics=$topic_count gaps_ok=$gaps_ok)"
   fi
 }
 

@@ -1,0 +1,42 @@
+{
+  "@type": "ResearchIndex",
+  "count": 3,
+  "findings": [
+    {
+      "id": "urn:mif:concept:harness:kg-cookiecutter-0002",
+      "title": "Cookiecutter instantiation is a one-time snapshot with no upstream path",
+      "namespace": "harness/example-topic",
+      "dimension": "landscape",
+      "tags": [
+        "distribution",
+        "template-engine"
+      ],
+      "verdict": "survived",
+      "citations": 1
+    },
+    {
+      "id": "urn:mif:concept:harness:kg-copier-0001",
+      "title": "Copier provides update propagation to instantiated projects",
+      "namespace": "harness/example-topic",
+      "dimension": "technical",
+      "tags": [
+        "distribution",
+        "template-engine"
+      ],
+      "verdict": "survived",
+      "citations": 1
+    },
+    {
+      "id": "urn:mif:concept:harness:kg-distribution-0003",
+      "title": "A living template is mandatory for a harness that keeps gaining capability",
+      "namespace": "harness/example-topic",
+      "dimension": "trajectory",
+      "tags": [
+        "distribution",
+        "decision"
+      ],
+      "verdict": "survived",
+      "citations": 1
+    }
+  ]
+}

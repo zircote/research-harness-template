@@ -29,7 +29,11 @@ check '.nodes | all(.id | startswith("urn:mif:"))' "every node id is a urn:mif: 
 check '.edges | all(.source | startswith("urn:mif:"))' "every edge source is a urn:mif: concept"
 check '.edges | all(.target | startswith("urn:mif:"))' "every edge target is a urn:mif: id"
 check 'any(.edges[]; .via == "relationship")' "at least one edge derives from a typed MIF relationship"
-check 'any(.nodes[]; .kind == "entity" and (.id | startswith("urn:mif:entity:")))' "graph has MIF entity nodes"
+# Entity nodes prove MIF-entity derivation — but a valid corpus may carry typed
+# relationships and no entities. Require entity nodes only when the graph has
+# entity-mention edges (i.e. the corpus actually references entities).
+check '([.edges[] | select(.via == "entity")] | length) == 0 or any(.nodes[]; .kind == "entity" and (.id | startswith("urn:mif:entity:")))' \
+  "every referenced MIF entity is an entity node"
 
 # Every relationship edge must point at a real node (referential integrity).
 check '(.nodes | map(.id)) as $ids | .edges | all(.target as $t | $ids | index($t) != null)' \
