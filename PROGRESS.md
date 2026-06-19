@@ -13,8 +13,8 @@ milestones of `IMPLEMENTATION-PLAN.md` / GitHub milestones #1–#8.
 | 4 — Harness services | done | #42 | PASS | 2026-06-19 |
 | 5 — Packs | done | #43 | PASS | 2026-06-19 |
 | 6 — Outputs | done | #44 | PASS | 2026-06-19 |
-| 7 — Distribution | in_progress | — | — | 2026-06-19 |
-| 8 — Corpus/KG migration | pending | — | — | — |
+| 7 — Distribution | done | #45 | PASS | 2026-06-19 |
+| 8 — Corpus/KG migration | in_progress | — | — | 2026-06-19 |
 
 ## Milestone 1 — Contracts
 
@@ -154,3 +154,29 @@ runs the evals and the copier-update demo.
 Acceptance gate: `copier update` re-applies a template change to an instantiated
 harness, and the eval suite passes in CI. Asserted by `gate_m7` in
 `scripts/verify.sh`.
+
+**Completed** 2026-06-19 via PR #45 (squash-merged). Acceptance gate PASS:
+`verify.sh` 33 checks; CI green (copier runs on ubuntu/py3.12); code review
+(dropped a PyYAML dependency that broke CI). Closed #35–#36.
+
+## Milestone 8 — Corpus/KG import
+
+**Started** 2026-06-19. Branch `milestone-8-corpus-import`.
+
+Delivers the corpus-and-knowledge-graph import path as the first real use of the
+MIF substrate (SPEC §10): `scripts/import-corpus.sh` brings an existing MIF
+corpus into a user's freshly instantiated harness — validating each unit against
+the MIF-backed schema, preserving the W3C-PROV provenance block, registering the
+topic, and rebuilding the index and graph with edges intact. A synthetic
+`evals/fixtures/sample-corpus/` (findings + its shipped knowledge graph)
+demonstrates it. The legacy v1→v2 migrate skill is intentionally dropped (CUT).
+
+Crucially, the import targets an **instantiated harness**, never this template —
+the template ships clean and standalone. `gate_m8` proves the import into a
+temporary fresh harness (matching finding/node/edge counts, provenance preserved,
+graph MIF-derived) and asserts the template repo's own `reports/` stays free of
+any imported corpus.
+
+Acceptance gate: a sample corpus + its knowledge graph imports into a fresh
+harness with provenance and edges intact; a script asserts node and edge counts
+and provenance preservation. Asserted by `gate_m8` in `scripts/verify.sh`.
