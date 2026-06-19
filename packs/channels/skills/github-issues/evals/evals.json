@@ -1,0 +1,257 @@
+{
+  "skill_name": "github-issues",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a synthesized report at /tmp/test-artifacts/report.md. Please create GitHub issues from it in dry-run mode so I can review before filing. Use --repo myorg/myrepo --dry-run.\n\nContents of /tmp/test-artifacts/report.md:\n\n# Project Synthesis Report\n\n## Recommendations\n\n### Add automated integration test suite\nThe codebase currently has no integration tests. Building a suite covering the three core API endpoints would catch regressions before release.\n\n### Improve error messages in the CLI\nCurrent error output lacks actionable guidance. Rewriting the top five error messages with suggested next steps would reduce support burden.\n\n### Investigate dependency on legacy auth library\nThe auth module depends on a library that has had two known CVEs in the past year. Further investigation should determine whether to upgrade or replace it.\n\n### Update onboarding documentation\nThe getting-started guide references a deprecated CLI flag. Updating it to the current flag removes friction for new users.",
+      "expected_output": "Four issues previewed in dry-run mode: one feature (integration tests), one enhancement (error messages), one follow-up (auth library), one action-item (docs). Each issue body has Summary, Context, Acceptance Criteria (>=2 items), Dependencies, and Priority Rationale sections. issues.json written to /tmp/test-artifacts/. No urn:mif: or f_<dim>_<n> strings present. No market-research vocabulary (TAM, SAM, SOM, revenue, customers). Priority justified by evidence strength.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "/tmp/test-artifacts/issues.json",
+          "description": "issues.json written to artifact directory in dry-run mode"
+        },
+        {
+          "type": "json_valid",
+          "file": "/tmp/test-artifacts/issues.json",
+          "description": "issues.json is valid JSON"
+        },
+        {
+          "type": "json_field_count",
+          "file": "/tmp/test-artifacts/issues.json",
+          "path": ".",
+          "op": "eq",
+          "expected": 4,
+          "description": "Exactly four issues produced — one per actionable item"
+        },
+        {
+          "type": "json_array_contains",
+          "file": "/tmp/test-artifacts/issues.json",
+          "expected": {"labels": ["feature"]},
+          "description": "At least one issue carries the 'feature' label"
+        },
+        {
+          "type": "json_array_contains",
+          "file": "/tmp/test-artifacts/issues.json",
+          "expected": {"labels": ["enhancement"]},
+          "description": "At least one issue carries the 'enhancement' label"
+        },
+        {
+          "type": "json_array_contains",
+          "file": "/tmp/test-artifacts/issues.json",
+          "expected": {"labels": ["follow-up"]},
+          "description": "At least one issue carries the 'follow-up' label"
+        },
+        {
+          "type": "json_array_contains",
+          "file": "/tmp/test-artifacts/issues.json",
+          "expected": {"labels": ["action-item"]},
+          "description": "At least one issue carries the 'action-item' label"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "/tmp/test-artifacts/issues.json",
+          "text": "urn:mif:",
+          "description": "No urn:mif: identifiers leaked into issue JSON"
+        },
+        {
+          "type": "regex_match",
+          "file": "/tmp/test-artifacts/issues.json",
+          "pattern": "f_[a-z]+_[0-9]+",
+          "invert": true,
+          "description": "No f_<dim>_<n> finding IDs leaked into issue JSON"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "Each issue body contains a Summary section",
+          "check": "output_file_content",
+          "file": "/tmp/test-artifacts/issues.json",
+          "criteria": "Every 'body' field in the array includes a '## Summary' heading"
+        },
+        {
+          "description": "Each issue body contains an Acceptance Criteria section with at least two checkbox items",
+          "check": "output_file_content",
+          "file": "/tmp/test-artifacts/issues.json",
+          "criteria": "Every 'body' field contains '## Acceptance Criteria' and at least two '- [ ]' checkbox items"
+        },
+        {
+          "description": "Each issue body contains a Priority Rationale section",
+          "check": "output_file_content",
+          "file": "/tmp/test-artifacts/issues.json",
+          "criteria": "Every 'body' field includes '## Priority Rationale'"
+        },
+        {
+          "description": "No market-research domain vocabulary appears in any issue",
+          "check": "output_file_content",
+          "file": "/tmp/test-artifacts/issues.json",
+          "criteria": "None of the following terms appear: 'TAM', 'SAM', 'SOM', 'revenue', 'market share', 'competitor', 'customers', 'go-to-market'"
+        },
+        {
+          "description": "Each issue object has title, body, labels, priority, and category fields",
+          "check": "output_file_content",
+          "file": "/tmp/test-artifacts/issues.json",
+          "criteria": "Every array element contains the keys 'title', 'body', 'labels', 'priority', and 'category'"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "gh is not installed on this machine. I'd like to create GitHub issues from my synthesis at /tmp/test-artifacts/report.md targeting myorg/myrepo.",
+      "expected_output": "The skill detects gh is absent, prints a message explaining the channel is unavailable and instructs the user to install gh and run 'gh auth login', then writes the issue set to /tmp/test-artifacts/issues.json in local-write mode. It does NOT exit with an error or raise an exception. A summary by category is shown.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "/tmp/test-artifacts/issues.json",
+          "description": "issues.json written locally when gh is absent"
+        },
+        {
+          "type": "json_valid",
+          "file": "/tmp/test-artifacts/issues.json",
+          "description": "issues.json is valid JSON despite gh being missing"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "Skill informs the user that gh CLI is not installed and the channel is unavailable",
+          "check": "transcript",
+          "criteria": "The transcript contains a message indicating gh CLI is not installed and the issues channel is unavailable — matching the SKILL.md dependency-check message or similar phrasing"
+        },
+        {
+          "description": "Skill tells user how to install gh and authenticate",
+          "check": "transcript",
+          "criteria": "The transcript tells the user to install gh and run 'gh auth login' (or equivalent) to file issues later"
+        },
+        {
+          "description": "Skill does not error out or crash — execution completes and the user receives actionable output",
+          "check": "transcript",
+          "criteria": "No Python traceback, no unhandled error message, and a path to the written issues.json is reported to the user"
+        },
+        {
+          "description": "Skill produces a category summary even in local-write mode",
+          "check": "transcript",
+          "criteria": "The transcript includes a count of issues by category (features, enhancements, follow-ups, action items) or a total issue count"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create GitHub issues from /tmp/synthesis/api-audit.md. Use --dry-run. The artifact is:\n\n# API Audit Synthesis\n\n## Recommendations\n\n### Replace deprecated /v1/users endpoint callers\nSix internal services still call /v1/users which is scheduled for removal next quarter. Each service must be updated to /v2/users before the sunset date.\n\n### Cache invalidation logic is fragile — needs redesign\nThe current cache layer clears the entire keyspace on any write. Redesigning it with granular key invalidation would reduce cache-miss overhead by an estimated 40%.\n\n### Validate whether rate-limit headers conform to IETF draft standard\nThe API returns X-RateLimit-* headers, but it is unclear whether they follow the IETF RateLimit header fields draft. Investigation is needed before committing to a public API contract.\n\n### Write a migration guide for v1→v2 endpoint transition\nExternal partners consuming the v1 endpoint need a clear migration guide with before/after examples and a deprecation timeline.",
+      "expected_output": "Four issues previewed with correct category mapping: action-item (endpoint callers migration), enhancement or feature (cache redesign), follow-up (rate-limit header investigation), action-item (migration guide). All issues read standalone with no internal document references. Category label mapping matches SKILL.md table. issues.json written to /tmp/synthesis/.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "/tmp/synthesis/issues.json",
+          "description": "issues.json written to the artifact's directory"
+        },
+        {
+          "type": "json_valid",
+          "file": "/tmp/synthesis/issues.json",
+          "description": "issues.json is valid JSON"
+        },
+        {
+          "type": "json_field_count",
+          "file": "/tmp/synthesis/issues.json",
+          "path": ".",
+          "op": "eq",
+          "expected": 4,
+          "description": "Exactly four issues produced"
+        },
+        {
+          "type": "json_array_contains",
+          "file": "/tmp/synthesis/issues.json",
+          "expected": {"category": "follow-up"},
+          "description": "At least one issue categorized as follow-up (for the investigation item)"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "/tmp/synthesis/issues.json",
+          "text": "urn:mif:",
+          "description": "No urn:mif: identifiers in output"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "The investigation item (rate-limit headers) is classified as follow-up, not as feature or enhancement",
+          "check": "output_file_content",
+          "file": "/tmp/synthesis/issues.json",
+          "criteria": "The issue about rate-limit header investigation carries category 'follow-up' and label 'follow-up'"
+        },
+        {
+          "description": "Each issue body context section paraphrases the artifact without referencing internal document structure (no 'see above', 'as mentioned', 'in section X', or similar cross-references)",
+          "check": "output_file_content",
+          "file": "/tmp/synthesis/issues.json",
+          "criteria": "No 'body' field contains phrases like 'see above', 'as mentioned', 'in section', 'the report', 'the artifact', or 'per the synthesis'"
+        },
+        {
+          "description": "The replacement of deprecated endpoint callers is classified as action-item (not feature or follow-up) because it is a concrete process change",
+          "check": "output_file_content",
+          "file": "/tmp/synthesis/issues.json",
+          "criteria": "The issue about replacing /v1/users callers carries category 'action-item'"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Turn the recommendations in /tmp/findings/perf-report.md into GitHub issues with --dry-run. I want to make sure priorities are properly justified, not inflated. Here's the artifact:\n\n# Performance Analysis Synthesis\n\n## Recommendations\n\n### Rewrite the query planner (speculative)\nThe query planner could theoretically be rewritten to use a cost-based optimizer. No benchmarks support this yet; further profiling is needed before committing engineering resources.\n\n### Add a database index on the orders.created_at column\nQuery logs confirm that the three most frequent slow queries all filter on orders.created_at with no index. An index would directly eliminate the top-reported latency issue, unblocking downstream batching work.\n\n### Switch logging library\nThe current logger works fine but a newer library has a slightly prettier output format. This is purely cosmetic.",
+      "expected_output": "Three issues with correctly calibrated priorities: the index addition is P0 (strong evidence from query logs, blocks other work); the logging library switch is P3 (speculative/cosmetic, no evidence of material benefit); the query planner rewrite is P2 or P3 (speculative, no benchmark support). Priority Rationale in each issue cites evidence from the artifact rather than asserting priority without justification.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "/tmp/findings/issues.json",
+          "description": "issues.json written to artifact directory"
+        },
+        {
+          "type": "json_valid",
+          "file": "/tmp/findings/issues.json",
+          "description": "issues.json is valid JSON"
+        },
+        {
+          "type": "json_field_count",
+          "file": "/tmp/findings/issues.json",
+          "path": ".",
+          "op": "eq",
+          "expected": 3,
+          "description": "Exactly three issues produced"
+        },
+        {
+          "type": "regex_match",
+          "file": "/tmp/findings/issues.json",
+          "pattern": "f_[a-z]+_[0-9]+",
+          "invert": true,
+          "description": "No f_<dim>_<n> finding ID references in output"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "The database index issue receives P0 priority because it has strong evidence (query logs) and blocks downstream work",
+          "check": "output_file_content",
+          "file": "/tmp/findings/issues.json",
+          "criteria": "The issue about the orders.created_at index has priority 'P0' or 'p0'"
+        },
+        {
+          "description": "The logging library cosmetic switch receives P3 (speculative/exploratory) — it must NOT be inflated to P0/P1",
+          "check": "output_file_content",
+          "file": "/tmp/findings/issues.json",
+          "criteria": "The issue about switching the logging library has priority 'P3' or 'p3', not P0, P1, or P2"
+        },
+        {
+          "description": "The query planner rewrite receives P2 or P3 (no benchmark evidence) — must NOT be P0/P1",
+          "check": "output_file_content",
+          "file": "/tmp/findings/issues.json",
+          "criteria": "The issue about the query planner rewrite has priority 'P2', 'p2', 'P3', or 'p3'"
+        },
+        {
+          "description": "Every Priority Rationale section cites specific evidence from the artifact rather than asserting priority without justification",
+          "check": "output_file_content",
+          "file": "/tmp/findings/issues.json",
+          "criteria": "Each 'body' field's '## Priority Rationale' section contains evidence-based language (e.g., references query logs, benchmarks, speculative/cosmetic framing) — not generic statements like 'high impact' with no support"
+        }
+      ]
+    }
+  ]
+}

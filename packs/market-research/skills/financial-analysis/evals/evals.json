@@ -1,0 +1,333 @@
+{
+  "skill_name": "financial-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm the CFO of a B2B SaaS startup and need a full financial analysis. Here are our Q3 numbers: CAC is $600, monthly ARPU is $100, annual gross churn is 20%, gross margin is 80%. We're growing at 45% YoY and our operating margin is 5%. Last quarter MRR was $800k, this quarter it's $900k. We also had $50k in expansion MRR and $30k in churn MRR this quarter from a $800k starting base. Give me the full analysis including unit economics, Rule of 40, and NRR.",
+      "expected_output": "Financial Analysis Summary covering all six required output sections. Unit Economics section must compute: LTV = $4,800, LTV:CAC = 8:1, Payback = 7.5 months. Key Metrics table with those exact figures. Rule of 40 score of 50 (45% growth + 5% margin). NRR calculation: (800 + 50 - 30) / 800 = 102.5%. All benchmarks cited against SaaS norms. Trend indicators INC/DEC/CONST present. No placeholder values.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)financial analysis summary",
+          "description": "Output contains the required Financial Analysis Summary section header"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)unit economics",
+          "description": "Unit Economics section is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "4[,.]?800|\\$4800",
+          "description": "LTV value of $4,800 is computed and present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "8.?:?.?1|8x|8 to 1",
+          "description": "LTV:CAC ratio of 8:1 is stated"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "7\\.5|7½",
+          "description": "Payback period of 7.5 months is computed"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)rule of 40",
+          "description": "Rule of 40 framework is applied"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "\\b50\\b.{0,60}rule.{0,30}40|rule.{0,30}40.{0,60}\\b50\\b",
+          "description": "Rule of 40 score of 50 is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)NRR|net revenue retention|net dollar retention",
+          "description": "NRR metric is computed"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "102\\.?5?%|102%",
+          "description": "NRR of 102.5% (or ~102%) is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "INC|DEC|CONST",
+          "description": "At least one trend indicator is present"
+        },
+        {
+          "type": "regex_not_match",
+          "source": "output",
+          "pattern": "\\$X|\\$XX|\\[insert|TBD|\\[LTV\\]|\\[CAC\\]",
+          "description": "No placeholder values in output"
+        }
+      ],
+      "expectations": [
+        "The Unit Economics section explicitly shows the LTV formula: ARPU × 12 ÷ churn × gross margin = $100 × 12 ÷ 0.20 × 0.80 = $4,800 (or equivalent step-by-step derivation).",
+        "LTV:CAC of 8:1 is assessed against the ≥3:1 SaaS benchmark and noted as healthy (may indicate under-investing in growth per SKILL.md guidance at >5:1).",
+        "Payback period of 7.5 months is compared to the <12-month SaaS benchmark and rated favorably.",
+        "Rule of 40 score of 50 (45% YoY growth + 5% operating margin) is computed and assessed as passing the ≥40 threshold.",
+        "The Profitability Assessment section cites the gross margin of 80% against the 70-85% SaaS benchmark range.",
+        "Recommendations section appears and includes at least one actionable suggestion tied to the financials (e.g., consider increasing CAC budget given strong payback and LTV:CAC)."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We're a B2B SaaS startup that's been burning cash. Our CAC is $2,400, monthly ARPU is $50, annual gross churn is 60%, and gross margin is 65%. We have $1.2M ARR and are growing at 80% YoY but our operating margin is -85%. We're trying to fundraise Series A. What's our financial health honestly? Give me the unit economics and a full analysis.",
+      "expected_output": "Financial Analysis Summary that flags the unsustainable unit economics immediately. LTV = $650, LTV:CAC = 0.27:1 — below the 1:1 unsustainable threshold per SKILL.md. Payback ≈ 73.8 months — far outside the <18-month early-stage benchmark. Rule of 40 = 80 + (-85) = -5 — fails. Alert on LTV:CAC < 1 must be explicitly raised. Health Assessment must reflect critical risk.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)financial analysis summary",
+          "description": "Output contains the Financial Analysis Summary section header"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)unit economics",
+          "description": "Unit Economics section is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "\\$?6[45][0-9]|650",
+          "description": "LTV value of approximately $650 is computed"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "0\\.2[0-9]|0\\.27|unsustainable|<.?1.?:?.?1|below.{0,20}1:1",
+          "description": "LTV:CAC below 1:1 (unsustainable) is flagged"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)unsustainable|critical|alert|warning|red flag",
+          "description": "An explicit alert or warning about unit economics viability is raised"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)rule of 40",
+          "description": "Rule of 40 framework is applied"
+        },
+        {
+          "type": "regex_not_match",
+          "source": "output",
+          "pattern": "rule of 40.{0,100}pass|≥ ?40.{0,50}pass|score.{0,30}pass",
+          "description": "Rule of 40 is NOT reported as passing (score is -5, a fail)"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)payback",
+          "description": "Payback Period is computed"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "7[0-9]|73\\.?8?|74",
+          "description": "Payback period of approximately 73-74 months is stated"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)financial health assessment",
+          "description": "Financial Health Assessment section is present"
+        },
+        {
+          "type": "regex_not_match",
+          "source": "output",
+          "pattern": "\\$X|\\$XX|\\[insert|TBD",
+          "description": "No placeholder values in output"
+        }
+      ],
+      "expectations": [
+        "The skill explicitly raises the LTV:CAC < 1:1 alert mandated by SKILL.md — not merely mentions it, but flags it as an unsustainability signal that investors will scrutinize.",
+        "LTV of approximately $650 is derived step-by-step: ARPU $50 × 12 ÷ 60% churn × 65% GM = $650.",
+        "Payback period in the range of 73-74 months is computed (CAC $2,400 ÷ ($50 × 0.65) ≈ 73.8 months) and compared to the <18-month early-stage benchmark.",
+        "Rule of 40 score is computed as 80% growth + (-85%) operating margin = -5, and reported as failing the ≥40 threshold.",
+        "The Financial Health Assessment characterizes the business as high-risk or critical — it does not produce an optimistic summary given these numbers.",
+        "The Recommendations section addresses the path to viable unit economics (e.g., reduce CAC, increase ARPU, reduce churn) with at least two specific actions."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I run a SaaS company and need to know if we pass the Rule of 40. We're at $5M ARR, grew from $4.237M last year (so you can compute the growth rate). Our COGS are $1.1M and operating expenses are $3.2M total (including COGS). Gross margin is 78%. What's our Rule of 40 score and full profitability analysis?",
+      "expected_output": "YoY growth rate computed as ($5M - $4.237M) / $4.237M = 18% (approximately). Operating margin = ($5M - $3.2M) / $5M = 36%. Rule of 40 = 18 + 36 = 54 — passes at 54. Gross margin confirmed at 78% (above 70% SaaS benchmark). Full profitability section with Gross Margin, Operating Margin, Net Margin table. Trend indicator for revenue direction.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)financial analysis summary",
+          "description": "Output contains the Financial Analysis Summary section header"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)rule of 40",
+          "description": "Rule of 40 framework is applied"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "\\b1[78]\\s*%|17\\.?[0-9]*%|18\\.?[0-9]*%",
+          "description": "YoY growth rate of approximately 18% is computed"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "36\\s*%|36\\.?[0-9]*%",
+          "description": "Operating margin of 36% is computed"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "\\b5[0-9]\\b.{0,60}rule.{0,30}40|rule.{0,30}40.{0,60}\\b5[0-9]\\b|score.{0,30}5[0-9]",
+          "description": "Rule of 40 score in the 50s range is present (approximately 54)"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)profitability assessment|profitability",
+          "description": "Profitability Assessment section is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "78\\s*%",
+          "description": "Gross margin of 78% is confirmed in the analysis"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "INC|DEC|CONST",
+          "description": "At least one trend indicator is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)gross margin",
+          "description": "Gross Margin metric appears in the Key Metrics or Profitability table"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)operating margin",
+          "description": "Operating Margin metric appears in the output"
+        },
+        {
+          "type": "regex_not_match",
+          "source": "output",
+          "pattern": "\\$X|\\$XX|\\[insert|TBD",
+          "description": "No placeholder values in output"
+        }
+      ],
+      "expectations": [
+        "The YoY growth rate is computed from the provided ARR figures: ($5M - $4.237M) / $4.237M ≈ 18% — not taken as a given or estimated differently.",
+        "Operating margin is computed as (Revenue - Total OpEx) / Revenue = ($5M - $3.2M) / $5M = 36%, and this derivation is shown.",
+        "Rule of 40 score is computed as growth (≈18%) + operating margin (36%) ≈ 54, explicitly stated as passing the ≥40 threshold.",
+        "The Key Metrics table includes all three profitability metrics: Gross Margin (78%), Operating Margin (36%), and Net Margin (inferred or noted as not provided).",
+        "Gross margin of 78% is assessed against the 70-85% SaaS norm and rated as within benchmark range.",
+        "A trend indicator (INC) is applied to the revenue direction based on the positive growth rate."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We're a usage-based pricing SaaS (think Twilio-style). Revenue last month was $200k, this month is $230k. ARPU varies month-to-month based on usage. We have 180 customers this month, up from 160 last month. Gross margin is 72%. No fixed subscription — customers pay per API call. Annual churn is 15% by count but we have strong expansion: NRR is 130%. Walk me through our revenue model classification, unit economics, and whether our pricing strategy is appropriate for a usage-based model.",
+      "expected_output": "Revenue Model classified as Usage-Based with INC trend indicator. ARPU computed as $230k / 180 = $1,277.78 (current month). MoM growth = (230 - 200) / 200 = 15%. LTV computed using the provided inputs. NRR of 130% flagged as strong (above 110% growth-stage benchmark). Pricing Analysis section addresses usage-based strategy and its fit. No placeholders.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)financial analysis summary",
+          "description": "Output contains the Financial Analysis Summary section header"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)usage.based|usage based",
+          "description": "Revenue model is classified as usage-based"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)revenue model",
+          "description": "Revenue Model section is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "INC",
+          "description": "INC trend indicator is applied to the usage-based model"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)NRR|net revenue retention|net dollar retention",
+          "description": "NRR metric is referenced"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "130\\s*%",
+          "description": "NRR of 130% appears verbatim from the prompt data"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "15\\s*%",
+          "description": "MoM growth rate of 15% is present (or annual churn of 15% is referenced)"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)pricing analysis|pricing strategy",
+          "description": "Pricing Analysis section is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "(?i)unit economics",
+          "description": "Unit Economics section is present"
+        },
+        {
+          "type": "regex_match",
+          "source": "output",
+          "pattern": "1[,.]?2[0-9][0-9]|1277|1278|ARPU.{0,30}\\$1[,.]?[0-9]{3}",
+          "description": "ARPU of approximately $1,277-1,278 is computed from $230k / 180 customers"
+        },
+        {
+          "type": "regex_not_match",
+          "source": "output",
+          "pattern": "\\$X|\\$XX|\\[insert|TBD",
+          "description": "No placeholder values in output"
+        }
+      ],
+      "expectations": [
+        "The Revenue Model section classifies this as Usage-Based (not Subscription/SaaS) and cites the pay-per-API-call structure, assigning the INC trend indicator per the SKILL.md revenue model table.",
+        "ARPU is computed as current month revenue ÷ customers = $230,000 ÷ 180 = approximately $1,278, and this figure is used in the LTV derivation.",
+        "NRR of 130% is assessed against the >120% scale-stage benchmark in SKILL.md and noted as a strong expansion signal consistent with usage-based expansion dynamics.",
+        "The Pricing Analysis section addresses why usage-based pricing is appropriate (or not) for this business — not a generic description of the strategy, but a judgment call tied to the data.",
+        "LTV is computed using the available inputs (ARPU, churn, GM) with a note that ARPU volatility in usage-based models makes LTV estimates less precise than in fixed-subscription models.",
+        "The Financial Health Assessment distinguishes the strong NRR signal from the unit-count churn of 15%, and notes that expansion revenue is masking any customer-count attrition."
+      ]
+    }
+  ]
+}
