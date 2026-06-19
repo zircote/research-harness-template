@@ -1,5 +1,8 @@
 {
   "name": "research-harness",
+  "owner": {
+    "name": "zircote"
+  },
   "metadata": {
     "description": "Bundled packs for the research harness. Each pack is a Claude Code plugin under packs/<name>/; the harness.config.json packs[] control plane enables or disables each one.",
     "version": "1.0.0"

@@ -83,10 +83,11 @@ gate_m1() {
   # 1d. Contamination scrub: no corpus finding IDs or corpus report-slug paths
   #     in built artifacts (criteria "Constraints"). Planning docs are excluded;
   #     they are meta, not built artifacts.
+  # git grep handles filenames with spaces and an empty match set safely (it
+  # never reads stdin and returns 1 on no match), unlike `git ls-files | xargs grep`.
   local hits
-  hits=$(git ls-files \
-           ':!:COMPLETION-CRITERIA.md' ':!:IMPLEMENTATION-PLAN.md' ':!:PROGRESS.md' \
-         | xargs grep -nE 'f_(tech|competitive|trends|customer|sizing|financial|regulatory)_[0-9]+|reports/[a-z0-9][a-z0-9-]+/findings_' 2>/dev/null || true)
+  hits=$(git grep -nE 'f_(tech|competitive|trends|customer|sizing|financial|regulatory)_[0-9]+|reports/[a-z0-9][a-z0-9-]+/findings_' -- \
+           ':!COMPLETION-CRITERIA.md' ':!IMPLEMENTATION-PLAN.md' ':!PROGRESS.md' 2>/dev/null || true)
   if [ -z "$hits" ]; then
     ok "no corpus finding IDs or corpus report-slug paths in built artifacts"
   else

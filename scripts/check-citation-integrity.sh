@@ -9,7 +9,7 @@
 #   1. every finding carries at least one citation (MIF Level 3);
 #   2. every citation has a well-formed http(s) URL and a citationRole;
 #   3. no finding ships with an adversarial verdict of "falsified";
-#   4. no citation URL is marked dead (extensions.harness.citationStatus.alive=false).
+#   4. no citation URL is listed dead (extensions.harness.citationStatus.deadUrls[]).
 #
 # Exit 0 = all findings pass (GOOD). Exit 1 = at least one violation (BAD),
 # with one `file:finding-id: reason` line per violation on stderr.
@@ -50,15 +50,15 @@ for f in "$@"; do
         (if ($cites | length) < 1
            then ($loc + "no citations (MIF Level 3 requires >=1)") else empty end),
         ($cites[]
-           | select((.url // "") | test("^https?://") | not)
-           | ($loc + "citation missing well-formed http(s) URL: " + (.title // "<untitled>"))),
+           | select((((.url // "")|type) == "string" and ((.url // "")|test("^https?://"))) | not)
+           | ($loc + "citation missing well-formed http(s) URL: " + ((.title // "<untitled>")|tostring))),
         ($cites[]
            | select((.citationRole // "") == "")
            | ($loc + "citation missing citationRole: " + (.title // "<untitled>"))),
         (if $verdict == "falsified"
            then ($loc + "adversarial verdict is falsified; finding must not ship") else empty end),
         ((.value.extensions.harness.citationStatus.deadUrls // [])[]
-           | ($loc + "citation URL marked dead (alive=false): " + .))
+           | ($loc + "citation URL listed dead: " + (.|tostring)))
       ]
     | .[]
   ' "$f")
