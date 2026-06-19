@@ -465,9 +465,95 @@ gate_m7() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 8 — Corpus / KG import
+# ---------------------------------------------------------------------------
+gate_m8() {
+  info "Milestone 8 — Corpus/KG import"
+  local SRC="evals/fixtures/sample-corpus"
+
+  # 8a. The legacy v1->v2 migrate skill is intentionally NOT carried (SPEC §4a CUT).
+  #     The import path (below), not a migration shim, is how a corpus comes forward.
+  if [ ! -d .claude/skills/migrate ] && [ ! -e .claude/skills/migrate ]; then
+    ok "legacy v1->v2 migrate skill is not carried (CUT)"
+  else
+    bad "a migrate skill is present but should have been cut"
+  fi
+
+  # 8b. An existing corpus + its knowledge graph imports into a FRESH harness with
+  #     provenance and graph edges intact. The import targets a TEMPORARY fresh
+  #     harness — this template repo's own reports/ is never populated with a corpus.
+  local T; T=$(mktemp -d)
+  cp harness.config.json "$T/config.json"
+  if scripts/import-corpus.sh "$SRC" imported-sample "$T/reports" "$T/config.json" >/dev/null 2>&1; then
+    local src_n imp_n src_nodes imp_nodes src_edges imp_edges prov_ok
+    src_n=$(find "$SRC/findings" -name '*.json' | grep -c .)
+    imp_n=$(find "$T/reports/imported-sample/findings" -name '*.json' 2>/dev/null | grep -c .)
+    src_nodes=$(jq '.nodes|length' "$SRC/knowledge-graph.json")
+    src_edges=$(jq '.edges|length' "$SRC/knowledge-graph.json")
+    imp_nodes=$(jq '.nodes|length' "$T/reports/imported-sample/knowledge-graph.json" 2>/dev/null)
+    imp_edges=$(jq '.edges|length' "$T/reports/imported-sample/knowledge-graph.json" 2>/dev/null)
+    # Provenance preserved on every imported finding (W3C-PROV block survives).
+    prov_ok=$(find "$T/reports/imported-sample/findings" -name '*.json' -exec jq -e '.provenance.sourceType != null' {} \; 2>/dev/null | grep -c true)
+
+    if [ "$imp_n" = "$src_n" ] && [ "$imp_nodes" = "$src_nodes" ] && [ "$imp_edges" = "$src_edges" ]; then
+      ok "corpus + knowledge graph import: $imp_n findings, $imp_nodes nodes, $imp_edges edges (counts match source)"
+    else
+      bad "import counts diverge (findings $imp_n/$src_n, nodes $imp_nodes/$src_nodes, edges $imp_edges/$src_edges)"
+    fi
+    # The exact edge SET survives the import (not just the count) — each
+    # source->target->type triple is preserved (edges intact, SPEC §10).
+    local norm='[.edges[]|{source,target,type}]|sort'
+    if [ "$(jq -c "$norm" "$SRC/knowledge-graph.json")" = "$(jq -c "$norm" "$T/reports/imported-sample/knowledge-graph.json" 2>/dev/null)" ]; then
+      ok "every source graph edge (source/target/type) survived the import"
+    else
+      bad "imported graph edge set diverges from the source corpus graph"
+    fi
+    if [ "$prov_ok" = "$src_n" ]; then
+      ok "provenance preserved on every imported finding ($prov_ok/$src_n)"
+    else
+      bad "provenance lost on import ($prov_ok/$src_n retained)"
+    fi
+    # The imported graph still derives from MIF ids (edges intact).
+    if scripts/assert-graph-mif.sh "$T/reports/imported-sample/knowledge-graph.json" >/dev/null 2>&1; then
+      ok "imported knowledge graph is MIF-derived with edges intact"
+    else
+      bad "imported knowledge graph fails the MIF-derivation assertion"
+    fi
+    # The topic was registered in the (temp) manifest, not the template's.
+    if [ "$(jq -r '[.topics[]|select(.id=="imported-sample")]|length' "$T/config.json")" = "1" ]; then
+      ok "imported topic registered in the instantiated harness manifest"
+    else
+      bad "imported topic not registered in the manifest"
+    fi
+  else
+    bad "corpus import failed"
+    scripts/import-corpus.sh "$SRC" imported-sample "$T/reports" "$T/config.json" 2>&1 | sed 's/^/      /' >&2
+  fi
+  rm -rf "$T"
+
+  # 8c. The template repo itself ships clean — no imported corpus committed under
+  #     reports/ (only reports/_meta/ scaffolding and the sample session).
+  if [ -z "$(find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
+    ok "template repo reports/ ships clean (no corpus committed outside _meta)"
+  else
+    bad "unexpected corpus committed under reports/ (the template must stay clean)"
+    find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
+  fi
+
+  # 8d. The import REFUSES to populate the template repo's own reports/ — the
+  #     constraint is enforced by the script, not merely intended.
+  if scripts/import-corpus.sh "$SRC" should-not-land reports >/dev/null 2>&1; then
+    bad "import-corpus.sh did NOT refuse to import into the template's reports/"
+    rm -rf reports/should-not-land
+  else
+    ok "import refuses to populate the template repo's own reports/"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8)
 
 for g in "${GATES[@]}"; do "$g"; done
 
