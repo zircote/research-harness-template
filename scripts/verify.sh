@@ -162,7 +162,7 @@ gate_m2() {
   fi
 
   # 2e. The markdown hooks import cleanly (syntax check).
-  if python3 -c 'import py_compile,sys; [py_compile.compile(f,doraise=True) for f in sys.argv[1:]]' \
+  if python3 -B -c 'import sys; [compile(open(f).read(), f, "exec") for f in sys.argv[1:]]' \
        .claude/hooks/markdown/md_guard.py \
        .claude/hooks/markdown/md_lint_core.py \
        .claude/hooks/markdown/md_remediate.py >/dev/null 2>&1; then

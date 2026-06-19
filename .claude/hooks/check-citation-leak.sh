@@ -17,7 +17,11 @@
 # Build-time scaffolding (OUTLINE.md, *.json, provenance/, artifacts/) is excluded.
 
 MODE="${1:-post}"
-LEAK_RE='f_[a-z]+_[0-9]+|reports/[a-z0-9][a-z0-9-]+/|findings_[a-z]+\.json|extensions\.harness'
+# Internal-research reference shapes: corpus finding ids, corpus report-slug
+# paths (anchored to the findings/_meta forms so a public "reports/2024/" URL in
+# legitimate prose is not flagged), per-dimension findings files, and the
+# harness-internal extension namespace.
+LEAK_RE='f_[a-z]+_[0-9]+|reports/[a-z0-9][a-z0-9-]+/(findings|_meta)|findings_[a-z]+\.json|extensions\.harness'
 
 is_published_surface () { # echo "yes" or ""
   case "$1" in

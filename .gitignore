@@ -1,0 +1,6 @@
+# Python bytecode (the markdown hooks are plain scripts; bytecode is build cruft)
+__pycache__/
+*.pyc
+
+# Hook runtime state
+.claude/hooks/markdown/state/
