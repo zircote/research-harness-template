@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.dev/schema/findings.schema.json",
+  "title": "Research Harness Finding (MIF-backed)",
+  "description": "A research finding is a MIF v1.0 memory unit (schemas/mif/mif.schema.json) extended with two harness-local concerns that MIF core does not carry (SPEC §8b): a non-empty citation set (citation-integrity is a core gate, SPEC §6c/§6d) and an adversarial-falsification verification record under extensions.harness. The base $ref points at the REAL vendored MIF schema; this file only adds, never overrides.",
+  "allOf": [
+    { "$ref": "https://mif-spec.dev/schema/mif.schema.json" },
+    {
+      "type": "object",
+      "required": ["citations", "extensions"],
+      "properties": {
+        "citations": {
+          "type": "array",
+          "minItems": 1,
+          "description": "MIF Level 3 citations; at least one is required so every finding is traceable to a primary source (citation-integrity gate)."
+        },
+        "extensions": {
+          "type": "object",
+          "required": ["harness"],
+          "properties": {
+            "harness": {
+              "type": "object",
+              "required": ["dimension", "verification"],
+              "properties": {
+                "dimension": {
+                  "type": "string",
+                  "description": "The config-declared research dimension this finding belongs to (domain-general; not a fixed market-research set). SPEC §4a.",
+                  "pattern": "^[a-z][a-z0-9_-]*$"
+                },
+                "verification": {
+                  "type": "object",
+                  "description": "Harness-local falsification trait (SPEC §8b): the ordinal verdict from the single adversarial gate.",
+                  "required": ["verdict", "verdict_basis"],
+                  "properties": {
+                    "verdict": {
+                      "type": "string",
+                      "enum": ["falsified", "weakened", "survived", "inconclusive"]
+                    },
+                    "verdict_basis": { "type": "string", "minLength": 1 },
+                    "attempted_at": { "type": "string", "format": "date-time" },
+                    "disconfirming_evidence": {
+                      "type": "array",
+                      "items": { "type": "string", "format": "uri" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

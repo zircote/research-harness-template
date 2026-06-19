@@ -1,0 +1,28 @@
+{
+  "$schema": "./harness.config.schema.json",
+  "version": "1.0.0",
+  "mifConformanceLevel": 3,
+  "topics": [
+    {
+      "id": "example-topic",
+      "title": "Example research topic",
+      "namespace": "harness/example-topic",
+      "status": "active"
+    }
+  ],
+  "dimensions": [
+    { "id": "technical", "description": "Technical feasibility, architecture, and implementation evidence." },
+    { "id": "landscape", "description": "Comparable prior art, alternatives, and competing approaches." },
+    { "id": "trajectory", "description": "Direction of travel: adoption, standards, and momentum signals." }
+  ],
+  "outputs": [
+    { "channel": "blog", "enabled": true },
+    { "channel": "book", "enabled": true }
+  ],
+  "packs": [
+    { "name": "market-research", "enabled": false, "source": "bundled" },
+    { "name": "trend-modeling", "enabled": false, "source": "bundled" },
+    { "name": "reports", "enabled": true, "source": "bundled" },
+    { "name": "channels", "enabled": false, "source": "bundled" }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.dev/schema/pack.schema.json",
+  "title": "Research Harness Pack (Claude Code plugin)",
+  "description": "A pack IS a Claude Code plugin (SPEC §7b): a self-contained bundle of flat skills/, agents/, commands/, and hooks/ under .claude-plugin/plugin.json. This schema validates that plugin.json plus the harness-local fields that classify the pack and namespace its skills.",
+  "type": "object",
+  "required": ["name", "version", "kind"],
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Pack name; also the skill namespace (skills resolve as pack:skill)."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": { "type": "string" },
+    "kind": {
+      "type": "string",
+      "enum": ["methodology", "genre", "channel", "ontology"],
+      "description": "The pack taxonomy (SPEC §7b table): methodology adds dimensions/analyst skills; genre adds deliverable templates; channel adds render adapters; ontology adds MIF entity/relationship/trait extensions."
+    },
+    "license": { "type": "string" },
+    "author": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "properties": { "name": { "type": "string" } } }
+      ]
+    },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "provides": {
+      "type": "object",
+      "description": "What the pack contributes to the core; every entry is namespaced so it never collides with core skills.",
+      "additionalProperties": false,
+      "properties": {
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "agents": { "type": "array", "items": { "type": "string" } },
+        "commands": { "type": "array", "items": { "type": "string" } },
+        "dimensions": { "type": "array", "items": { "type": "string" } },
+        "genres": { "type": "array", "items": { "type": "string" } },
+        "channels": { "type": "array", "items": { "type": "string" } },
+        "ontologies": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
