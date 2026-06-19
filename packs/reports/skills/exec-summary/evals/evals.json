@@ -1,0 +1,207 @@
+{
+  "skill_name": "exec-summary",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have 4 research findings from a study on enterprise AI adoption. Please produce an executive summary using the exec-summary genre template and write it to exec-summary.md. Here are the findings:\n\n---\nFinding 1 (f_market_1): Enterprise AI adoption reached 72% of Fortune 500 firms in 2024, up from 41% in 2022. Source: https://gartner.com/reports/ai-enterprise-2024. Dimension: market. Verdict: survived.\n\nFinding 2 (f_market_2): Implementation costs average $2.3M for mid-market deployments, with a 14-month median payback period. Source: https://mckinsey.com/ai-roi-2024. Dimension: market. Verdict: survived.\n\nFinding 3 (f_technical_1): LLM-based automation reduces analyst hours by 40% in back-office workflows, per 3 controlled pilots. Source: https://hbr.org/llm-pilots-2024. Dimension: technical. Verdict: survived.\n\nFinding 4 (f_technical_2): Data governance gaps blocked deployment in 31% of attempted rollouts. Source: https://forrester.com/ai-blockers-2024. Dimension: technical. Verdict: survived.\n\nThe decision being supported: whether to approve a $5M AI transformation budget for Q1 2025.",
+      "expected_output": "An executive summary written to exec-summary.md containing all four required sections (BLUF, Key Findings, Recommendation, Risks & Caveats), front matter, a numbered footnote list, at least one quantified figure, and no internal MIF plumbing (no urn:mif: URNs, no f_market_1-style internal IDs in the body).",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "exec-summary.md",
+          "description": "Output file was created"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "BLUF",
+          "description": "Document opens with a BLUF section"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Key Findings",
+          "description": "Document contains a Key Findings section"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Recommendation",
+          "description": "Document contains a Recommendation section"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Risks",
+          "description": "Document contains a Risks & Caveats section"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "72%",
+          "description": "At least one quantified figure from the findings is carried through"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "urn:mif:",
+          "description": "Internal MIF URNs do not appear in the output"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "f_market_1",
+          "description": "Internal finding ID handles do not leak into the output body"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "Appendix",
+          "description": "No appendices — the genre prohibits them"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "Bibliography",
+          "description": "No bibliography — genre uses footnotes only"
+        }
+      ],
+      "expectations": [
+        "The BLUF section appears first, before any context or background, and states the conclusion and recommended action in one paragraph.",
+        "The Key Findings section contains 3-5 bullets, each with a single fact and its business consequence, and at least some bullets include inline citation markers like [1] or [2].",
+        "The Recommendation section contains one specific, actionable directive that addresses the $5M budget decision with What, Why, How, and Risk elements.",
+        "The footnote list at the end resolves inline citation markers to primary-source URLs (the gartner.com, mckinsey.com, hbr.org, or forrester.com sources), not to internal finding IDs.",
+        "The document is written in active voice throughout, with no passive constructions like 'it was found that' or 'analysis showed'."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Produce an executive summary using the exec-summary genre and write it to exec-summary.md. I need a brief for the board on entering the Southeast Asian logistics market. Here are the findings — note that one was falsified and must be excluded:\n\n---\nFinding A (f_landscape_1): Southeast Asia logistics market is valued at $51B and growing at 9% CAGR through 2028. Source: https://statista.com/sea-logistics-2024. Dimension: landscape. Verdict: survived.\n\nFinding B (f_landscape_2): Three incumbents (DHL, Ninja Van, J&T) control 58% of last-mile volume. Source: https://pitchbook.com/sea-logistics-players. Dimension: landscape. Verdict: survived.\n\nFinding C (f_landscape_3): Regulatory clearance timeline averages 18 months across 6 ASEAN markets. Source: https://aseansec.org/logistics-regs. Dimension: landscape. Verdict: survived.\n\nFinding D (f_landscape_4): Market entry cost estimated at $4.2M based on 2019 data from a single private source with no corroboration. Source: https://internal-memo.example.com/2019. Dimension: landscape. Verdict: falsified.\n\nThe decision being supported: whether to greenlight a market entry feasibility study in Q2 2025.",
+      "expected_output": "An executive summary that excludes the falsified finding (Finding D / $4.2M cost estimate) entirely, covers the other three findings, and produces all required sections with front matter and footnotes.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "exec-summary.md",
+          "description": "Output file was created"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "$4.2M",
+          "description": "The falsified finding's unique figure does not appear anywhere in the output"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "internal-memo.example.com",
+          "description": "The falsified finding's source URL is not cited"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "$51B",
+          "description": "A surviving quantified finding is present in the output"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "BLUF",
+          "description": "BLUF section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Recommendation",
+          "description": "Recommendation section is present"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "urn:mif:",
+          "description": "Internal MIF URNs do not leak into output"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "f_landscape_4",
+          "description": "The falsified finding's internal handle does not appear"
+        }
+      ],
+      "expectations": [
+        "The falsified finding (Finding D, $4.2M cost estimate) is completely absent from the output — it is not mentioned, alluded to, or hedged against.",
+        "The Recommendation addresses the feasibility study decision with a clear directive, not a generic 'consider further research' non-answer.",
+        "The Risks & Caveats section acknowledges the limited findings set (three surviving facts) and the absence of cost-estimate data as a decision risk.",
+        "Footnotes resolve only to the three surviving source URLs (statista.com, pitchbook.com, aseansec.org)."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use the exec-summary genre template to create an executive summary and write it to exec-summary.md. Context: I'm advising a hospital network on adopting AI-assisted diagnostics. One finding is inconclusive, which should be disclosed in Risks & Caveats. Another is weakened — also needs a confidence hedge there.\n\nFindings:\n\n---\nFinding 1 (f_clinical_1): AI diagnostic tools reduced radiologist review time by 35% across 12 published trials in 2023-2024. Source: https://nejm.org/ai-radiology-2024. Dimension: clinical. Verdict: survived.\n\nFinding 2 (f_compliance_1): FDA cleared 15 new AI diagnostic devices in 2024, signaling regulatory acceptance. Source: https://fda.gov/ai-devices-2024. Dimension: regulatory. Verdict: weakened. Verdict basis: Clearances cited cover narrow device classes only; generalizability is limited.\n\nFinding 3 (f_clinical_2): Hospital AI programs show 22% reduction in diagnostic error rates when combined with clinician review protocols. Source: https://lancet.com/ai-hospitals-2024. Dimension: clinical. Verdict: survived.\n\nFinding 4 (f_compliance_2): Long-term liability framework for AI diagnostic errors remains unresolved at the federal level. Source: https://healthaffairs.org/ai-liability-2024. Dimension: regulatory. Verdict: inconclusive. Verdict basis: Proposed rules exist but no final rulemaking.\n\nDecision supported: whether to proceed with a pilot deployment of AI diagnostics in two radiology departments.",
+      "expected_output": "An executive summary that includes a Risks & Caveats section explicitly flagging the two uncertain findings (weakened and inconclusive verdicts) with confidence hedges, while still using all four findings in Key Findings. The document must have all required sections, front matter, no internal MIF leakage, and footnotes.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "exec-summary.md",
+          "description": "Output file was created"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "BLUF",
+          "description": "BLUF section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Key Findings",
+          "description": "Key Findings section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Recommendation",
+          "description": "Recommendation section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "Risks",
+          "description": "Risks & Caveats section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "exec-summary.md",
+          "text": "35%",
+          "description": "At least one quantified figure is carried through"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "urn:mif:",
+          "description": "Internal MIF URNs do not appear"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "f_clinical_1",
+          "description": "Internal finding handles do not leak into body"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "exec-summary.md",
+          "text": "Appendix",
+          "description": "No appendices — genre prohibits them"
+        }
+      ],
+      "expectations": [
+        "The Risks & Caveats section explicitly notes that Finding 2 (FDA clearances) is limited in generalizability, using hedging language such as 'limited', 'uncertain', 'estimated', or equivalent.",
+        "The Risks & Caveats section explicitly notes that the liability framework (Finding 4) is unresolved or inconclusive, and does not present it as established fact.",
+        "The BLUF paragraph recommends a clear action regarding the two-department pilot without hedging into an extended methods discussion.",
+        "The document is 1-2 pages in length — not a multi-section research report with method sections, alternatives analysis, or appendices."
+      ]
+    }
+  ]
+}

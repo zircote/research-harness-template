@@ -1,0 +1,368 @@
+{
+  "skill_name": "competitive-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run a competitive analysis for my SaaS project management tool. Main competitors are Asana, Monday.com, and Linear. We're targeting small engineering teams (5-20 people). I need the full Porter's 5 Forces, a competitor matrix, and a positioning map — want to take this to a board meeting.",
+      "expected_output": "Full competitive analysis with all five Porter's forces rated (HIGH/MODERATE/LOW), a competitor matrix comparing Asana/Monday.com/Linear, a Mermaid quadrantChart positioning map, and strategic recommendations tailored to small engineering teams and board presentation context.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Competitive Rivalry",
+          "description": "Porter's force 1: Competitive Rivalry is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Supplier Power",
+          "description": "Porter's force 2: Supplier Power is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Buyer Power",
+          "description": "Porter's force 3: Buyer Power is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Threat of Substitution",
+          "description": "Porter's force 4: Threat of Substitution is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Threat of New Entry",
+          "description": "Porter's force 5: Threat of New Entry is present"
+        },
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(HIGH|MODERATE|LOW|VERY HIGH)",
+          "description": "At least one force carries an explicit rating"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Competitive Matrix",
+          "description": "Required Competitive Matrix section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "quadrantChart",
+          "description": "Positioning map rendered as Mermaid quadrantChart (2+ named competitors satisfy the condition)"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Strategic Recommendations",
+          "description": "Required Strategic Recommendations section is present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Asana",
+          "description": "Named competitor Asana appears in the analysis"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Linear",
+          "description": "Named competitor Linear appears in the analysis"
+        },
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(INC|DEC|CONST)",
+          "description": "Trend indicators are applied to at least one competitor"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "urn:mif:",
+          "description": "No internal MIF URN leakage in output"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "f_competitive_",
+          "description": "No internal finding-ID leakage in output"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "Each force carries an industry-specific rationale, not boilerplate",
+          "check": "transcript_content",
+          "criteria": "The Porter's analysis mentions SaaS project management specifics (e.g., integrations, freemium models, switching costs from workflow lock-in) rather than generic force descriptions"
+        },
+        {
+          "description": "Analysis is tailored to small engineering teams",
+          "check": "transcript_content",
+          "criteria": "The competitor matrix and recommendations reflect the 5-20 person engineering team context — not generic enterprise or marketing-team positioning"
+        },
+        {
+          "description": "Board-ready framing is applied",
+          "check": "transcript_content",
+          "criteria": "Given the board meeting context, the output includes a clear strategic takeaway or executive-facing summary, not just raw data tables"
+        },
+        {
+          "description": "Confidence tiers or source notes are present",
+          "check": "transcript_content",
+          "criteria": "At least some claims are labelled with a confidence tier (High/Medium/Low) or source reference, not treated as unqualified facts"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm launching an AI-native code review tool — there's nothing quite like it yet. Can you do a competitive analysis? I know traditional code review tools exist (GitHub PR review, Gerrit) and some AI coding assistants (Copilot, Cursor) but nobody is specifically doing AI-native code review as a standalone product.",
+      "expected_output": "Emerging-category competitive analysis that identifies substitutes and indirect/potential competitors, applies an adapted Porter's framework (rivalry LOW, new entry HIGH, substitution VERY HIGH), addresses first-mover dynamics, and recommends on category definition — without fabricating direct competitors that do not exist.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Competitive Rivalry",
+          "description": "All five forces present: Competitive Rivalry"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Supplier Power",
+          "description": "All five forces present: Supplier Power"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Buyer Power",
+          "description": "All five forces present: Buyer Power"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Threat of Substitution",
+          "description": "All five forces present: Threat of Substitution"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Threat of New Entry",
+          "description": "All five forces present: Threat of New Entry"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Competitive Matrix",
+          "description": "Required Competitive Matrix section present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Strategic Recommendations",
+          "description": "Required Strategic Recommendations section present"
+        },
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(substitute|substitut|indirect|potential entrant|adjacent)",
+          "description": "Analysis identifies substitutes or indirect competitors as required for emerging categories"
+        },
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(INC|DEC|CONST)",
+          "description": "Trend indicators applied to at least one competitor or substitute"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "urn:mif:",
+          "description": "No internal MIF URN leakage"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "f_competitive_",
+          "description": "No internal finding-ID leakage"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "Porter's forces are adapted for an emerging/new-category market",
+          "check": "transcript_content",
+          "criteria": "The analysis reflects that rivalry is low (few direct competitors), threat of new entry is high (well-funded players could pivot), and threat of substitution is very high (existing tools serve the need today) — not just copy-paste generic ratings"
+        },
+        {
+          "description": "First-mover and category-creation dynamics are addressed",
+          "check": "transcript_content",
+          "criteria": "The output discusses advantages and risks of creating a new category (e.g., education burden, potential for high switching costs if the category sticks, risk of fast follower from GitHub/JetBrains)"
+        },
+        {
+          "description": "Analysis does not fabricate nonexistent direct competitors",
+          "check": "transcript_content",
+          "criteria": "The skill does not invent fictional AI-native code review companies. It frames GitHub PR review, Copilot, Cursor, and Gerrit as indirect or substitute competitors with honest labels"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Hey can you do a competitive analysis for the cloud data warehouse space? Snowflake, BigQuery, and Redshift are the big three. Databricks is becoming a factor. Looking for help deciding whether to build on top of one of these or compete directly.",
+      "expected_output": "Full Porter's 5 Forces analysis for cloud data warehouses, competitor matrix covering Snowflake/BigQuery/Redshift/Databricks, positioning map (Mermaid quadrant), and strategic recommendations that directly address the build-on-top vs. compete-directly decision context.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Competitive Rivalry",
+          "description": "Force 1 present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Supplier Power",
+          "description": "Force 2 present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Buyer Power",
+          "description": "Force 3 present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Threat of Substitution",
+          "description": "Force 4 present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Threat of New Entry",
+          "description": "Force 5 present"
+        },
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(HIGH|MODERATE|LOW|VERY HIGH)",
+          "description": "Explicit force ratings present"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Snowflake",
+          "description": "Competitor Snowflake in analysis"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "BigQuery",
+          "description": "Competitor BigQuery in analysis"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Databricks",
+          "description": "Competitor Databricks in analysis"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Competitive Matrix",
+          "description": "Required Competitive Matrix section"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "quadrantChart",
+          "description": "Positioning map as Mermaid quadrantChart (4 named competitors satisfy the 2+ condition)"
+        },
+        {
+          "type": "file_contains",
+          "file": "transcript.md",
+          "literal": "Strategic Recommendations",
+          "description": "Strategic Recommendations section present"
+        },
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(INC|DEC|CONST)",
+          "description": "Trend indicators present"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "urn:mif:",
+          "description": "No MIF URN leakage"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "f_competitive_",
+          "description": "No finding-ID leakage"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "Build-on-top vs. compete-directly decision is addressed in recommendations",
+          "check": "transcript_content",
+          "criteria": "The Strategic Recommendations section explicitly weighs the two strategic options the user named — build on one of the platforms vs. compete directly — with specific reasoning rather than ignoring the framing"
+        },
+        {
+          "description": "Positioning map dimensions are relevant to the cloud warehouse space",
+          "check": "transcript_content",
+          "criteria": "The quadrantChart axes reflect meaningful warehouse-specific dimensions (e.g., query performance vs. cost, open table format support vs. vendor lock-in, data engineering focus vs. BI focus) rather than generic dimensions"
+        },
+        {
+          "description": "Competitor matrix contains substantive dimension values",
+          "check": "transcript_content",
+          "criteria": "The Competitive Matrix rows include pricing model (consumption-based, seat-based, etc.), strengths, and weaknesses specific to each platform — not placeholder text like 'List' or 'TBD'"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I want a competitive analysis but I haven't decided what market yet. Just give me something useful.",
+      "expected_output": "Skill asks clarifying questions about the market/industry, product, known competitors, goal, and target segment rather than fabricating an analysis. Does NOT produce a Porter's 5 Forces table or competitor matrix for an unknown market.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "regex_match",
+          "file": "transcript.md",
+          "pattern": "(market|industry|product|competitor|segment|goal|which|what)",
+          "description": "Skill asks at least one clarifying question about scope"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "urn:mif:",
+          "description": "No MIF URN leakage"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "transcript.md",
+          "literal": "f_competitive_",
+          "description": "No finding-ID leakage"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "Skill does not fabricate analysis for an unspecified market",
+          "check": "transcript_content",
+          "criteria": "The skill does NOT produce a Porter's 5 Forces analysis, competitor matrix, or positioning map — it acknowledges the missing context and asks clarifying questions before proceeding"
+        },
+        {
+          "description": "Clarifying questions cover the required dimensions",
+          "check": "transcript_content",
+          "criteria": "The questions ask for at least two of: market/industry, the user's product, known competitors, strategic goal, and target segment — as specified in the SKILL.md Handling Incomplete Prompts section"
+        },
+        {
+          "description": "Response is helpful rather than a refusal",
+          "check": "transcript_content",
+          "criteria": "The skill describes what it will deliver once context is provided (e.g., mentions Porter's 5 Forces, competitor matrix, positioning map as expected outputs) rather than just saying it cannot help"
+        }
+      ]
+    }
+  ]
+}
