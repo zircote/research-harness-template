@@ -500,6 +500,14 @@ gate_m8() {
     else
       bad "import counts diverge (findings $imp_n/$src_n, nodes $imp_nodes/$src_nodes, edges $imp_edges/$src_edges)"
     fi
+    # The exact edge SET survives the import (not just the count) — each
+    # source->target->type triple is preserved (edges intact, SPEC §10).
+    local norm='[.edges[]|{source,target,type}]|sort'
+    if [ "$(jq -c "$norm" "$SRC/knowledge-graph.json")" = "$(jq -c "$norm" "$T/reports/imported-sample/knowledge-graph.json" 2>/dev/null)" ]; then
+      ok "every source graph edge (source/target/type) survived the import"
+    else
+      bad "imported graph edge set diverges from the source corpus graph"
+    fi
     if [ "$prov_ok" = "$src_n" ]; then
       ok "provenance preserved on every imported finding ($prov_ok/$src_n)"
     else
@@ -530,6 +538,15 @@ gate_m8() {
   else
     bad "unexpected corpus committed under reports/ (the template must stay clean)"
     find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
+  fi
+
+  # 8d. The import REFUSES to populate the template repo's own reports/ — the
+  #     constraint is enforced by the script, not merely intended.
+  if scripts/import-corpus.sh "$SRC" should-not-land reports >/dev/null 2>&1; then
+    bad "import-corpus.sh did NOT refuse to import into the template's reports/"
+    rm -rf reports/should-not-land
+  else
+    ok "import refuses to populate the template repo's own reports/"
   fi
 }
 

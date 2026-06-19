@@ -35,6 +35,21 @@ CONFIG="${4:-harness.config.json}"
 SRC_FINDINGS="$SRC/findings"
 [ -d "$SRC_FINDINGS" ] || { echo "import: source has no findings/ dir: $SRC_FINDINGS" >&2; exit 2; }
 
+# GUARD — never import a corpus into the template repository itself (that defeats
+# the point of a clean, reusable template). The template root is recognizable by
+# its build docs + copier.yml (an instantiated harness has neither: copier.yml and
+# COMPLETION-CRITERIA.md are excluded at instantiation). Refuse if the target
+# reports-root resolves inside the template's own reports/.
+if [ -f "$ROOT/copier.yml" ] && [ -f "$ROOT/COMPLETION-CRITERIA.md" ] && [ -z "${HARNESS_ALLOW_TEMPLATE_IMPORT:-}" ]; then
+  RP_ABS="$(cd "$REPORTS" 2>/dev/null && pwd || echo "$ROOT/$REPORTS")"
+  case "$RP_ABS" in
+    "$ROOT"/reports|"$ROOT"/reports/*)
+      echo "import: refusing to import a corpus into the template repository's own reports/." >&2
+      echo "        Run this against an INSTANTIATED harness — pass a <reports-root> outside the template." >&2
+      exit 2 ;;
+  esac
+fi
+
 DEST="$REPORTS/$TOPIC/findings"
 mkdir -p "$DEST"
 
@@ -69,7 +84,7 @@ if [ "$no_prov" -gt 0 ]; then
 fi
 
 # Register the topic in the manifest if not already present (lossless add).
-NS="$(jq -r '.findings[0].namespace // empty' <(jq -s '{findings: map(.)}' "$DEST"/*.json) 2>/dev/null)"
+NS="$(jq -rs '.[0].namespace // empty' "$DEST"/*.json 2>/dev/null)"
 NS="${NS:-harness/$TOPIC}"
 if [ -f "$CONFIG" ] && [ "$(jq -r --arg t "$TOPIC" '[.topics[]|select(.id==$t)]|length' "$CONFIG")" = "0" ]; then
   tmp=$(mktemp)
