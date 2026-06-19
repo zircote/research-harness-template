@@ -221,9 +221,74 @@ gate_m3() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 4 — Harness services
+# ---------------------------------------------------------------------------
+gate_m4() {
+  info "Milestone 4 — Harness services"
+  local SF="reports/_meta/sample-session/findings"
+  local KG="reports/_meta/sample-session/knowledge-graph.json"
+  local IDX="reports/_meta/sample-session/research-index.json"
+
+  # 4a. The sample MIF corpus validates against the MIF-backed findings schema.
+  local f bad_f=""
+  for f in "$SF"/*.json; do
+    ajv_mif schemas/findings.schema.json "$f" || bad_f="${bad_f}$(basename "$f") "
+  done
+  if [ -z "$bad_f" ]; then
+    ok "sample MIF corpus validates against the findings schema"
+  else
+    bad "sample findings invalid: $bad_f"
+  fi
+
+  # 4b. The knowledge graph builds from MIF entities/relations and the assertion
+  #     proves nodes/edges derive from urn:mif: ids, not tags (#20).
+  if scripts/build-graph.sh "$SF" "$KG" >/dev/null 2>&1 \
+     && scripts/build-index.sh "$SF" "$IDX" >/dev/null 2>&1 \
+     && scripts/assert-graph-mif.sh "$KG" >/dev/null 2>&1; then
+    ok "knowledge graph built from MIF entities/relations (not tags); assertion passes"
+  else
+    bad "MIF-native knowledge graph build/assertion failed"
+    scripts/assert-graph-mif.sh "$KG" 2>&1 | sed 's/^/      /' >&2
+  fi
+
+  # 4c. The graph viz renders.
+  if scripts/build-graph-viz.sh "$KG" "${KG%.json}.html" >/dev/null 2>&1 \
+     && [ -s "${KG%.json}.html" ]; then
+    ok "graph visualization renders to HTML"
+  else
+    bad "graph visualization failed"
+  fi
+
+  # 4d. The five services exist as flat skills with descriptions (#21-25).
+  local s smiss=""
+  for s in search discover lab graph topics; do
+    if [ -f ".claude/skills/$s/SKILL.md" ] && grep -q '^description:' ".claude/skills/$s/SKILL.md"; then :; else
+      smiss="${smiss}${s} "
+    fi
+  done
+  if [ -z "$smiss" ]; then
+    ok "five harness-service skills present (search, discover, lab, graph, topics)"
+  else
+    bad "missing/malformed service skills: $smiss"
+  fi
+
+  # 4e. Services operate over the MIF sample: search (index), discover (gaps),
+  #     topics (registry) each return results derived from the MIF substrate.
+  local search_hits gap_dims topic_count
+  search_hits=$(jq -r '[.findings[] | select(.dimension=="technical")] | length' "$IDX" 2>/dev/null)
+  topic_count=$(jq -r '.topics | length' harness.config.json 2>/dev/null)
+  gap_dims=$(jq -r '.findings | map(.dimension) | unique | length' "$IDX" 2>/dev/null)
+  if [ "${search_hits:-0}" -ge 1 ] && [ "${topic_count:-0}" -ge 1 ] && [ "${gap_dims:-0}" -ge 1 ]; then
+    ok "services operate over the MIF sample (search/discover/topics return MIF-derived results)"
+  else
+    bad "service smoke over MIF sample failed (search=$search_hits topics=$topic_count dims=$gap_dims)"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4)
 
 for g in "${GATES[@]}"; do "$g"; done
 

@@ -4,3 +4,9 @@ __pycache__/
 
 # Hook runtime state
 .claude/hooks/markdown/state/
+
+# Derived harness-service artifacts (reproducible from the MIF findings via
+# scripts/build-graph.sh and scripts/build-index.sh).
+reports/**/knowledge-graph.json
+reports/**/knowledge-graph.html
+reports/**/research-index.json
