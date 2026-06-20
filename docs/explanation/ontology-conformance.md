@@ -43,13 +43,13 @@ not Claude Code plugins, so they never touch `gate_m5`. They are disabled by def
 subset, and `topics[].ontologies[]` binds them per topic. An extended ontology applies
 **only** to topics that bind it — domain typing stays scoped to where it belongs.
 
-## Classification vs resolution — the honest split
+## Classification vs resolution — the deterministic split
 
 Two layers, deliberately separated by what can be proven deterministically:
 
 - **Classification** — deciding which `entity_type` a finding *resembles* — is an
   agent step (topic onboarding in `/start`, the `dimension-analyst`). It is
-  best-effort and **not** gate-proven, the same honesty as inbound source-wrapping.
+  best-effort and **not** gate-proven, the same posture as inbound source-wrapping.
 - **Resolution + validation + recording** — `resolve-ontology.sh` — is fully
   deterministic and is what `gate_m12` enforces. Whatever type an agent stamps must
   resolve to a bound ontology and satisfy its schema, or the build fails.

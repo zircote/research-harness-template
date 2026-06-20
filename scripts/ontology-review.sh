@@ -34,7 +34,7 @@ done
 # A catalog is required to resolve anything; if absent, run sync-packs first.
 if [ ! -f "$CATALOG" ]; then
   echo "ontology-review: catalog missing — running sync-packs.sh first" >&2
-  scripts/sync-packs.sh >/dev/null 2>&1 || { echo "ontology-review: sync-packs failed" >&2; exit 3; }
+  "$ROOT/scripts/sync-packs.sh" >/dev/null 2>&1 || { echo "ontology-review: sync-packs failed" >&2; exit 3; }
 fi
 
 if [ -n "$ONE_TOPIC" ]; then topics="$ONE_TOPIC"; else topics=$(jq -r '.topics[].id' "$CONFIG"); fi
@@ -48,18 +48,25 @@ for topic in $topics; do
   map="$RD/$topic/ontology-map.json"
   bound=$(jq -r --arg t "$topic" '.topics[]|select(.id==$t)|.ontologies // [] | join(",")' "$CONFIG"); [ -z "$bound" ] && bound="(core-only)"
   rm -f "$map"   # rebuild deterministically from disk
+  nfiles=0
   while IFS= read -r f; do
     [ -z "$f" ] && continue
-    scripts/resolve-ontology.sh "$f" --topic "$topic" --catalog "$CATALOG" --config "$CONFIG" --map "$map" >/dev/null 2>&1 || true
+    nfiles=$((nfiles+1))
+    "$ROOT/scripts/resolve-ontology.sh" "$f" --topic "$topic" --catalog "$CATALOG" --config "$CONFIG" --map "$map" >/dev/null 2>&1 || true
   done < <(find "$fdir" -maxdepth 1 -type f -name '*.json' ! -name '.*' ! -name '*.tmp' 2>/dev/null | sort)
 
-  local_total=0; typed=0; untyped=0; bad=0
+  records=0; typed=0; untyped=0; bad=0
   if [ -f "$map" ]; then
-    local_total=$(jq 'length' "$map")
+    records=$(jq 'length' "$map")
     typed=$(jq '[.[] | select(.resolved_ontology != null and .valid)] | length' "$map")
     untyped=$(jq '[.[] | select(.basis == "untyped")] | length' "$map")
     bad=$(jq '[.[] | select(.valid == false)] | length' "$map")
   fi
+  # Reconcile: every finding file must produce a record. A gap means the resolver
+  # could not even run on a finding (broken env / unreadable file) — count it as
+  # invalid so a silent 0/0/0 can never read as clean.
+  gap=$((nfiles - records)); [ "$gap" -lt 0 ] && gap=0
+  bad=$((bad + gap)); local_total=$nfiles
   [ "$bad" -gt 0 ] && any_bad=1
   printf '%-28s %-22s %6s %6s %8s %9s\n' "$topic" "$(printf '%s' "$bound" | cut -c1-22)" "$local_total" "$typed" "$untyped" "$bad"
   g_total=$((g_total+local_total)); g_typed=$((g_typed+typed)); g_untyped=$((g_untyped+untyped)); g_bad=$((g_bad+bad))

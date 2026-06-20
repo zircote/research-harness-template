@@ -33,6 +33,9 @@ done
 [ -n "$FINDING" ] && [ -f "$FINDING" ] || { echo "resolve-ontology: finding not found: ${FINDING:-<none>}" >&2; exit 2; }
 
 fid=$(jq -r '."@id" // .id // empty' "$FINDING" 2>/dev/null); [ -z "$fid" ] && fid="$(basename "$FINDING")"
+# Fail closed on a finding that is not valid JSON — never let a parse error read as
+# "untyped" and pass (a corrupt finding must surface, not silently slip through).
+jq -e . "$FINDING" >/dev/null 2>&1 || { echo "resolve-ontology: $FINDING is not valid JSON — fail" >&2; exit 2; }
 et=$(jq -r '.entity.entity_type // empty' "$FINDING" 2>/dev/null)
 oid=$(jq -r '.ontology.id // empty' "$FINDING" 2>/dev/null)
 
@@ -53,12 +56,18 @@ record() { # entity_type resolved_ontology basis valid
     [ -d "$ROOT/reports/$TOPIC" ] || return 0
     map="$ROOT/reports/$TOPIC/ontology-map.json"
   fi
-  local cur='[]'; [ -f "$map" ] && cur=$(cat "$map")
-  printf '%s' "$cur" | jq -S --arg f "$fid" --arg et "$et_" --arg ro "$ro" --arg b "$basis" --argjson v "$valid" \
+  # Start from the existing map only if it is readable JSON; a corrupt map is reset
+  # rather than allowed to block the upsert (and drop a valid:false record).
+  local cur='[]'; { [ -f "$map" ] && jq -e . "$map" >/dev/null 2>&1 && cur=$(cat "$map"); } || cur='[]'
+  if printf '%s' "$cur" | jq -S --arg f "$fid" --arg et "$et_" --arg ro "$ro" --arg b "$basis" --argjson v "$valid" \
     '[ .[] | select(.finding_id != $f) ]
      + [{finding_id:$f, entity_type:(if $et=="" then null else $et end),
          resolved_ontology:(if $ro=="" then null else $ro end), basis:$b, valid:$v}]
-     | sort_by(.finding_id)' > "$map.tmp" && mv "$map.tmp" "$map"
+     | sort_by(.finding_id)' > "$map.tmp"; then
+    mv "$map.tmp" "$map"
+  else
+    rm -f "$map.tmp"; return 1
+  fi
 }
 
 # 1. Untyped finding -> nothing to resolve.
@@ -106,7 +115,7 @@ fi
 matches=""
 for aid in $allowed; do
   src="$(src_of "$aid")"; [ -z "$src" ] && continue
-  if yq -r '.entity_types[].name' "$ROOT/$src" 2>/dev/null | grep -qx "$et"; then
+  if yq -r '.entity_types[].name' "$ROOT/$src" 2>/dev/null | grep -Fxq -- "$et"; then
     matches="$matches $aid"
   fi
 done
@@ -135,7 +144,7 @@ rsrc="$(src_of "$resolved")"
 ver=$(yq -r '.ontology.version' "$ROOT/$rsrc" 2>/dev/null)
 
 # 5. Validate the finding's entity against the resolved type's schema (additive).
-type_schema=$(yq -o=json '.entity_types[] | select(.name == "'"$et"'") | .schema' "$ROOT/$rsrc" 2>/dev/null \
+type_schema=$(et="$et" yq -o=json '.entity_types[] | select(.name == env(et)) | .schema' "$ROOT/$rsrc" 2>/dev/null \
   | jq '{type:"object", required:(.required // []), properties:(.properties // {}), additionalProperties:true}')
 entity=$(jq -c '.entity' "$FINDING")
 echo "$type_schema" > /tmp/ro-schema.$$.json

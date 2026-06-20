@@ -88,8 +88,10 @@ PY
 # (packs/ontologies/<id>/) only when enabled in the config's ontologies[]. A topic
 # may bind only a cataloged id (gate_m12 enforces binding -> catalog -> registry).
 onto='[]'
-add_onto(){ onto=$(jq -c --arg id "$1" --arg v "$2" --arg s "$3" --argjson core "$4" \
-  '. + [{id:$id, version:$v, source:$s, core:$core}]' <<<"$onto"); }
+add_onto(){ # id version source core — skip a malformed ontology (empty/null id or version)
+  { [ -z "$1" ] || [ "$1" = "null" ] || [ -z "$2" ] || [ "$2" = "null" ]; } && return 0
+  onto=$(jq -c --arg id "$1" --arg v "$2" --arg s "$3" --argjson core "$4" \
+    '. + [{id:$id, version:$v, source:$s, core:$core}]' <<<"$onto"); }
 for y in schemas/ontologies/*/*.yaml; do
   [ -e "$y" ] || continue
   add_onto "$(yq -r '.ontology.id' "$y")" "$(yq -r '.ontology.version' "$y")" "$y" true

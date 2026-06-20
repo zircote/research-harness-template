@@ -919,8 +919,11 @@ ajv_onto() { # ajv_onto <ontology.yaml>
 }
 # Every vendored ontology: core (schemas/ontologies/) + example packs (packs/ontologies/).
 onto_registry_yaml() {
-  { find schemas/ontologies -maxdepth 2 -type f -name '*.yaml'
-    find packs/ontologies -maxdepth 2 -type f -name '*.ontology.yaml'; } 2>/dev/null | sort
+  # mindepth 2 mirrors sync-packs' globs (schemas/ontologies/<id>/<ver>.yaml,
+  # packs/ontologies/<id>/<id>.ontology.yaml) — a stray top-level yaml is not a
+  # registry ontology and must not be validated as one (kept symmetric with the catalog).
+  { find schemas/ontologies -mindepth 2 -maxdepth 2 -type f -name '*.yaml'
+    find packs/ontologies -mindepth 2 -maxdepth 2 -type f -name '*.ontology.yaml'; } 2>/dev/null | sort
 }
 
 gate_m12() {
