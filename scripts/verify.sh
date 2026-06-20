@@ -960,16 +960,24 @@ gate_m12() {
     bad "duplicate ontology id@version: $(echo $dupes)"
   fi
 
-  # 12d. VENDOR.lock checksums match the verbatim vendored files (supply-chain floor).
+  # 12d. The supply-chain floor is CONTRACT-only: the vendored ontology schema +
+  #      context are checksum-locked, while ontology DEFINITION files are unlocked so
+  #      they can be authored/enriched. Assert (a) every verbatim file's checksum
+  #      matches, and (b) NO ontology definition file is verbatim (re-locking one
+  #      would block editing — that must fail the gate).
   local lbad="" ln=0
   while IFS=$'\t' read -r lp lsum; do
     [ -z "$lp" ] && continue; ln=$((ln+1))
     [ "$(shasum -a 256 "$lp" 2>/dev/null | cut -d' ' -f1)" = "$lsum" ] || lbad="${lbad}${lp} "
   done < <(jq -r '.files[] | select(.verbatim) | "\(.path)\t\(.sha256)"' schemas/mif/VENDOR.lock 2>/dev/null)
-  if [ -z "$lbad" ] && [ "$ln" -ge 1 ]; then
-    ok "VENDOR.lock checksums match all $ln verbatim vendored files"
+  local locked_defs
+  locked_defs=$(jq -r '[.files[] | select(.verbatim) | .path
+                        | select(test("(^schemas/ontologies/.*\\.yaml$)|(^packs/ontologies/.*\\.ontology\\.yaml$)"))] | join(" ")' \
+                  schemas/mif/VENDOR.lock 2>/dev/null)
+  if [ -z "$lbad" ] && [ "$ln" -ge 1 ] && [ -z "$locked_defs" ]; then
+    ok "VENDOR.lock: $ln contract file(s) checksum-locked; ontology definitions are unlocked (editable)"
   else
-    bad "VENDOR.lock checksum mismatch: ${lbad:-lockfile unreadable}"
+    bad "VENDOR.lock issue: checksum-mismatch=[${lbad:-none}] re-locked-ontology-defs=[${locked_defs:-none}]"
   fi
 
   # Build a real catalog (core + k12 enabled) to drive the resolver fixtures.
@@ -1058,6 +1066,25 @@ gate_m12() {
     ok "ontology-review reports correct typed/untyped/invalid coverage; --strict fails on invalid mappings"
   else
     bad "ontology-review wrong (summary='$rv' strict-exit=$rvs)"
+  fi
+
+  # 12k. Authoring: the ontology-manager skill scaffolds a NEW ontology that validates
+  #      against the contract, and the registry is extensible (enumeration count rises
+  #      by one when it is added) — proving ontologies can be created/expanded.
+  local base scaf withnew
+  base=$(onto_registry_yaml | grep -c . || true)
+  mkdir -p "$T/packs/ontologies/demo-new"
+  scaf="$T/packs/ontologies/demo-new/demo-new.ontology.yaml"
+  if .claude/skills/ontology-manager/scripts/scaffold_ontology.sh demo-new 0.1.0 --extends mif-base > "$scaf" 2>/dev/null \
+     && ajv_onto "$scaf"; then
+    withnew=$( { onto_registry_yaml; echo "$scaf"; } | grep -c . || true)
+    if [ "$withnew" -eq "$((base + 1))" ]; then
+      ok "ontology-manager scaffolds a NEW valid ontology; the registry is extensible (count $base -> $withnew)"
+    else
+      bad "registry not extensible (count $base, withnew $withnew)"
+    fi
+  else
+    bad "scaffold_ontology.sh did not produce a contract-valid ontology"
   fi
 
   rm -rf "$T"
