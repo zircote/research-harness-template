@@ -1,23 +1,83 @@
 #!/usr/bin/env bash
 # render-artifact.sh — render one typed Artifact (schemas/artifact.schema.json)
-# to a first-class output channel (SPEC §6d). Blog and book are the always-on
-# first-class channels; both consume the SAME artifact contract, which is the
-# point of the typed findings->artifact seam — research and publication ship as
-# one system and the citation gates run uniformly across every output.
+# to an output channel (SPEC §6d, §10). Three channels:
+#   report — the generic MIF Level-3 markdown report (reports/<topic>/<slug>.md):
+#            authoritative YAML frontmatter (the MIF concept) + Markdown body.
+#            This is the canonical MIF source of truth and is NEVER exempt; it is
+#            write-then-validated through scripts/mif-project.sh. A real
+#            falsification verdict (extensions.harness.verification) is REQUIRED,
+#            so the falsification gate must run over the synthesised claims BEFORE
+#            rendering — pass the resulting verdict as <verification.json>.
+#   blog/book — first-class PUBLISHED channels (MIF-exempt by declaration). Prose
+#            is written from the artifact's synthesised body + public citations
+#            only; it carries no internal finding ids, so the citation-leak gate
+#            stays green.
+# Every channel consumes the SAME artifact contract — the typed findings->artifact
+# seam — so the citation gates run uniformly across every output.
 #
-# Published prose is written from the artifact's synthesized body + public
-# citations only; it carries no internal finding ids or corpus paths, so the
-# citation-leak gate stays green.
-#
-# Usage: render-artifact.sh <artifact.json> <blog|book> <out.md>
+# Usage: render-artifact.sh <artifact.json> <report|blog|book> <out.md> [<verification.json>]
 
 set -uo pipefail
-ART="${1:?usage: render-artifact.sh <artifact.json> <blog|book> <out.md>}"
-CHANNEL="${2:?usage: render-artifact.sh <artifact.json> <blog|book> <out.md>}"
-OUT="${3:?usage: render-artifact.sh <artifact.json> <blog|book> <out.md>}"
+cd "$(dirname "$0")/.." || exit 2
+ART="${1:?usage: render-artifact.sh <artifact.json> <report|blog|book> <out.md> [verification.json]}"
+CHANNEL="${2:?usage: render-artifact.sh <artifact.json> <report|blog|book> <out.md> [verification.json]}"
+OUT="${3:?usage: render-artifact.sh <artifact.json> <report|blog|book> <out.md> [verification.json]}"
+VERIF="${4:-}"
 [ -f "$ART" ] || { echo "render: artifact not found: $ART" >&2; exit 2; }
 
 case "$CHANNEL" in
+  report)
+    # The generic MIF Level-3 markdown report: authoritative YAML frontmatter
+    # (the MIF concept) + a Markdown body. The body becomes the MIF `content`.
+    NS=$(jq -r '.namespace // "harness/report"' "$ART")
+    SLUG=$(basename "$OUT"); SLUG="${SLUG%.md}"
+    CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    # Body prose: lede, body sections as ## headings, a Sources list. The title
+    # lives in the frontmatter (the MIF concept); emitting it again as a body H1
+    # would both duplicate it and trip markdownlint MD025 (two top-level headings).
+    BODY=$(jq -r '
+      (.sections[0].body),
+      "",
+      ( .sections[1:][] | "## " + .heading + "\n\n" + .body + "\n" ),
+      "## Sources",
+      "",
+      ( .sources[] | "- [" + .title + "](" + .url + ")" )
+    ' "$ART")
+    # The MIF concept (frontmatter) built from the artifact. dimension is the
+    # reserved synthesis token; verification is attached from the falsification
+    # pass below (REQUIRED for L3 validity).
+    CONCEPT=$(jq --arg ns "$NS" --arg slug "$SLUG" --arg created "$CREATED" '
+      {
+        "@context": "https://mif-spec.dev/schema/context.jsonld",
+        "@type": "Concept",
+        "@id": ("urn:mif:report:" + $ns + ":" + $slug),
+        conceptType: "semantic",
+        namespace: $ns,
+        title: .title,
+        created: $created,
+        provenance: { "@type": "Provenance", sourceType: "system_generated", confidence: 0.9, trustLevel: "moderate_confidence" },
+        citations: [ .sources[] | { "@type": "Citation", citationType: .citationType, citationRole: .citationRole, title: .title, url: .url } ],
+        extensions: { harness: { dimension: "synthesis" } }
+      }' "$ART")
+    if [ -n "$VERIF" ] && [ -f "$VERIF" ]; then
+      CONCEPT=$(printf '%s' "$CONCEPT" | jq --slurpfile v "$VERIF" '.extensions.harness.verification = $v[0]')
+    fi
+    # Emit YAML frontmatter from the concept JSON via yq (the YAML analog of jq;
+    # the same tool mif-project.sh reads it back with — consistent jq/yq tooling).
+    # Write to a temp and move into place ONLY after it validates (atomic /
+    # fail-closed, like wrap-source.sh) so a rejected report never leaves an
+    # invalid or partially-written file behind at $OUT.
+    RTMPD="$(mktemp -d)"; RTMP="$RTMPD/report.md"
+    { echo "---"; printf '%s' "$CONCEPT" | yq -p=json -o=yaml '.'; echo "---"; echo; printf '%s\n' "$BODY"; } > "$RTMP"
+    if ! scripts/mif-project.sh "$RTMP" >/dev/null 2>&1; then
+      echo "render: report does NOT project to a valid MIF L3 finding (not written to $OUT)." >&2
+      echo "render: run the falsification gate over the synthesised claims first and pass <verification.json>." >&2
+      scripts/mif-project.sh "$RTMP" 2>&1 | sed 's/^/  /' >&2 || true
+      rm -rf "$RTMPD"; exit 1
+    fi
+    mkdir -p "$(dirname "$OUT")"
+    mv "$RTMP" "$OUT"; rm -rf "$RTMPD"
+    ;;
   blog)
     # A blog post: title, lede, body sections as ## headings, a Sources list.
     jq -r '
@@ -49,7 +109,7 @@ case "$CHANNEL" in
     ' "$ART" > "$OUT"
     ;;
   *)
-    echo "render: channel must be blog|book (got '$CHANNEL')" >&2
+    echo "render: channel must be report|blog|book (got '$CHANNEL')" >&2
     exit 2
     ;;
 esac

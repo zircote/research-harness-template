@@ -2,6 +2,10 @@
   "name": "notebooklm",
   "version": "1.0.0",
   "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "NotebookLM audio/video/slide/infographic outputs are non-text formats orthogonal to MIF markdown; the MIF Level-3 source of truth lives in the generic report channel."
+  },
   "description": "Render a synthesized deliverable to NotebookLM assets \u2014 audio deep-dive, slide deck, infographics, video, mind map",
   "license": "MIT",
   "author": {

@@ -43,6 +43,18 @@ supplies — you hardwire no domain.
 - If `SOURCE` is a URL: use `WebFetch` to retrieve content.
 - If a file path: use `Read`.
 - Estimate total size (~4 chars per token).
+- **Normalize at the boundary (SPEC §10).** Before chunking, wrap the fetched
+  source as a validated MIF source-envelope so the inbound invariant holds for
+  large documents too:
+
+  ```bash
+  scripts/wrap-source.sh --url "<url>" --content-type "<mime>" \
+    --namespace "<topic-namespace>" --slug "<source-slug>" \
+    --out "reports/<topic>/sources/<source-slug>.json" --content-file <body-file>
+  ```
+
+  `wrap-source.sh` refuses a source that does not validate at L3 — do not chunk a
+  refused source. Chunk findings reference the envelope's `urn:mif:source:` id.
 
 ### Step 2: Detect content type
 

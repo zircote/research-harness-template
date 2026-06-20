@@ -16,7 +16,7 @@
     "mifConformanceLevel": {
       "type": "integer",
       "enum": [1, 2, 3],
-      "description": "Minimum MIF conformance level the harness emits. SPEC §10 fixes this at Level 3 (provenance + citations + entities + extensions)."
+      "description": "Minimum MIF conformance level the harness emits AND ingests. SPEC §10 fixes this at Level 3 (provenance + citations + entities + extensions). The floor binds every artifact crossing the project boundary — findings, generic markdown reports, and ingested source envelopes — not findings alone. Orthogonal-format channel outputs (blog, book, pdf, audio, external-service bodies) are the only exceptions, and only when explicitly declared exempt (outputs[].mifExempt here for first-class channels, or the pack manifest's `.claude-plugin/plugin.json` mif.exempt for channel packs)."
     },
     "features": {
       "type": "object",
@@ -72,14 +72,30 @@
     },
     "outputs": {
       "type": "array",
-      "description": "Enabled output channels. blog and book are always-on first-class outputs (SPEC §6d); others arrive via the channels pack.",
+      "description": "Enabled output channels. blog and book are always-on first-class outputs (SPEC §6d); others arrive via the channels pack. The generic `report` channel (reports/<topic>/<slug>.md) is the canonical MIF Level-3 source of truth and is never exempt; the channels here are projections of it.",
       "items": {
         "type": "object",
         "required": ["channel"],
         "additionalProperties": false,
         "properties": {
           "channel": { "type": "string", "pattern": "^[a-z][a-z0-9:-]*$" },
-          "enabled": { "type": "boolean" }
+          "enabled": { "type": "boolean" },
+          "mifExempt": {
+            "type": "boolean",
+            "description": "When true, this first-class channel's rendered output is exempt from the MIF Level-3 output-conformance gate (SPEC §10) because its format is orthogonal to the result (e.g. blog/book public prose, which the citation-leak gate keeps free of internal MIF identity). The gate skips and logs exempt surfaces."
+          },
+          "mifExemptReason": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Why the format is orthogonal to the result (required to make an exemption auditable)."
+          }
+        },
+        "if": {
+          "properties": { "mifExempt": { "const": true } },
+          "required": ["mifExempt"]
+        },
+        "then": {
+          "required": ["mifExemptReason"]
         }
       }
     },

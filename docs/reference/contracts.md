@@ -52,3 +52,32 @@ then validate immediately. A write is not complete until the artifact validates.
 `scripts/check-citation-integrity.sh <findings.json>` asserts every finding has
 at least one well-formed, live citation and no `falsified` verdict. Exit 0 =
 pass, exit 1 = violation (one diagnostic line per violation).
+
+## Generic report — `reports/<topic>/<slug>.md` (MIF Level-3 markdown)
+
+The canonical MIF Level-3 output and source of truth (SPEC §10). A report **is** a
+MIF concept serialized as markdown: authoritative YAML frontmatter (the MIF fields
+— `@id`, `conceptType`, `created`, `citations`, `provenance`,
+`extensions.harness.{dimension,verification}`) over a Markdown body that becomes the
+MIF `content`. `scripts/mif-project.sh <report.md>` projects frontmatter+body to
+JSON and validates it against `findings.schema.json` (the **same bar as a finding**)
+plus the citation-integrity gate — so a report carries a real, non-falsified
+falsification verdict, exactly like a finding. `scripts/render-artifact.sh
+<artifact.json> report <out.md> <verification.json>` emits it write-then-validated
+(fails closed on a non-conformant report).
+
+## Source envelope — `schemas/mif/source-envelope.schema.json`
+
+The inbound boundary contract. A raw ingested source normalized into a MIF memory
+unit: `allOf`-extends the vendored MIF schema with required `provenance.sourceType`
+and `extensions.harness.source` (`url`, `fetchedAt`, `contentType`).
+`scripts/wrap-source.sh` composes and validates one, refusing (non-zero) any source
+that does not validate at L3 before an analyst consumes it.
+
+## Exemption
+
+A report is exempt from L3 only when its format is orthogonal to the result, and
+only when **declared**: first-class channels in `harness.config.json`
+`outputs[].mifExempt: true`, channel packs in `plugin.json` `mif.exempt: true`.
+Genres are L3 by default; exemption is for orthogonal formats, never genres.
+`verify.sh` `gate_m10` enforces all of the above and logs every exempt surface.

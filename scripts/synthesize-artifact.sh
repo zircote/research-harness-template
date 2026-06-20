@@ -32,13 +32,16 @@ if ! jq -s --arg genre "$GENRE" '
       genre: $genre,
       audience: "general",
       newsworthiness: "medium",
+      namespace: ($surv[0].namespace // "harness/report"),
+      mif: { conformanceLevel: 3 },
       finding_refs: [ $surv[] | .["@id"] ],
       sections: [ $surv[] | {
         heading: .title,
         body: (.content // .summary // .title),
         supports: [ .["@id"] ]
       } ],
-      sources: ( [ $surv[] | (.citations // [])[] | { title: .title, url: .url } ]
+      sources: ( [ $surv[] | (.citations // [])[]
+                   | { title: .title, url: .url, citationType: (.citationType // "website"), citationRole: (.citationRole // "supports") } ]
                  | unique_by(.url) )
     }
 ' $FILES > "$OUT.tmp" 2>"$OUT.err"; then

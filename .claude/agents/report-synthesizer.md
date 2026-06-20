@@ -151,6 +151,48 @@ artifact ships on dead or malformed references:
 scripts/check-citation-integrity.sh "$REPORTS_DIR"/finding-*.json
 ```
 
+## Step 4b — Render the generic MIF Level-3 report (falsification-graded)
+
+The generic report (`reports/<topic>/<slug>.md`) is the **canonical MIF Level-3
+source of truth** for this synthesis (SPEC §10). It is a basic markdown report and
+is therefore **never exempt** — it is held to the same L3 bar as a finding
+(`schemas/findings.schema.json`): authoritative YAML frontmatter (the MIF concept,
+with `citations`, `provenance`, and `extensions.harness.verification`) over a
+Markdown body. The published channels (`blog`, `book`, and channel packs) are
+**projections** of the same artifact and declare exemption in their manifests; the
+report channel is where MIF conformance is enforced.
+
+Because a report carries `extensions.harness.verification`, it must actually pass
+the adversarial falsification gate — **never synthesize a verdict.** Order:
+
+```bash
+# 1. Synthesize the typed artifact (full MIF citations carried through).
+scripts/synthesize-artifact.sh "$REPORTS_DIR/findings" "$GENRE" "$REPORTS_DIR/artifact.json"
+
+# 2. Run the adversarial falsification gate OVER THE SYNTHESISED REPORT'S CLAIMS to
+#    obtain a REAL verdict — NEVER author the verdict by hand. Compose a
+#    finding-shaped projection of the report (its central claims as `content`, the
+#    report's citations) WITHOUT a verification block, then run the SAME gate a
+#    finding goes through and extract the verdict block it writes:
+#      scripts/falsify.sh "$REPORTS_DIR/report-finding.json" <evidence> \
+#        > "$REPORTS_DIR/report-finding.falsified.json"
+#      jq '.extensions.harness.verification' "$REPORTS_DIR/report-finding.falsified.json" \
+#        > "$REPORTS_DIR/report.verification.json"
+#    A `falsified` verdict means the report is quarantined and NOT shipped.
+#    The gate enforces that SOME well-formed, non-falsified verdict is present; that
+#    it was honestly earned rests on you, exactly as for a finding.
+
+# 3. Render the report, passing the real verdict. render-artifact.sh write-then-
+#    validates via scripts/mif-project.sh and fails closed if the report does not
+#    project to a valid L3 finding.
+scripts/render-artifact.sh "$REPORTS_DIR/artifact.json" report \
+  "$REPORTS_DIR/<slug>.md" "$REPORTS_DIR/report.verification.json"
+```
+
+Genres (exec-summary, academic, briefing, engineering, trend-analysis) are L3 by
+default — they shape the report's content but the report is still rendered through
+this channel and held to L3. Exemption is for orthogonal *formats*, never genres.
+
 ## Step 5 — Self-review before handoff (blocking)
 
 - **Traceability:** every factual assertion maps to a surviving finding `@id` that

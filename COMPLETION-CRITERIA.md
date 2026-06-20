@@ -170,6 +170,23 @@ into `scripts/verify.sh` wherever a command can assert it.
 - Deliver: the legacy v1-to-v2 migrate skill dropped; a corpus and
   knowledge-graph import path implemented as the first real use.
 
+### Milestone 10 — MIF I/O conformance (SPEC §10)
+
+- Gate: `verify.sh` `gate_m10` shows every basic markdown report projects to a
+  valid MIF Level-3 finding (the same bar as a finding: `mif-project.sh` →
+  `findings.schema.json` + citation-integrity, carrying a real, non-falsified
+  verification verdict); every ingested source validates as a MIF source-envelope;
+  and every MIF-exempt channel is declared and logged (no silent caps). The report
+  emit path is write-then-validated and fails closed; a Stop-hook backstop
+  (`check-output-conformance.sh`) warns on any non-conformant report.
+- Deliver: the generic `report` channel as the canonical MIF Level-3 source of
+  truth; manifest-declared exemption (`outputs[].mifExempt`, pack `mif.exempt`) for
+  orthogonal-format channels (blog, book, pdf, notebooklm, github-issues,
+  github-discuss); `wrap-source.sh` boundary normalization for ingested sources;
+  and the §10 floor stated to bind every artifact the harness **emits and
+  ingests**, not findings alone. Genres are L3 by default; exemption is for
+  orthogonal formats, never genres.
+
 ## Constraints
 
 - Author every artifact from the design spec and the real MIF schema. Never

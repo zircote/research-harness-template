@@ -1,0 +1,109 @@
+{
+  "skill_name": "publish-report",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Generate the canonical MIF Level-3 report from the sample findings. The report must carry a REAL falsification verdict (do not author one by hand) — derive it from the falsification gate. Run exactly:\n\n  OUTDIR=$(pwd)\n  bash $CLAUDE_PROJECT_DIR/scripts/synthesize-artifact.sh $CLAUDE_PROJECT_DIR/reports/_meta/sample-session/findings general $OUTDIR/artifact.json\n  bash $CLAUDE_PROJECT_DIR/scripts/falsify.sh $CLAUDE_PROJECT_DIR/evals/fixtures/raw-finding.json $CLAUDE_PROJECT_DIR/evals/fixtures/evidence.json > $OUTDIR/ff.json\n  jq '.extensions.harness.verification' $OUTDIR/ff.json > $OUTDIR/verification.json\n  bash $CLAUDE_PROJECT_DIR/scripts/render-artifact.sh $OUTDIR/artifact.json report $OUTDIR/report.md $OUTDIR/verification.json\n\nConfirm the report projects to a valid MIF L3 finding before reporting done.",
+      "expected_output": "report.md with MIF YAML frontmatter (a urn:mif:report: @id, citations, provenance, extensions.harness.verification with a non-falsified verdict, dimension: synthesis) over a Markdown body with a ## Sources section and no top-level (#) heading; artifact.json valid JSON; the report projects to a valid MIF L3 finding via mif-project.sh.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "report.md",
+          "description": "the canonical report file was created"
+        },
+        {
+          "type": "json_valid",
+          "file": "artifact.json",
+          "description": "artifact.json is valid JSON"
+        },
+        {
+          "type": "file_contains",
+          "file": "report.md",
+          "literal": "urn:mif:report:",
+          "description": "frontmatter carries a urn:mif:report: id (the report IS a MIF concept)"
+        },
+        {
+          "type": "file_contains",
+          "file": "report.md",
+          "literal": "verification:",
+          "description": "frontmatter carries a falsification verification block"
+        },
+        {
+          "type": "file_contains",
+          "file": "report.md",
+          "literal": "dimension: synthesis",
+          "description": "the report uses the reserved synthesis dimension token"
+        },
+        {
+          "type": "file_contains",
+          "file": "report.md",
+          "literal": "## Sources",
+          "description": "the body has a ## Sources section"
+        },
+        {
+          "type": "shell_command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/mif-project.sh\" report.md",
+          "description": "the report projects to a valid MIF L3 finding (same bar as a finding + citation-integrity)"
+        }
+      ],
+      "expectations": [
+        "report.md is a single markdown file: authoritative YAML frontmatter (the MIF concept) over a clean Markdown body, with the title only in the frontmatter.",
+        "The verification verdict was taken from the falsification gate output, not invented; it is one of survived/weakened/inconclusive (never falsified for a shipped report).",
+        "The report is the canonical MIF Level-3 source of truth and validates against findings.schema.json via mif-project.sh."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A falsified report must never ship. Demonstrate the guardrail: synthesize the sample report, but attach a FALSIFIED verdict, and show the report is rejected. Run:\n\n  OUTDIR=$(pwd)\n  bash $CLAUDE_PROJECT_DIR/scripts/synthesize-artifact.sh $CLAUDE_PROJECT_DIR/reports/_meta/sample-session/findings general $OUTDIR/artifact.json\n  printf '%s' '{\"verdict\":\"falsified\",\"verdict_basis\":\"Disconfirming search refuted the central claim.\",\"attempted_at\":\"2026-06-19T12:30:00Z\"}' > $OUTDIR/verification.json\n  bash $CLAUDE_PROJECT_DIR/scripts/render-artifact.sh $OUTDIR/artifact.json report $OUTDIR/report.md $OUTDIR/verification.json ; echo \"render exit: $?\"\n\nThe render must FAIL (non-zero) and report.md must not be a valid L3 report. Report what happened.",
+      "expected_output": "render-artifact.sh exits non-zero because a falsified report fails the write-then-validate gate (citation-integrity rejects a falsified verdict); the falsified report does not ship.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "json_valid",
+          "file": "artifact.json",
+          "description": "artifact.json is valid JSON"
+        },
+        {
+          "type": "shell_command",
+          "command": "! bash \"$CLAUDE_PROJECT_DIR/scripts/mif-project.sh\" report.md 2>/dev/null",
+          "description": "a report carrying a falsified verdict does NOT project to a valid L3 finding (rejected)"
+        }
+      ],
+      "expectations": [
+        "The render step fails closed: a falsified report cannot pass write-then-validate.",
+        "The guardrail is the citation-integrity gate, which rejects a falsified verdict — the same rule that protects findings.",
+        "The agent reports the failure honestly rather than claiming the report shipped."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Render the canonical report using the 'technical' genre to confirm genres are held to L3 (genres are not exempt). Run:\n\n  OUTDIR=$(pwd)\n  bash $CLAUDE_PROJECT_DIR/scripts/synthesize-artifact.sh $CLAUDE_PROJECT_DIR/reports/_meta/sample-session/findings technical $OUTDIR/artifact.json\n  bash $CLAUDE_PROJECT_DIR/scripts/falsify.sh $CLAUDE_PROJECT_DIR/evals/fixtures/raw-finding.json $CLAUDE_PROJECT_DIR/evals/fixtures/evidence.json > $OUTDIR/ff.json\n  jq '.extensions.harness.verification' $OUTDIR/ff.json > $OUTDIR/verification.json\n  bash $CLAUDE_PROJECT_DIR/scripts/render-artifact.sh $OUTDIR/artifact.json report $OUTDIR/report.md $OUTDIR/verification.json\n\nConfirm the technical-genre report is valid MIF L3.",
+      "expected_output": "A technical-genre report.md that still projects to a valid MIF L3 finding — genres shape content but are held to L3, never exempt.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "json_field_exists",
+          "file": "artifact.json",
+          "path": ".genre",
+          "description": "the artifact records the technical genre"
+        },
+        {
+          "type": "shell_command",
+          "command": "jq -e '.genre == \"technical\"' artifact.json",
+          "description": "the genre is technical"
+        },
+        {
+          "type": "shell_command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/mif-project.sh\" report.md",
+          "description": "the genre report is held to L3 and validates (genres are not exempt)"
+        }
+      ],
+      "expectations": [
+        "The technical-genre report is rendered through the same report channel and validates at MIF L3.",
+        "Exemption is for orthogonal formats (pdf, audio, external-service bodies), never for genres.",
+        "The report carries a real, non-falsified verification verdict."
+      ]
+    }
+  ]
+}
