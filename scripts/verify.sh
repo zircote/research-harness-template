@@ -95,13 +95,15 @@ gate_m1() {
   #     they are meta, not built artifacts. The sigint-conversion test fixture is
   #     also excluded: it deliberately carries sigint-format ids (f_tech_*,
   #     findings_*.json) because it is the INPUT the M9 conversion gate converts
-  #     FROM — a test fixture, not a built artifact.
+  #     FROM — a test fixture, not a built artifact. reports/ is excluded too: it
+  #     is the corpus/data, not a built artifact, and in an instance it legitimately
+  #     holds finding ids (the template's reports/ cleanliness is covered by 8c).
   # git grep handles filenames with spaces and an empty match set safely (it
   # never reads stdin and returns 1 on no match), unlike `git ls-files | xargs grep`.
   local hits
   hits=$(git grep -nE 'f_(tech|competitive|trends|customer|sizing|financial|regulatory)_[0-9]+|reports/[a-z0-9][a-z0-9-]+/findings_' -- \
            ':!COMPLETION-CRITERIA.md' ':!IMPLEMENTATION-PLAN.md' ':!PROGRESS.md' \
-           ':!evals/fixtures/sample-sigint-corpus' 2>/dev/null || true)
+           ':!evals/fixtures/sample-sigint-corpus' ':!reports' 2>/dev/null || true)
   if [ -z "$hits" ]; then
     ok "no corpus finding IDs or corpus report-slug paths in built artifacts"
   else
