@@ -18,6 +18,9 @@
 
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Fail fast (not silently wrong) if a required tool is missing — a missing yq/jq/ajv
+# would otherwise read as "type not declared" and mis-resolve.
+for t in yq jq ajv; do command -v "$t" >/dev/null 2>&1 || { echo "resolve-ontology: required tool '$t' not found" >&2; exit 5; }; done
 CATALOG="$ROOT/.claude/enabled-packs.json"
 CONFIG="$ROOT/harness.config.json"
 FINDING=""; TOPIC=""; MAP=""
@@ -70,11 +73,19 @@ record() { # entity_type resolved_ontology basis valid
   fi
 }
 
-# 1. Untyped finding -> nothing to resolve.
-if [ -z "$et" ] && [ -z "$oid" ]; then
+# 1. Untyped finding (no entity block, no ontology ref) -> nothing to resolve.
+has_entity=false; jq -e 'has("entity") and (.entity != null)' "$FINDING" >/dev/null 2>&1 && has_entity=true
+if [ -z "$et" ] && [ -z "$oid" ] && [ "$has_entity" != true ]; then
   record "" "" "untyped" true
   echo "resolve-ontology: $fid is untyped (no entity/ontology) — ok"
   exit 0
+fi
+# 1b. Typing intent present (entity block or ontology ref) but entity_type empty ->
+#     fail closed. An empty entity_type would otherwise match every type (empty
+#     pattern) and validate against an effectively empty schema — a false PASS.
+if [ -z "$et" ]; then
+  echo "resolve-ontology: $fid has an entity/ontology but no entity_type — fail" >&2
+  record "" "" "unresolved" false; exit 1
 fi
 
 # 2. The catalog is the source of truth for what is enabled/registered. Its absence
@@ -112,16 +123,25 @@ if [ -n "$TOPIC" ]; then
 fi
 
 # 4. Resolve entity_type against the allowed ontologies' declared entity_types.
+#    Capture yq output separately (not piped into grep): under `pipefail` a piped
+#    yq failure would be masked as a silent no-match — a transient yq error must
+#    fail closed, never be misread as "type not declared".
 matches=""
 for aid in $allowed; do
   src="$(src_of "$aid")"; [ -z "$src" ] && continue
-  if yq -r '.entity_types[].name' "$ROOT/$src" 2>/dev/null | grep -Fxq -- "$et"; then
+  # `[]?` yields empty (not an error) for an ontology with no entity_types — e.g. a
+  # traits-only core like shared-traits — while a genuinely broken/unreadable file
+  # still makes yq fail and we abort (fail closed).
+  if ! names=$(yq -r '.entity_types[]?.name' "$ROOT/$src" 2>/dev/null); then
+    echo "resolve-ontology: yq failed reading ontology '$aid' ($src) — aborting (fail closed)" >&2
+    exit 4
+  fi
+  if printf '%s\n' "$names" | grep -Fxq -- "$et"; then
     matches="$matches $aid"
   fi
 done
 matches=$(printf '%s' "$matches" | tr ' ' '\n' | sed '/^$/d' | sort -u)
 mcount=$(printf '%s\n' "$matches" | grep -c . || true)
-[ -n "${RO_DEBUG:-}" ] && echo "RO_DEBUG et='$et' allowed='$allowed' matches='$(echo $matches)' mcount='$mcount' catalog='$CATALOG' root='$ROOT'" >&2
 
 resolved=""
 if [ "$mcount" -eq 0 ]; then
@@ -148,16 +168,19 @@ ver=$(yq -r '.ontology.version' "$ROOT/$rsrc" 2>/dev/null)
 type_schema=$(et="$et" yq -o=json '.entity_types[] | select(.name == env(et)) | .schema' "$ROOT/$rsrc" 2>/dev/null \
   | jq '{type:"object", required:(.required // []), properties:(.properties // {}), additionalProperties:true}')
 entity=$(jq -c '.entity' "$FINDING")
-echo "$type_schema" > /tmp/ro-schema.$$.json
-echo "$entity" > /tmp/ro-entity.$$.json
-if ajv validate --spec=draft2020 --strict=false -c ajv-formats -s /tmp/ro-schema.$$.json -d /tmp/ro-entity.$$.json >/dev/null 2>&1; then
-  rm -f /tmp/ro-schema.$$.json /tmp/ro-entity.$$.json
+# Unpredictable temp DIR (no $$ path — avoids symlink/TOCTOU and collisions); the
+# files keep a .json extension so ajv selects the JSON parser.
+vtmp=$(mktemp -d "${TMPDIR:-/tmp}/ro.XXXXXX")
+trap 'rm -rf "$vtmp"' EXIT
+sf="$vtmp/schema.json"; ef="$vtmp/entity.json"
+printf '%s' "$type_schema" > "$sf"
+printf '%s' "$entity" > "$ef"
+if ajv validate --spec=draft2020 --strict=false -c ajv-formats -s "$sf" -d "$ef" >/dev/null 2>&1; then
   record "$et" "$resolved@$ver" "$basis" true
   echo "resolve-ontology: $fid -> $resolved@$ver:$et ($basis) — valid"
   exit 0
 else
-  rm -f /tmp/ro-schema.$$.json /tmp/ro-entity.$$.json
   record "$et" "$resolved@$ver" "$basis" false
-  echo "resolve-ontology: $fid entity fails $resolved:$et schema (required field missing) — fail" >&2
+  echo "resolve-ontology: $fid entity does not satisfy $resolved:$et schema — fail" >&2
   exit 1
 fi

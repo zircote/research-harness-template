@@ -987,13 +987,6 @@ gate_m12() {
   printf '{"@id":"f-undecl","entity":{"name":"x","entity_type":"not-a-type"}}\n' > "$T/undecl.json"
   ro() { $RO "$T/$1.json" --topic "$2" --catalog "$T/cat.json" --config "$T/rcfg.json" --map "$T/$1.$2.map" >/dev/null 2>&1; }
 
-  # --- TEMP DIAGNOSTIC (remove) ---
-  info "DBG core_ids: $(jq -r '.ontologies[]|select(.core)|.id' "$T/cat.json" | tr '\n' ' ')"
-  info "DBG k12 entry: $(jq -c '.ontologies[]|select(.id=="k12-educational-publishing")' "$T/cat.json")"
-  info "DBG good trace: $(RO_DEBUG=1 $RO "$T/good.json" --topic edu --catalog "$T/cat.json" --config "$T/rcfg.json" --map "$T/dbg.map" 2>&1 | grep RO_DEBUG)"
-  info "DBG good names-from-k12: $(yq -r '.entity_types[].name' "$ROOT/packs/ontologies/k12-educational-publishing/k12-educational-publishing.ontology.yaml" 2>&1 | tr '\n' ' ' | cut -c1-80)"
-  # --- END TEMP DIAGNOSTIC ---
-
   # 12e. The resolver's pass/fail matrix + recorded mapping.
   ro untyped edu; local ru=$?
   ro good edu;    local rg=$?

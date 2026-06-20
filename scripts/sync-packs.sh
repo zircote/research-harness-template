@@ -87,6 +87,9 @@ PY
 # Core ontologies (schemas/ontologies/) are ALWAYS cataloged; extended ontologies
 # (packs/ontologies/<id>/) only when enabled in the config's ontologies[]. A topic
 # may bind only a cataloged id (gate_m12 enforces binding -> catalog -> registry).
+# yq is required here — fail fast rather than silently emit an empty catalog (which
+# would cause confusing downstream resolver failures under `set -u`).
+command -v yq >/dev/null 2>&1 || { echo "sync-packs: yq is required to build the ontology catalog" >&2; exit 1; }
 onto='[]'
 add_onto(){ # id version source core — skip a malformed ontology (empty/null id or version)
   { [ -z "$1" ] || [ "$1" = "null" ] || [ -z "$2" ] || [ "$2" = "null" ]; } && return 0
