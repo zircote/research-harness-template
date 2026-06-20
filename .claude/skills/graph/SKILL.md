@@ -106,3 +106,18 @@ concept node back to its finding for context.
 /graph --kind entity
 /graph --viz
 ```
+
+## World mode — the cross-topic ontological spine (SPEC §8d)
+
+Beyond the per-topic graph, build the **world graph**: one unified, ontology-typed graph
+spanning every topic (concepts stamped with their ontology type + verdict; entities
+merged across topics by `urn:mif:` @id; falsified flagged, not excluded).
+
+```bash
+scripts/build-world.sh                       # writes reports/world.json over all topics
+scripts/validate-world.sh reports/world.json # fail-closed ontology conformance
+```
+
+`validate-world.sh` requires every node `entityType` and relationship `type` to be
+ontology-declared for its topic, with `from`/`to` domains satisfied (`gate_m13` enforces
+this). See `docs/explanation/ontological-spine.md`.
