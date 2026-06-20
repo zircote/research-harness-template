@@ -148,5 +148,29 @@ instead of a single topic's `knowledge-graph.json`; the node/edge shape is the s
   Because entities are merged by @id, a `--node` neighborhood here spans every topic
   that references it (`.topics`), and `--between` reveals cross-topic links.
 
+### Coverage gaps → suggest `/ontology-review`
+
+The build never stops (untyped findings are valid nodes), but a topic with **no bound
+ontology** — or one whose findings carry **domain types nothing declares** — leaves the
+spine under-typed. After a `--concordance` build or validate, surface these and point the
+user at the remedy; do **not** silently ship an under-typed spine.
+
+- **Untyped concept nodes** (topics that would benefit from a binding) — list the topics
+  with any untyped finding:
+
+  ```bash
+  jq -r '[ .nodes[] | select(.kind=="concept" and .entityType==null) | .topics[] ] | unique[]' \
+    reports/concordance.json
+  ```
+
+- **Hard conformance failures** — `--concordance --validate` already fails closed and its
+  message **names the topic and the fix** (`… not declared by a bound ontology — fix:
+  /ontology-review --topic <id> --enrich`).
+
+For each gap, recommend to the user: **run `/ontology-review --topic <id> --enrich`** to
+bind/enrich that topic's ontology, then rebuild with `--concordance --build`. (A core-only
+topic whose findings are all generically typed or untyped is *not* a gap — generic typing
+is valid; only unresolved **domain** types are.)
+
 If `reports/concordance.json` is missing, build it first (`--concordance --build`). See
 `docs/explanation/ontological-spine.md`.
