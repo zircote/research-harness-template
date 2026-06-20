@@ -82,12 +82,16 @@ gate_m1() {
 
   # 1d. Contamination scrub: no corpus finding IDs or corpus report-slug paths
   #     in built artifacts (criteria "Constraints"). Planning docs are excluded;
-  #     they are meta, not built artifacts.
+  #     they are meta, not built artifacts. The sigint-conversion test fixture is
+  #     also excluded: it deliberately carries sigint-format ids (f_tech_*,
+  #     findings_*.json) because it is the INPUT the M9 conversion gate converts
+  #     FROM — a test fixture, not a built artifact.
   # git grep handles filenames with spaces and an empty match set safely (it
   # never reads stdin and returns 1 on no match), unlike `git ls-files | xargs grep`.
   local hits
   hits=$(git grep -nE 'f_(tech|competitive|trends|customer|sizing|financial|regulatory)_[0-9]+|reports/[a-z0-9][a-z0-9-]+/findings_' -- \
-           ':!COMPLETION-CRITERIA.md' ':!IMPLEMENTATION-PLAN.md' ':!PROGRESS.md' 2>/dev/null || true)
+           ':!COMPLETION-CRITERIA.md' ':!IMPLEMENTATION-PLAN.md' ':!PROGRESS.md' \
+           ':!evals/fixtures/sample-sigint-corpus' 2>/dev/null || true)
   if [ -z "$hits" ]; then
     ok "no corpus finding IDs or corpus report-slug paths in built artifacts"
   else
