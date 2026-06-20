@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.dev/schema/session-state.schema.json",
+  "title": "Session State Checkpoint",
+  "description": "A durable, disk-derived checkpoint for resumable research sessions (SPEC §6b continuity). scripts/reconcile-session.sh derives this purely from reports/<topic>/findings/ on disk so that /resume never reworks completed findings: a finding is DONE only once it is schema-valid AND carries extensions.harness.verification.attempted_at (the falsification gate has run). Partial/invalid findings and *.tmp partial writes are excluded from done-counts. The checkpoint carries no wall-clock field so reconcile is byte-deterministic.",
+  "type": "object",
+  "required": ["topic", "findings", "dimensions", "checks"],
+  "additionalProperties": false,
+  "properties": {
+    "topic": { "type": "string", "minLength": 1 },
+    "findings": {
+      "type": "array",
+      "description": "One record per non-tmp finding file on disk, sorted by id.",
+      "items": {
+        "type": "object",
+        "required": ["id", "dimension", "valid", "attempted_at", "verdict"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "dimension": { "type": "string" },
+          "valid": {
+            "type": "boolean",
+            "description": "True iff the finding validates against schemas/findings.schema.json (ajv exit 0)."
+          },
+          "attempted_at": {
+            "type": ["string", "null"],
+            "description": "extensions.harness.verification.attempted_at, or null if the gate has not stamped it."
+          },
+          "verdict": {
+            "type": ["string", "null"],
+            "description": "extensions.harness.verification.verdict (falsified|weakened|survived|inconclusive), or null."
+          }
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "Per config-declared dimension: total non-tmp findings vs done (valid AND gated). Invalid/partial findings count toward total but never toward done.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["total", "done"],
+        "additionalProperties": false,
+        "properties": {
+          "total": { "type": "integer", "minimum": 0 },
+          "done": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "description": "Per completion-condition check: its pass/fail as computed from disk.",
+      "items": {
+        "type": "object",
+        "required": ["check", "passed"],
+        "additionalProperties": false,
+        "properties": {
+          "check": { "type": "string", "minLength": 1 },
+          "passed": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

@@ -187,6 +187,20 @@ into `scripts/verify.sh` wherever a command can assert it.
   ingests**, not findings alone. Genres are L3 by default; exemption is for
   orthogonal formats, never genres.
 
+### Milestone 11 — Session-recovery durability (SPEC §6b)
+
+- Gate: `verify.sh` `gate_m11` shows, against a fixture session, that
+  `scripts/reconcile-session.sh` derives a `state.json` checkpoint validating
+  against `schemas/session-state.schema.json`; that reconcile is idempotent (two
+  runs print byte-identical plans); that gated+valid findings are recorded done
+  while invalid and `*.tmp` partial writes are excluded from done-counts; that
+  `scripts/write-finding.sh` is atomic-to-valid (a finding lands only after it
+  validates); and that a fully-gated session reconciles to an empty plan. Purely
+  additive — no existing gate is weakened.
+- Deliver: a disk-derived, idempotent reconcile checkpoint so `/resume` never
+  reworks completed findings, and crash-safe (stage + validate + atomic rename)
+  finding writes.
+
 ## Constraints
 
 - Author every artifact from the design spec and the real MIF schema. Never

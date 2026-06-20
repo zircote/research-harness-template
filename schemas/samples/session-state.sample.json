@@ -1,0 +1,29 @@
+{
+  "topic": "example-topic",
+  "findings": [
+    {
+      "id": "urn:mif:concept:harness/example-topic:f-done",
+      "dimension": "technical",
+      "valid": true,
+      "attempted_at": "2026-06-19T12:30:00Z",
+      "verdict": "survived"
+    },
+    {
+      "id": "urn:mif:concept:harness/example-topic:f-raw",
+      "dimension": "landscape",
+      "valid": false,
+      "attempted_at": null,
+      "verdict": null
+    }
+  ],
+  "dimensions": {
+    "technical": { "total": 1, "done": 1 },
+    "landscape": { "total": 1, "done": 0 }
+  },
+  "checks": [
+    { "check": "all_valid_gated", "passed": true },
+    { "check": "findings_present", "passed": true },
+    { "check": "no_invalid_findings", "passed": false },
+    { "check": "no_partial_writes", "passed": true }
+  ]
+}

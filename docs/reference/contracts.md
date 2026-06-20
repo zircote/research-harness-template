@@ -81,3 +81,19 @@ only when **declared**: first-class channels in `harness.config.json`
 `outputs[].mifExempt: true`, channel packs in `plugin.json` `mif.exempt: true`.
 Genres are L3 by default; exemption is for orthogonal formats, never genres.
 `verify.sh` `gate_m10` enforces all of the above and logs every exempt surface.
+
+## Session state — `schemas/session-state.schema.json`
+
+The crash-safe resume checkpoint (SPEC §6b). `scripts/reconcile-session.sh
+<reports-dir>` derives `reports/<topic>/state.json` **purely from disk** — per
+finding `{id, dimension, valid, attempted_at, verdict}`, per-dimension
+`{total, done}`, and per completion-check `{check, passed}` — then prints the
+remaining-work plan. A finding is **done** only when it is schema-valid AND gated
+(`extensions.harness.verification.attempted_at` present); invalid findings and
+`*.tmp`/hidden partial writes are excluded from done-counts, so `/resume` never
+reworks completed findings. Reconcile is byte-deterministic and idempotent (no
+wall-clock field; sorted records) — two runs over the same disk produce identical
+output. `scripts/write-finding.sh <src> <findings-dir> <name>` is the write half:
+a finding lands in `findings/` only after it validates (stage + ajv + atomic
+rename), so a half-written finding is never visible. `verify.sh` `gate_m11`
+asserts all of this against a fixture session.
