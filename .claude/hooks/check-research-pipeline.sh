@@ -12,7 +12,7 @@ cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 command -v git >/dev/null 2>&1 || exit 0
 
 # Findings files changed this session (modified or new, staged or unstaged).
-CHANGED=$(git status --porcelain -- 'reports/*/findings_*.json' 'reports/*/*.finding.json' 2>/dev/null | sed 's/^...//')
+CHANGED=$(git status --porcelain -- 'reports/*/findings/finding-*.json' 'reports/*/findings_*.json' 'reports/*/*.finding.json' 2>/dev/null | sed 's/^...//')
 [ -z "$CHANGED" ] && exit 0   # no findings touched -> nothing to remind
 
 # Distinct topics touched this session.

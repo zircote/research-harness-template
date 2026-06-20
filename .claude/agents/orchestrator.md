@@ -166,7 +166,8 @@ dimensions; in `augment` mode, the single new dimension), running at most
        '{topic}'.
        GOAL_FILE: {GOAL_FILE}        — research toward this session goal
        DIMENSION: {dimension}        — the config-declared dimension you own
-       REPORTS_DIR: {REPORTS_DIR}    — write all finding files here, verbatim
+       REPORTS_DIR: {REPORTS_DIR}    — write findings into {REPORTS_DIR}/findings/ (the
+                                       canonical dir synthesize/graph/index/reconcile read)
 
        Read harness.config.json dimensions[] for this dimension's description.
        Conduct web research scoped to your dimension and the goal. Emit each
@@ -199,6 +200,13 @@ dimensions; in `augment` mode, the single new dimension), running at most
 Wait for every analyst subagent to return (or time out a straggler and exclude
 it, noting the omission). Collect the finding file paths from the returns and from
 `REPORTS_DIR`.
+
+**Checkpoint.** Snapshot durable state from disk so a crash/interrupt here is
+recoverable without re-running completed work:
+
+```bash
+scripts/reconcile-session.sh "$REPORTS_DIR"   # writes $REPORTS_DIR/state.json + plan
+```
 
 Append to the progress file:
 
@@ -260,6 +268,20 @@ Append to the progress file:
 ---
 
 ## Phase 3: Completion check — hold or loop
+
+**Reconcile first, then decide from disk.** Re-run the checkpoint and read the
+plan — it is authoritative and idempotent, and it is what a `/resume` would see:
+
+```bash
+scripts/reconcile-session.sh "$REPORTS_DIR"   # rewrites $REPORTS_DIR/state.json + plan
+```
+
+A dimension whose `state.json` `dimensions[d]` has `done == total` is COMPLETE —
+**never re-fan-out a complete dimension** (re-running burns research/falsification
+budget). Loop only dimensions the plan reports with `done < total`, plus any
+dimension an unmet goal check names. **If `reconcile-session.sh` exits non-zero it
+has failed safe (broken toolchain) — STOP and report; do NOT re-fan-out, and never
+treat the failure as "everything remaining".**
 
 Evaluate the goal's `completion_condition.checks[]` against the current state.
 Each check is a transcript-verifiable fact (it may carry an optional `verify`

@@ -766,9 +766,146 @@ gate_m10() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 11 — Session-recovery durability (SPEC §6b)
+# Crash-safe, resumable sessions: a disk-derived state.json checkpoint; an
+# idempotent reconcile that computes remaining work from disk only (never reworking
+# completed findings); and atomic-to-valid finding writes. Purely additive.
+# ---------------------------------------------------------------------------
+gate_m11() {
+  info "Milestone 11 — Session durability"
+
+  # 11a. The session-state schema validates its sample.
+  if ajv_plain schemas/session-state.schema.json schemas/samples/session-state.sample.json; then
+    ok "session-state schema validates its sample"
+  else
+    bad "session-state schema does not validate its sample"
+  fi
+
+  # Fixture session: A,B gated+valid (DONE); C raw finding (ajv-invalid = remaining);
+  # D a *.tmp partial write. A finding is ajv-valid only once the gate stamps
+  # verification, so valid+gated move together.
+  local T RD
+  T="$(mktemp -d)"; RD="$T/durability-topic"; mkdir -p "$RD/findings"
+  jq '."@id"="urn:mif:concept:harness/durability-topic:a" | .extensions.harness.dimension="technical"' \
+    schemas/samples/finding.sample.json > "$RD/findings/finding-a.json"
+  jq '."@id"="urn:mif:concept:harness/durability-topic:b" | .extensions.harness.dimension="landscape"' \
+    schemas/samples/finding.sample.json > "$RD/findings/finding-b.json"
+  jq '."@id"="urn:mif:concept:harness/durability-topic:c" | .extensions.harness.dimension="technical"' \
+    evals/fixtures/raw-finding.json > "$RD/findings/finding-c.json"
+  printf '{partial' > "$RD/findings/finding-d.json.tmp"
+
+  scripts/reconcile-session.sh "$RD" > "$T/plan1.txt" 2>/dev/null
+
+  # 11b (condition 1). The checkpoint exists and validates against the schema.
+  if [ -f "$RD/state.json" ] && ajv_plain schemas/session-state.schema.json "$RD/state.json"; then
+    ok "reconcile writes a state.json checkpoint that validates against session-state.schema.json"
+  else
+    bad "reconcile did not write a valid state.json checkpoint"
+  fi
+
+  # 11c (condition 3). Valid findings (A,B) recorded DONE; per-finding records carry
+  # {id,dimension,valid,attempted_at,verdict}. A finding is done iff schema-valid —
+  # validity requires verification.verdict, so a valid finding has been gated.
+  local doneA doneB shape
+  doneA=$(jq -r '[.findings[] | select(.id|endswith(":a")) | select(.valid)] | length' "$RD/state.json")
+  doneB=$(jq -r '[.findings[] | select(.id|endswith(":b")) | select(.valid)] | length' "$RD/state.json")
+  shape=$(jq -r '[.findings[] | has("id") and has("dimension") and has("valid") and has("attempted_at") and has("verdict")] | all' "$RD/state.json")
+  if [ "$doneA" = 1 ] && [ "$doneB" = 1 ] && [ "$shape" = true ]; then
+    ok "gated + valid findings recorded done (per-finding id/dimension/valid/attempted_at/verdict)"
+  else
+    bad "gated/valid findings not recorded done correctly (A=$doneA B=$doneB shape=$shape)"
+  fi
+
+  # 11d (condition 4). Invalid finding (C) and *.tmp partial (D) EXCLUDED from
+  # done-counts: technical total=2 (A,C), done=1 (A); D never counted.
+  local tot don
+  tot=$(jq -r '.dimensions.technical.total' "$RD/state.json")
+  don=$(jq -r '.dimensions.technical.done' "$RD/state.json")
+  if [ "$tot" = 2 ] && [ "$don" = 1 ]; then
+    ok "partial/invalid findings excluded from done-counts (technical total=2 done=1; *.tmp uncounted)"
+  else
+    bad "done-counts wrong (technical total=$tot done=$don; expected 2/1)"
+  fi
+
+  # 11e (condition 2). Reconcile is idempotent — a second run prints a byte-identical plan.
+  scripts/reconcile-session.sh "$RD" > "$T/plan2.txt" 2>/dev/null
+  if diff -q "$T/plan1.txt" "$T/plan2.txt" >/dev/null 2>&1; then
+    ok "reconcile is idempotent (two runs print byte-identical plans)"
+  else
+    bad "reconcile is not idempotent (plans differ)"
+  fi
+
+  # 11f (condition 5). Writes are atomic-to-valid: a valid finding lands; an invalid
+  # one never appears in findings/.
+  local good=0 badw=0
+  scripts/write-finding.sh "$RD/findings/finding-a.json" "$T/wf" "finding-ok.json" >/dev/null 2>&1 && [ -f "$T/wf/finding-ok.json" ] && good=1
+  scripts/write-finding.sh evals/fixtures/raw-finding.json "$T/wf" "finding-bad.json" >/dev/null 2>&1; [ -e "$T/wf/finding-bad.json" ] || badw=1
+  if [ "$good" = 1 ] && [ "$badw" = 1 ]; then
+    ok "writes are atomic-to-valid (valid finding lands; invalid finding never written)"
+  else
+    bad "atomic-write contract broken (valid-landed=$good invalid-absent=$badw)"
+  fi
+
+  # 11g (condition 6). A fully-gated session reconciles to an empty plan.
+  local RD2 plan
+  RD2="$T/done-topic"; mkdir -p "$RD2/findings"
+  jq '."@id"="urn:mif:concept:harness/done-topic:a" | .extensions.harness.dimension="technical"' \
+    schemas/samples/finding.sample.json > "$RD2/findings/finding-a.json"
+  plan=$(scripts/reconcile-session.sh "$RD2" 2>/dev/null)
+  if [ "$plan" = "nothing to do" ]; then
+    ok "a fully-gated session reconciles to an empty plan (nothing to do)"
+  else
+    bad "fully-gated session did not reconcile to an empty plan (got: $plan)"
+  fi
+
+  # 11h (reality guard). Reconcile the REAL shipped sample session (copied so the
+  # repo is not mutated): its completed findings must reconcile to 'nothing to do',
+  # NOT be reported as rework. This pins the cost-critical property against actual
+  # session data — a completed finding is never re-run on resume.
+  local SS sp
+  SS="$T/sample-copy"; mkdir -p "$SS/findings"
+  cp reports/_meta/sample-session/findings/*.json "$SS/findings/" 2>/dev/null
+  sp=$(scripts/reconcile-session.sh "$SS" 2>/dev/null)
+  if [ "$sp" = "nothing to do" ]; then
+    ok "the shipped sample session reconciles to 'nothing to do' (completed findings never re-run)"
+  else
+    bad "sample session reported rework — resume would re-run completed findings: ${sp//$'\n'/ | }"
+  fi
+
+  # 11i (safety). A falsified finding (valid, verdict=falsified) is NOT done — its
+  # dimension still needs a replacement.
+  local RD3 ftot fdone
+  RD3="$T/falsified-topic"; mkdir -p "$RD3/findings"
+  jq '."@id"="urn:mif:concept:harness/falsified-topic:f" | .extensions.harness.dimension="technical" | .extensions.harness.verification.verdict="falsified"' \
+    schemas/samples/finding.sample.json > "$RD3/findings/finding-f.json"
+  scripts/reconcile-session.sh "$RD3" >/dev/null 2>&1
+  ftot=$(jq -r '.dimensions.technical.total' "$RD3/state.json"); fdone=$(jq -r '.dimensions.technical.done' "$RD3/state.json")
+  if [ "$ftot" = 1 ] && [ "$fdone" = 0 ]; then
+    ok "a falsified finding is excluded from done-counts (its dimension still needs a replacement)"
+  else
+    bad "falsified finding mis-counted (technical total=$ftot done=$fdone; expected 1/0)"
+  fi
+
+  # 11j (fail-safe — THE cost guard). A broken ajv toolchain must make reconcile
+  # ABORT (non-zero), not read every finding as invalid and emit a re-run-everything
+  # plan. Shim a failing `ajv` onto PATH (jq/find still work) and assert reconcile
+  # exits non-zero and prints no "need work" plan.
+  local bad_out bad_rc
+  mkdir -p "$T/badbin"; printf '#!/bin/sh\nexit 1\n' > "$T/badbin/ajv"; chmod +x "$T/badbin/ajv"
+  bad_out=$(PATH="$T/badbin:$PATH" scripts/reconcile-session.sh "$RD2" 2>/dev/null); bad_rc=$?
+  if [ "$bad_rc" -ne 0 ] && ! printf '%s' "$bad_out" | grep -q 'need work'; then
+    ok "reconcile fails safe on a broken ajv toolchain (aborts; never emits a re-run-everything plan)"
+  else
+    bad "reconcile did NOT fail safe (rc=$bad_rc; out: ${bad_out//$'\n'/ | })"
+  fi
+
+  rm -rf "$T"
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11)
 
 for g in "${GATES[@]}"; do "$g"; done
 

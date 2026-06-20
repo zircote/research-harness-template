@@ -81,3 +81,29 @@ only when **declared**: first-class channels in `harness.config.json`
 `outputs[].mifExempt: true`, channel packs in `plugin.json` `mif.exempt: true`.
 Genres are L3 by default; exemption is for orthogonal formats, never genres.
 `verify.sh` `gate_m10` enforces all of the above and logs every exempt surface.
+
+## Session state — `schemas/session-state.schema.json`
+
+The crash-safe resume checkpoint (SPEC §6b). `scripts/reconcile-session.sh <reports-dir>`
+derives `reports/<topic>/state.json` **purely from disk** — per
+finding `{id, dimension, valid, attempted_at, verdict}`, per-dimension
+`{total, done}`, and per completion-check `{check, passed}` — then prints the
+remaining-work plan. A finding is **done** when it is schema-valid — validity
+*requires* `extensions.harness.verification` with a verdict, so a valid finding has
+already been through the falsification gate — and not `falsified` (a falsified
+finding's dimension still needs a replacement). Invalid findings and `*.tmp`/hidden
+partial writes are excluded from done-counts, so `/resume` never reworks completed
+findings. Reconcile is byte-deterministic and idempotent (no
+wall-clock field; sorted records) — two runs over the same disk produce identical
+output. `scripts/write-finding.sh <src> <findings-dir> <name>` is the atomic-to-valid
+primitive for placing an **already-valid** finding (e.g. an import): it lands in
+`findings/` only after full-schema validation (stage + ajv + atomic rename). The
+dimension-analyst stages its own *raw, pre-gate* findings into `findings/` the same
+atomic way (stage + validate the fields it owns + rename) — those are not
+full-schema-valid until the falsification gate stamps a verdict, so they go through
+the analyst's inline atomic write, not `write-finding.sh`. Reconcile **fails safe**:
+if ajv cannot validate a known-good sample it aborts non-zero and writes no
+checkpoint, so a broken toolchain never produces a "re-run everything" plan; callers
+treat a non-zero reconcile as "stop", never "everything remaining". `verify.sh`
+`gate_m11` asserts all of this — including against the real shipped sample session
+and under a broken ajv.

@@ -62,10 +62,10 @@ claim budget, so check first:
 
 ```bash
 case "$SCOPE" in
-  all) COUNT=$(ls "$REPORTS_DIR"/*.json 2>/dev/null | grep -v goal.json | wc -l | tr -d ' ') ;;
+  all) COUNT=$(ls "$REPORTS_DIR"/findings/*.json 2>/dev/null | wc -l | tr -d ' ') ;;
   dimension:*) DIM="${SCOPE#dimension:}"; COUNT=0
-    for f in "$REPORTS_DIR"/*.json; do
-      [ "$(basename "$f")" = goal.json ] && continue
+    for f in "$REPORTS_DIR"/findings/*.json; do
+      [ -e "$f" ] || continue
       [ "$(jq -r '.extensions.harness.dimension // empty' "$f")" = "$DIM" ] && COUNT=$((COUNT+1))
     done ;;
   finding:*) COUNT=1 ;;

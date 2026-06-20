@@ -48,8 +48,8 @@ evidence, stop and re-read the claim adversarially.
 
 ## Inputs (spawn prompt)
 
-- `REPORTS_DIR` — the topic directory holding the finding files to test.
-- `SCOPE` — one of `all` (every active finding under `REPORTS_DIR`),
+- `REPORTS_DIR` — the topic directory; finding files live in `$REPORTS_DIR/findings/`.
+- `SCOPE` — one of `all` (every active finding under `$REPORTS_DIR/findings/`),
   `dimension:{dim}` (findings whose `extensions.harness.dimension` is `{dim}`),
   or `finding:{id}` (a single finding by `@id`).
 - `QUERY_BUDGET` — max disconfirming queries per claim (default 6).
@@ -60,11 +60,11 @@ evidence, stop and re-read the claim adversarially.
 
 ## Step 1: Load findings to falsify
 
-Each finding is an individual MIF JSON file under `REPORTS_DIR`. Build the
-working set from `SCOPE`:
+Each finding is an individual MIF JSON file under `$REPORTS_DIR/findings/`. Build
+the working set from `SCOPE`:
 
-- `all` → every finding file under `REPORTS_DIR` (exclude `quarantine/` and
-  `archive/`).
+- `all` → every finding file under `$REPORTS_DIR/findings/` (the `quarantine/` and
+  `archive/` siblings are separate and excluded).
 - `dimension:{dim}` → those with `.extensions.harness.dimension == "{dim}"`.
 - `finding:{id}` → the one file with `.["@id"] == "{id}"`.
 
