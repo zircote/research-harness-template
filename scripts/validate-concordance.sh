@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# validate-world.sh — fail-closed ontology conformance for the world graph (SPEC §8d).
+# validate-concordance.sh — fail-closed ontology conformance for the concordance (SPEC §8d).
 # Asserts that every node entityType and every relationship edge type is declared by an
 # ontology BOUND to the node's topic(s) (core mif-generic/mif-base ∪ the topic's bound
 # ontologies), and that each relationship's endpoints satisfy the ontology's from/to
 # domains. Any undeclared type or domain violation -> non-zero (fail-closed). Mention
 # edges (via:entity) are structural and not domain-checked.
 #
-# Usage: validate-world.sh <world.json> [--config <p>] [--catalog <p>]
+# Usage: validate-concordance.sh <concordance.json> [--config <p>] [--catalog <p>]
 
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-for t in yq jq; do command -v "$t" >/dev/null 2>&1 || { echo "validate-world: '$t' not found" >&2; exit 5; }; done
-WORLD=""; CONFIG="$ROOT/harness.config.json"; CATALOG="$ROOT/.claude/enabled-packs.json"
+for t in yq jq; do command -v "$t" >/dev/null 2>&1 || { echo "validate-concordance: '$t' not found" >&2; exit 5; }; done
+GRAPH=""; CONFIG="$ROOT/harness.config.json"; CATALOG="$ROOT/.claude/enabled-packs.json"
 while [ $# -gt 0 ]; do
   case "$1" in
     --config) CONFIG="$2"; shift 2 ;;
     --catalog) CATALOG="$2"; shift 2 ;;
-    *) WORLD="$1"; shift ;;
+    *) GRAPH="$1"; shift ;;
   esac
 done
-[ -n "$WORLD" ] && [ -f "$WORLD" ] || { echo "validate-world: world graph not found: ${WORLD:-<none>}" >&2; exit 2; }
+[ -n "$GRAPH" ] && [ -f "$GRAPH" ] || { echo "validate-concordance: concordance not found: ${GRAPH:-<none>}" >&2; exit 2; }
 # Fail-safe: without the catalog we cannot determine bound ontologies — abort, never pass.
-[ -f "$CATALOG" ] || { echo "validate-world: catalog missing ($CATALOG) — run sync-packs.sh; refusing to validate" >&2; exit 3; }
+[ -f "$CATALOG" ] || { echo "validate-concordance: catalog missing ($CATALOG) — run sync-packs.sh; refusing to validate" >&2; exit 3; }
 
 src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$CATALOG" | head -1; }
 core_ids=$(jq -r '.ontologies[]? | select(.core) | .id' "$CATALOG")
@@ -36,7 +36,7 @@ for oid in $all_ids; do
   src="$(src_of "$oid")"; [ -z "$src" ] && continue
   # yq only converts yaml->json; jq extracts the shape (robust against yq construction quirks).
   if ! ofull=$(yq -o=json '.' "$ROOT/$src" 2>/dev/null); then
-    echo "validate-world: yq failed reading ontology '$oid' ($src) — aborting (fail closed)" >&2; exit 4
+    echo "validate-concordance: yq failed reading ontology '$oid' ($src) — aborting (fail closed)" >&2; exit 4
   fi
   od=$(jq -c '{types:[.entity_types[]?.name], rels:(.relationships // {})}' <<<"$ofull")
   ONTO=$(jq -c --arg id "$oid" --argjson d "$od" '. + {($id):$d}' <<<"$ONTO")
@@ -58,7 +58,7 @@ core_arr=$(printf '%s\n' $core_ids | sed '/^$/d' | jq -R . | jq -cs .)
 STRUCTURAL=$(jq -cn --argjson onto "$ONTO" --argjson core "$core_arr" '[ $core[] | ($onto[.].rels // {} | keys[]) ] | unique')
 
 # All conformance logic in one jq (deterministic, portable).
-if ! viol=$(jq -rn --slurpfile W "$WORLD" --argjson onto "$ONTO" --argjson allowed "$ALLOWED" \
+if ! viol=$(jq -rn --slurpfile W "$GRAPH" --argjson onto "$ONTO" --argjson allowed "$ALLOWED" \
               --argjson builtin "$BUILTIN" --argjson structural "$STRUCTURAL" '
   $W[0] as $G
   | ($G.nodes | map({key:.id, value:.}) | from_entries) as $byid
@@ -83,13 +83,13 @@ if ! viol=$(jq -rn --slurpfile W "$WORLD" --argjson onto "$ONTO" --argjson allow
               end
           end ] )
   | .[]'); then
-  echo "validate-world: conformance check errored (jq) — aborting (fail closed)" >&2; exit 4
+  echo "validate-concordance: conformance check errored (jq) — aborting (fail closed)" >&2; exit 4
 fi
 
 if [ -z "$viol" ]; then
-  echo "validate-world: conformant ($(jq '.nodes|length' "$WORLD") nodes, $(jq '.edges|length' "$WORLD") edges)"
+  echo "validate-concordance: conformant ($(jq '.nodes|length' "$GRAPH") nodes, $(jq '.edges|length' "$GRAPH") edges)"
   exit 0
 fi
 printf '%s\n' "$viol" >&2
-echo "validate-world: $(printf '%s\n' "$viol" | grep -c .) conformance violation(s) — fail" >&2
+echo "validate-concordance: $(printf '%s\n' "$viol" | grep -c .) conformance violation(s) — fail" >&2
 exit 1

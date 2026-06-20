@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://research-harness.dev/schema/world-graph.schema.json",
-  "title": "Ontological Spine — World Graph",
-  "description": "A single unified, cross-topic, ontology-typed knowledge graph (SPEC §8d). Built by scripts/build-world.sh from every topic's findings: concept nodes (one per finding) stamped with their resolved ontology entity_type and falsification verdict; entity nodes merged across topics by urn:mif: @id. ALL findings are nodes; falsified are flagged, not excluded. scripts/validate-world.sh enforces that every entityType and relationship type is ontology-declared for its topic (fail-closed).",
+  "$id": "https://research-harness.dev/schema/concordance.schema.json",
+  "title": "Ontological Spine — Concordance",
+  "description": "A single unified, cross-topic, ontology-typed knowledge graph (SPEC §8d). Built by scripts/build-concordance.sh from every topic's findings: concept nodes (one per finding) stamped with their resolved ontology entity_type and falsification verdict; entity nodes merged across topics by urn:mif: @id. ALL findings are nodes; falsified are flagged, not excluded. scripts/validate-concordance.sh enforces that every entityType and relationship type is ontology-declared for its topic (fail-closed).",
   "type": "object",
   "required": ["@type", "nodes", "edges"],
   "additionalProperties": false,
   "properties": {
-    "@type": { "const": "WorldGraph" },
+    "@type": { "const": "Concordance" },
     "generator": { "type": "string" },
     "nodes": {
       "type": "array",

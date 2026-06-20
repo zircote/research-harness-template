@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-world.sh — the ontological spine: ONE unified, cross-topic "world graph"
+# build-concordance.sh — the ontological spine: ONE unified, cross-topic "concordance"
 # (SPEC §8d). Merges every topic's findings into a single MIF-native graph typed by
 # the ontology: concept nodes (one per finding) stamped with their resolved ontology
 # entity_type (from reports/<topic>/ontology-map.json) AND falsification verdict;
@@ -7,14 +7,14 @@
 # that references it). ALL findings are nodes; falsified are FLAGGED, not excluded.
 # Deterministic/idempotent (sorted, no wall-clock) — "living" = on-demand rebuild.
 #
-# Usage: build-world.sh [<reports-dir>] [<out.json>]
-#   default reports-dir: reports/ ; default out: <reports-dir>/world.json
+# Usage: build-concordance.sh [<reports-dir>] [<out.json>]
+#   default reports-dir: reports/ ; default out: <reports-dir>/concordance.json
 
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RD="${1:-$ROOT/reports}"; case "$RD" in /*) : ;; *) RD="$(pwd)/$RD" ;; esac
-OUT="${2:-$RD/world.json}"
-[ -d "$RD" ] || { echo "build-world: reports dir not found: $RD" >&2; exit 2; }
+OUT="${2:-$RD/concordance.json}"
+[ -d "$RD" ] || { echo "build-concordance: reports dir not found: $RD" >&2; exit 2; }
 
 # Topics are the subdirectories of the reports dir that hold a findings/ — build
 # whatever corpus is actually present (independent of harness.config.json, so the
@@ -66,9 +66,9 @@ jq -n --argjson concepts "$concepts" --argjson entities "$entities" --argjson ed
   | ( $ed | map(.target) | unique | map(select(. as $t | ($ids | index($t)) | not))
       | map({ id:., kind:"concept", label:., topics:[], entityType:null,
               ontology:null, verdict:null, flagged:false, external:true }) ) as $stubs
-  | { "@type":"WorldGraph",
-      generator:"build-world.sh (MIF-native ontological spine; SPEC §8d)",
+  | { "@type":"Concordance",
+      generator:"build-concordance.sh (MIF-native ontological spine; SPEC §8d)",
       nodes: (($known + $stubs) | sort_by(.id)),
       edges: ($ed | sort_by(.source, .target, .type, .via)) }' > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
 
-echo "build-world: wrote $OUT ($(jq '.nodes|length' "$OUT") nodes, $(jq '.edges|length' "$OUT") edges) across topics"
+echo "build-concordance: wrote $OUT ($(jq '.nodes|length' "$OUT") nodes, $(jq '.edges|length' "$OUT") edges) across topics"

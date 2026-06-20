@@ -1,20 +1,20 @@
-# The ontological spine — a cross-topic world graph
+# The ontological spine — a cross-topic concordance
 
 The per-topic knowledge graph (`build-graph.sh`) answers "what connects within this
 topic." The **ontological spine** answers "what does the corpus know" — one unified,
-ontology-typed graph spanning every topic: a **worlds view** of knowledge as it was
+ontology-typed graph spanning every topic: a unified **concordance** of knowledge as it was
 researched, falsified, validated, and organized.
 
 ## What it is
 
-`scripts/build-world.sh` merges every topic's findings into a single `world.json`:
+`scripts/build-concordance.sh` merges every topic's findings into a single `concordance.json`:
 
 - **Concept nodes** — one per finding, **stamped** with its resolved ontology
   `entityType` (from `reports/<topic>/ontology-map.json`), its source `ontology`, and
   its falsification **verdict**.
 - **Entity nodes** — referenced MIF entities, **merged across topics by `urn:mif:`
   @id**: the same entity referenced in two topics is one node whose `topics` span both.
-  This is what stitches separate topics into a connected world.
+  This is what stitches separate topics into a connected concordance.
 - **Edges** — typed `relationships[]` plus `mentions` (finding → entity).
 
 It is **deterministic** (sorted, no wall-clock) — "living" means an on-demand rebuild
@@ -22,14 +22,14 @@ reflects the current corpus, not an incremental cache.
 
 ## The full record, not just the survivors
 
-Unlike the report-synthesizer (which ships only non-falsified findings), the world
+Unlike the report-synthesizer (which ships only non-falsified findings), the concordance
 shows the **entire research record**: every finding is a node carrying its verdict, and
-**falsified findings are flagged, not excluded**. The world is where you see what was
+**falsified findings are flagged, not excluded**. The concordance is where you see what was
 disproven alongside what held — research as it actually unfolded.
 
 ## Fail-closed conformance
 
-`scripts/validate-world.sh` enforces that the world is genuinely *ontological*, not just
+`scripts/validate-concordance.sh` enforces that the concordance is genuinely *ontological*, not just
 labelled:
 
 - Every node `entityType` must be declared by an ontology **bound to that node's

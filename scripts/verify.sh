@@ -1093,21 +1093,21 @@ gate_m12() {
 }
 
 # ---------------------------------------------------------------------------
-# Milestone 13 — Ontological spine (cross-topic world graph) (SPEC §8d)
-# One unified, ontology-typed, fail-closed world graph spanning 1..N topics:
+# Milestone 13 — Ontological spine (cross-topic concordance) (SPEC §8d)
+# One unified, ontology-typed, fail-closed concordance spanning 1..N topics:
 # concept nodes stamped with their resolved ontology entity_type + falsification
 # verdict; entity nodes merged across topics by urn:mif: @id; all findings present,
 # falsified flagged not excluded; every node/edge type ontology-conformant for its
 # topic (from/to domains enforced). Purely additive.
 # ---------------------------------------------------------------------------
 gate_m13() {
-  info "Milestone 13 — Ontological spine (world graph)"
+  info "Milestone 13 — Ontological spine (concordance)"
 
-  # 13a. The world-graph schema validates its sample.
-  if ajv_plain schemas/world-graph.schema.json schemas/samples/world-graph.sample.json; then
-    ok "world-graph schema validates its sample"
+  # 13a. The concordance schema validates its sample.
+  if ajv_plain schemas/concordance.schema.json schemas/samples/concordance.sample.json; then
+    ok "concordance schema validates its sample"
   else
-    bad "world-graph schema does not validate its sample"
+    bad "concordance schema does not validate its sample"
   fi
 
   # Fixture corpus: 2 topics (edu->k12, eng->software-engineering). edu finding is a
@@ -1133,30 +1133,30 @@ JSON
   echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"k12-educational-publishing@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
   echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"software-engineering@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
 
-  CONFIG="$T/cfg.json" scripts/build-world.sh "$T/reports" "$T/world.json" >/dev/null 2>&1
-  vw() { scripts/validate-world.sh "$1" --config "$T/cfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; }
+  CONFIG="$T/cfg.json" scripts/build-concordance.sh "$T/reports" "$T/concordance.json" >/dev/null 2>&1
+  vw() { scripts/validate-concordance.sh "$1" --config "$T/cfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; }
 
-  # 13b. build-world produces a world.json that validates against the schema.
-  if [ -f "$T/world.json" ] && ajv_plain schemas/world-graph.schema.json "$T/world.json"; then
-    ok "build-world spans topics and the world graph validates against the schema"
+  # 13b. build-concordance produces a concordance.json that validates against the schema.
+  if [ -f "$T/concordance.json" ] && ajv_plain schemas/concordance.schema.json "$T/concordance.json"; then
+    ok "build-concordance spans topics and the concordance validates against the schema"
   else
-    bad "build-world did not produce a schema-valid world graph"
+    bad "build-concordance did not produce a schema-valid concordance"
   fi
 
   # 13c. Conformance is fail-closed: undeclared entityType, undeclared relationship
-  #      type, and a from/to domain violation each FAIL validate-world.
-  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "wizard"' "$T/world.json" > "$T/u_type.json"
-  jq '(.edges[] | select(.via=="relationship" and (.type=="belongs_to")) | .type) = "frobnicate"' "$T/world.json" > "$T/u_rel.json"
-  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "author"' "$T/world.json" > "$T/dom.json"
-  if vw "$T/world.json" && ! vw "$T/u_type.json" && ! vw "$T/u_rel.json" && ! vw "$T/dom.json"; then
+  #      type, and a from/to domain violation each FAIL validate-concordance.
+  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "wizard"' "$T/concordance.json" > "$T/u_type.json"
+  jq '(.edges[] | select(.via=="relationship" and (.type=="belongs_to")) | .type) = "frobnicate"' "$T/concordance.json" > "$T/u_rel.json"
+  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "author"' "$T/concordance.json" > "$T/dom.json"
+  if vw "$T/concordance.json" && ! vw "$T/u_type.json" && ! vw "$T/u_rel.json" && ! vw "$T/dom.json"; then
     ok "conformance fail-closed: conformant passes; undeclared type / undeclared rel / domain violation each fail"
   else
-    bad "conformance not fail-closed (good=$(vw "$T/world.json"; echo $?) badtype=$(vw "$T/u_type.json"; echo $?) badrel=$(vw "$T/u_rel.json"; echo $?) dom=$(vw "$T/dom.json"; echo $?))"
+    bad "conformance not fail-closed (good=$(vw "$T/concordance.json"; echo $?) badtype=$(vw "$T/u_type.json"; echo $?) badrel=$(vw "$T/u_rel.json"; echo $?) dom=$(vw "$T/dom.json"; echo $?))"
   fi
 
   # 13d. Concept nodes are stamped with their ontology entity_type + verdict.
   local stamp
-  stamp=$(jq -r '.nodes[] | select(.id=="urn:mif:concept:x/edu:f1") | "\(.entityType)|\(.verdict)|\(.ontology)"' "$T/world.json")
+  stamp=$(jq -r '.nodes[] | select(.id=="urn:mif:concept:x/edu:f1") | "\(.entityType)|\(.verdict)|\(.ontology)"' "$T/concordance.json")
   if [ "$stamp" = "title|survived|k12-educational-publishing@0.1.0" ]; then
     ok "concept nodes are stamped with resolved ontology entity_type + verdict (from ontology-map.json)"
   else
@@ -1165,7 +1165,7 @@ JSON
 
   # 13e. Falsified findings are FLAGGED, not excluded.
   local fals
-  fals=$(jq -r '[.nodes[] | select(.id=="urn:mif:concept:x/eng:f1")] | "\(length)|\(.[0].verdict)|\(.[0].flagged)"' "$T/world.json")
+  fals=$(jq -r '[.nodes[] | select(.id=="urn:mif:concept:x/eng:f1")] | "\(length)|\(.[0].verdict)|\(.[0].flagged)"' "$T/concordance.json")
   if [ "$fals" = "1|falsified|true" ]; then
     ok "a falsified finding is present as a node, verdict=falsified and flagged (not excluded)"
   else
@@ -1174,7 +1174,7 @@ JSON
 
   # 13f. Cross-topic merge: the shared entity is ONE node spanning both topics.
   local merged
-  merged=$(jq -rc '[.nodes[] | select(.id=="urn:mif:entity:org:acme")] | "\(length)|\(.[0].topics|sort|join(","))"' "$T/world.json")
+  merged=$(jq -rc '[.nodes[] | select(.id=="urn:mif:entity:org:acme")] | "\(length)|\(.[0].topics|sort|join(","))"' "$T/concordance.json")
   if [ "$merged" = "1|edu,eng" ]; then
     ok "an entity referenced in two topics is ONE merged node spanning both (urn:mif @id merge)"
   else
@@ -1182,18 +1182,18 @@ JSON
   fi
 
   # 13g. Deterministic / idempotent.
-  CONFIG="$T/cfg.json" scripts/build-world.sh "$T/reports" "$T/world2.json" >/dev/null 2>&1
-  if diff -q "$T/world.json" "$T/world2.json" >/dev/null 2>&1; then
-    ok "build-world is deterministic (two runs byte-identical)"
+  CONFIG="$T/cfg.json" scripts/build-concordance.sh "$T/reports" "$T/concordance2.json" >/dev/null 2>&1
+  if diff -q "$T/concordance.json" "$T/concordance2.json" >/dev/null 2>&1; then
+    ok "build-concordance is deterministic (two runs byte-identical)"
   else
-    bad "build-world is not deterministic"
+    bad "build-concordance is not deterministic"
   fi
 
   # 13h. Real-sample guard: the SHIPPED corpus (reports/_meta) — which uses MIF built-in
   #      entity types (Concept/Technology) and MIF-native relationships (supports/
   #      contradicts/derived-from) — builds and CONFORMS. A curated fixture could pass
   #      while real data fails; this pins it to the actual corpus.
-  scripts/build-world.sh reports/_meta "$T/real.json" >/dev/null 2>&1
+  scripts/build-concordance.sh reports/_meta "$T/real.json" >/dev/null 2>&1
   if [ -s "$T/real.json" ] && [ "$(jq '.nodes|length' "$T/real.json" 2>/dev/null)" -gt 0 ] && vw "$T/real.json"; then
     ok "the shipped sample corpus builds and conforms (MIF core entity/relationship vocabulary recognized)"
   else

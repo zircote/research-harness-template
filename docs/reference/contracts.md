@@ -140,16 +140,16 @@ the `ontology-manager` skill scaffolds a new valid ontology (registry extensible
 the resolver pass/fail matrix; fail-safe; binding
 → catalog → registry integrity; and the pack-enable path end to end.
 
-## World graph — `schemas/world-graph.schema.json`
+## Concordance — `schemas/concordance.schema.json`
 
 The ontological spine (SPEC §8d): one unified, ontology-typed graph spanning 1..N
-topics. `scripts/build-world.sh [<reports-dir>] [<out>]` merges every topic's findings
-into a single `world.json` — concept nodes (one per finding) stamped with their resolved
+topics. `scripts/build-concordance.sh [<reports-dir>] [<out>]` merges every topic's findings
+into a single `concordance.json` — concept nodes (one per finding) stamped with their resolved
 ontology `entityType` + source `ontology` + falsification `verdict`; entity nodes
 **merged across topics by `urn:mif:` @id**; edges = typed `relationships[]` + `mentions`.
 ALL findings are nodes; **falsified are flagged, not excluded** (the full research
 record). Deterministic (sorted, no wall-clock) — "living" = on-demand rebuild.
-`scripts/validate-world.sh <world.json>` is the **fail-closed conformance** check: every
+`scripts/validate-concordance.sh <concordance.json>` is the **fail-closed conformance** check: every
 node `entityType` and every relationship edge `type` must be declared by an ontology
 **bound to the node's topic(s)** (core ∪ bound), and each relationship's endpoints must
 satisfy the ontology's `from`/`to` domains — an undeclared type or a domain violation is

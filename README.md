@@ -28,7 +28,7 @@ The repository has four layers, all present on clone (design spec §5):
    Findings are typed against per-topic ontologies (an always-on generic core plus
    optional domain ontology packs), enforced deterministically — see
    [docs/explanation/ontology-conformance.md](docs/explanation/ontology-conformance.md).
-   Those types compose into a unified, fail-closed cross-topic **world graph** (the
+   Those types compose into a unified, fail-closed cross-topic **concordance** (the
    ontological spine) — see
    [docs/explanation/ontological-spine.md](docs/explanation/ontological-spine.md).
 

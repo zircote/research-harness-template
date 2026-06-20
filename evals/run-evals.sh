@@ -101,14 +101,14 @@ run_neg "ontology-ambiguous"        bash -c "scripts/resolve-ontology.sh evals/f
 run     "ontology-disambiguated"    bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/disambig.json  --topic eng $OC --map \"$TMP/o9.json\""
 run     "ontology-review-coverage"  bash -c "mkdir -p \"$TMP/rep/edu/findings\" && cp evals/fixtures/ontology/good.json \"$TMP/rep/edu/findings/\" && scripts/ontology-review.sh --topic edu --strict --reports-dir \"$TMP/rep\" $OC"
 
-# 5e. Ontological spine (world graph, SPEC §8d): build over a topic corpus and validate
+# 5e. Ontological spine (concordance, SPEC §8d): build over a topic corpus and validate
 #     ontology conformance; an undeclared entityType or a from/to domain violation fails.
-WC="--config evals/fixtures/world/config.json --catalog evals/fixtures/world/catalog.json"
-run     "world-build-and-validate" bash -c "scripts/build-world.sh evals/fixtures/world/reports \"$TMP/w.json\" >/dev/null && scripts/validate-world.sh \"$TMP/w.json\" $WC"
-run     "world-conformant"         scripts/validate-world.sh evals/fixtures/world/good.world.json $WC
-run_neg "world-undeclared-type"    scripts/validate-world.sh evals/fixtures/world/undeclared-type.world.json $WC
-run_neg "world-domain-violation"   scripts/validate-world.sh evals/fixtures/world/domain-violation.world.json $WC
-run     "world-idempotent"         bash -c "scripts/build-world.sh evals/fixtures/world/reports \"$TMP/w1.json\" >/dev/null && scripts/build-world.sh evals/fixtures/world/reports \"$TMP/w2.json\" >/dev/null && diff -q \"$TMP/w1.json\" \"$TMP/w2.json\""
+WC="--config evals/fixtures/concordance/config.json --catalog evals/fixtures/concordance/catalog.json"
+run     "concordance-build-and-validate" bash -c "scripts/build-concordance.sh evals/fixtures/concordance/reports \"$TMP/w.json\" >/dev/null && scripts/validate-concordance.sh \"$TMP/w.json\" $WC"
+run     "concordance-conformant"         scripts/validate-concordance.sh evals/fixtures/concordance/good.concordance.json $WC
+run_neg "concordance-undeclared-type"    scripts/validate-concordance.sh evals/fixtures/concordance/undeclared-type.concordance.json $WC
+run_neg "concordance-domain-violation"   scripts/validate-concordance.sh evals/fixtures/concordance/domain-violation.concordance.json $WC
+run     "concordance-idempotent"         bash -c "scripts/build-concordance.sh evals/fixtures/concordance/reports \"$TMP/w1.json\" >/dev/null && scripts/build-concordance.sh evals/fixtures/concordance/reports \"$TMP/w2.json\" >/dev/null && diff -q \"$TMP/w1.json\" \"$TMP/w2.json\""
 
 echo
 if [ "$FAIL" -gt 0 ]; then

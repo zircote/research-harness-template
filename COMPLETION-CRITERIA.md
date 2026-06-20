@@ -223,17 +223,17 @@ into `scripts/verify.sh` wherever a command can assert it.
   `reports/<topic>/ontology-map.json`, and `/ontology-review` authoring (create /
   expand / enrich ontologies via the `ontology-manager` skill).
 
-### Milestone 13 — Ontological spine / world graph (SPEC §8d)
+### Milestone 13 — Ontological spine / concordance (SPEC §8d)
 
 - Gate: `verify.sh` `gate_m13` shows, against a two-topic fixture corpus, that the
-  `schemas/world-graph.schema.json` validates its sample; that `scripts/build-world.sh`
-  merges topics into a schema-valid `world.json`; that `scripts/validate-world.sh` is
-  fail-closed (a conformant world passes, while an undeclared `entityType`, an undeclared
+  `schemas/concordance.schema.json` validates its sample; that `scripts/build-concordance.sh`
+  merges topics into a schema-valid `concordance.json`; that `scripts/validate-concordance.sh` is
+  fail-closed (a conformant concordance passes, while an undeclared `entityType`, an undeclared
   relationship type, and a `from`/`to` domain violation each fail); that concept nodes are
   stamped with their resolved ontology `entityType` + verdict; that a falsified finding is
   present and flagged (not excluded); that an entity referenced in two topics is one node
   merged by `urn:mif:` @id; and that the build is deterministic. Purely additive.
-- Deliver: a unified, ontology-typed, fail-closed cross-topic world graph — concept nodes
+- Deliver: a unified, ontology-typed, fail-closed cross-topic concordance — concept nodes
   stamped with ontology type + verdict, entities merged across topics by @id, the full
   research record (falsified flagged not excluded), and ontology conformance enforced
   over the graph (entity types + relationship from/to domains).
