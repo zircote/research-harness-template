@@ -84,8 +84,8 @@ Genres are L3 by default; exemption is for orthogonal formats, never genres.
 
 ## Session state — `schemas/session-state.schema.json`
 
-The crash-safe resume checkpoint (SPEC §6b). `scripts/reconcile-session.sh
-<reports-dir>` derives `reports/<topic>/state.json` **purely from disk** — per
+The crash-safe resume checkpoint (SPEC §6b). `scripts/reconcile-session.sh <reports-dir>`
+derives `reports/<topic>/state.json` **purely from disk** — per
 finding `{id, dimension, valid, attempted_at, verdict}`, per-dimension
 `{total, done}`, and per completion-check `{check, passed}` — then prints the
 remaining-work plan. A finding is **done** when it is schema-valid — validity

@@ -35,5 +35,9 @@ if ! ajv validate --spec=draft2020 --strict=false -c ajv-formats \
   echo "write-finding: $NAME does NOT validate — refused; nothing written to $FDIR" >&2
   exit 1
 fi
-mv "$STAGE" "$FDIR/$NAME"
+if ! mv "$STAGE" "$FDIR/$NAME"; then
+  rm -f "$STAGE"
+  echo "write-finding: validated but failed to move into place: $FDIR/$NAME" >&2
+  exit 1
+fi
 echo "write-finding: wrote $FDIR/$NAME (validated)"

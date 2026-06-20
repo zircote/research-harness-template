@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://research-harness.dev/schema/session-state.schema.json",
   "title": "Session State Checkpoint",
-  "description": "A durable, disk-derived checkpoint for resumable research sessions (SPEC §6b continuity). scripts/reconcile-session.sh derives this purely from reports/<topic>/findings/ on disk so that /resume never reworks completed findings: a finding is DONE only once it is schema-valid AND carries extensions.harness.verification.attempted_at (the falsification gate has run). Partial/invalid findings and *.tmp partial writes are excluded from done-counts. The checkpoint carries no wall-clock field so reconcile is byte-deterministic.",
+  "description": "A durable, disk-derived checkpoint for resumable research sessions (SPEC §6b continuity). scripts/reconcile-session.sh derives this purely from reports/<topic>/findings/ on disk so that /resume never reworks completed findings: a finding is DONE once it is schema-valid (validity requires extensions.harness.verification with a verdict, so a valid finding has been through the falsification gate) and not falsified. Partial/invalid findings and *.tmp partial writes are excluded from done-counts. The checkpoint carries no wall-clock field so reconcile is byte-deterministic.",
   "type": "object",
   "required": ["topic", "findings", "dimensions", "checks"],
   "additionalProperties": false,

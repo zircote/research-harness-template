@@ -99,13 +99,25 @@ if [ "$partial_count" -eq 0 ]; then nptw=true; else nptw=false; fi
 state=$(jq -S --argjson nptw "$nptw" \
   '.checks += [{check:"no_partial_writes", passed:$nptw}] | .checks |= sort_by(.check)' <<<"$state")
 
-printf '%s\n' "$state" > "$RD/.state.json.staging" && mv "$RD/.state.json.staging" "$RD/state.json"
+# Write the checkpoint atomically. A failed write/rename must NOT fall through to a
+# plan computed from a stale/missing state.json — abort (callers treat non-zero as
+# "cannot determine remaining work — stop", never "everything done").
+if ! { printf '%s\n' "$state" > "$RD/.state.json.staging" && mv "$RD/.state.json.staging" "$RD/state.json"; }; then
+  rm -f "$RD/.state.json.staging"
+  echo "reconcile: failed to write the state.json checkpoint — refusing to emit a plan." >&2
+  exit 4
+fi
 
-plan=$(jq -r '
+# Compute the plan from the checkpoint. A jq failure here (e.g. an unreadable
+# state.json) must NOT silently become "nothing to do" — that would skip real work.
+if ! plan=$(jq -r '
   ( [ .dimensions | to_entries[] | select(.value.done < .value.total)
       | "dimension \(.key): \(.value.total - .value.done) finding(s) need work" ] )
   + ( [ .checks[] | select(.passed | not) | "check \(.check): FAIL" ] )
-  | sort | .[]' "$RD/state.json")
+  | sort | .[]' "$RD/state.json"); then
+  echo "reconcile: failed to read back the state.json checkpoint — refusing to emit a plan." >&2
+  exit 4
+fi
 
 if [ -z "$plan" ]; then
   echo "nothing to do"
