@@ -97,6 +97,7 @@ re-validate, and `gate_m12` re-checks every ontology against the contract on bui
 - **Create a brand-new ontology** (a new scheme for a new requirement):
 
   ```bash
+  mkdir -p packs/ontologies/<id>
   bash .claude/skills/ontology-manager/scripts/scaffold_ontology.sh \
     <id> 0.1.0 --extends mif-base > packs/ontologies/<id>/<id>.ontology.yaml
   # add domain entity types with yq, then validate:
