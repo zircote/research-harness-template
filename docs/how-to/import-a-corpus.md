@@ -50,11 +50,21 @@ differently — aggregated `reports/<topic>/findings_<dim>.json` wrappers
 (`{dimension, findings:[…]}`, or a bare findings array), not individual MIF
 units — so it must be converted first. The harness ships a converter:
 
-```bash
-# 1. Convert one sigint topic dir into a MIF staging dir (findings/*.json)
-scripts/convert-sigint-corpus.sh <sigint-topic-dir> <staging-dir>
+First enable the conversion path in `harness.config.json` (it is opt-in;
+`convert-sigint-corpus.sh` refuses to run otherwise):
 
-# 2. Import the staged MIF units like any other corpus
+```json
+{ "features": { "sigintCorpusImport": true } }
+```
+
+```bash
+# 1. Convert one sigint topic dir into a MIF staging dir (findings/*.json).
+#    Pass the SAME <topic-id> you will import under — it is baked into every
+#    unit's @id and namespace, so a mismatch registers the topic and the units
+#    under different namespaces. (If omitted, it defaults to the dir basename.)
+scripts/convert-sigint-corpus.sh <sigint-topic-dir> <staging-dir> <topic-id>
+
+# 2. Import the staged MIF units under the SAME <topic-id>
 scripts/import-corpus.sh <staging-dir> <topic-id>
 ```
 
@@ -62,12 +72,15 @@ scripts/import-corpus.sh <staging-dir> <topic-id>
 id, `provenance.sourceType = external_import` (W3C-PROV preserved), the source's
 own dimension carried into `extensions.harness.dimension`, the prior adversarial
 verdict carried into `extensions.harness.verification`, and `updates_finding`
-carried as a typed `updates` relationship. Citations are real `http(s)` URLs
-where the source had one (including bare-domain and embedded-URL recovery).
+carried as a typed `updates` relationship whose target is resolved to the
+converted in-corpus `@id` (so delta findings link to the real node, not a
+placeholder). Citations are real `http(s)` URLs where the source had one
+(including bare-domain and embedded-URL recovery).
 
 `gate_m9` in `scripts/verify.sh` proves the convert→import round-trip against
 `evals/fixtures/sample-sigint-corpus` (lossless count, provenance preserved,
-MIF-derived graph, config-gated internal citations).
+namespace matches the import topic, MIF-derived graph, and both feature flags
+enforced).
 
 ### Internal / document sources (feature-flagged)
 
@@ -81,8 +94,10 @@ gate accepts them **only when the instance opts in** via `harness.config.json`:
 ```
 
 Both flags default to `false` — the template ships strict (http(s)-only
-citations). Enable `internalCitations` in an instance that imported a legacy
-corpus with internal sources; leave it off to keep the strict default.
+citations). `sigintCorpusImport` gates the converter itself; `internalCitations`
+gates whether the citation-integrity gate accepts internal sources. Enable both
+in an instance importing a legacy corpus with internal sources; leave them off to
+keep the strict default.
 
 ## Getting the converter into your instance
 

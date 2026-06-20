@@ -14,6 +14,15 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 ROOT="$(pwd)"
 
+# Template vs instance. The distributable template carries copier.yml; an
+# instantiated harness has it stripped at generation. Template-only self-tests
+# (Milestone 7 distribution, and 8c/8d which assert the template stays clean and
+# refuses in-place imports) run ONLY in the template. An instance legitimately
+# holds an imported corpus in reports/, so those gates are skipped there; the
+# instance still verifies all harness CAPABILITY gates. verify.sh stays identical
+# template-and-instance so `copier update` never conflicts on it.
+IS_TEMPLATE=0; [ -f copier.yml ] && IS_TEMPLATE=1
+
 PASS=0
 FAIL=0
 RED=$'\033[31m'; GREEN=$'\033[32m'; DIM=$'\033[2m'; RST=$'\033[0m'
@@ -462,6 +471,10 @@ gate_m6() {
 # Milestone 7 — Distribution
 # ---------------------------------------------------------------------------
 gate_m7() {
+  if [ "$IS_TEMPLATE" != 1 ]; then
+    info "Milestone 7 — Distribution (template-only; skipped in instance)"
+    return
+  fi
   info "Milestone 7 — Distribution"
 
   # 7a. The Copier template config and its answers/identity templates are present.
@@ -564,22 +577,29 @@ gate_m8() {
   fi
   rm -rf "$T"
 
-  # 8c. The template repo itself ships clean — no imported corpus committed under
-  #     reports/ (only reports/_meta/ scaffolding and the sample session).
-  if [ -z "$(find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
-    ok "template repo reports/ ships clean (no corpus committed outside _meta)"
-  else
-    bad "unexpected corpus committed under reports/ (the template must stay clean)"
-    find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
-  fi
+  # 8c/8d are template-only self-tests: an instantiated harness legitimately holds
+  # an imported corpus in reports/ and may import in place, so these run only in
+  # the template.
+  if [ "$IS_TEMPLATE" = 1 ]; then
+    # 8c. The template repo itself ships clean — no imported corpus committed under
+    #     reports/ (only reports/_meta/ scaffolding and the sample session).
+    if [ -z "$(find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
+      ok "template repo reports/ ships clean (no corpus committed outside _meta)"
+    else
+      bad "unexpected corpus committed under reports/ (the template must stay clean)"
+      find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
+    fi
 
-  # 8d. The import REFUSES to populate the template repo's own reports/ — the
-  #     constraint is enforced by the script, not merely intended.
-  if scripts/import-corpus.sh "$SRC" should-not-land reports >/dev/null 2>&1; then
-    bad "import-corpus.sh did NOT refuse to import into the template's reports/"
-    rm -rf reports/should-not-land
+    # 8d. The import REFUSES to populate the template repo's own reports/ — the
+    #     constraint is enforced by the script, not merely intended.
+    if scripts/import-corpus.sh "$SRC" should-not-land reports >/dev/null 2>&1; then
+      bad "import-corpus.sh did NOT refuse to import into the template's reports/"
+      rm -rf reports/should-not-land
+    else
+      ok "import refuses to populate the template repo's own reports/"
+    fi
   else
-    ok "import refuses to populate the template repo's own reports/"
+    info "Milestone 8 — 8c/8d template-clean checks skipped (instance holds a corpus)"
   fi
 }
 
@@ -589,13 +609,21 @@ gate_m8() {
 gate_m9() {
   info "Milestone 9 — Sigint->MIF corpus conversion"
   local SRC="evals/fixtures/sample-sigint-corpus"
-  local ST T cfg
+  local TOPIC="sigint-sample"
+  local ST T cfg cfg_on
   ST=$(mktemp -d); T=$(mktemp -d)
+
+  # The conversion path is opt-in (features.sigintCorpusImport). Run the gate with
+  # a flag-on config, and pass the SAME topic id used for import below so each
+  # unit's @id/namespace match the registered topic.
+  cfg_on=$(mktemp)
+  jq '.features = ((.features // {}) + {"sigintCorpusImport": true, "internalCitations": true})' \
+    harness.config.json > "$cfg_on"
 
   # 9a. The converter turns a legacy sigint corpus (aggregated findings_<dim>.json
   #     wrappers) into individual MIF units — every unit validates and the count
   #     matches the source findings (lossless conversion).
-  scripts/convert-sigint-corpus.sh "$SRC" "$ST" >/dev/null 2>&1
+  HARNESS_CONFIG="$cfg_on" scripts/convert-sigint-corpus.sh "$SRC" "$ST" "$TOPIC" >/dev/null 2>&1
   local src_n staged_n valid_n=0
   src_n=$(jq 'if type=="array" then length else ((.findings//[])|length) end' "$SRC"/findings_*.json | awk '{s+=$1} END{print s+0}')
   staged_n=$(find "$ST/findings" -name '*.json' 2>/dev/null | grep -c .)
@@ -616,12 +644,14 @@ gate_m9() {
   #     MIF-derived graph intact (entities + a typed relationship carried from
   #     updates_finding) — the same acceptance as gate_m8, over converted input.
   cp harness.config.json "$T/config.json"
-  if scripts/import-corpus.sh "$ST" sigint-sample "$T/reports" "$T/config.json" >/dev/null 2>&1; then
-    local imp_n prov_n
-    imp_n=$(find "$T/reports/sigint-sample/findings" -name '*.json' 2>/dev/null | grep -c .)
-    prov_n=$(find "$T/reports/sigint-sample/findings" -name '*.json' -exec jq -e '.provenance.sourceType=="external_import"' {} \; 2>/dev/null | grep -c true)
-    if [ "$imp_n" = "$staged_n" ] && [ "$prov_n" = "$imp_n" ] \
-       && scripts/assert-graph-mif.sh "$T/reports/sigint-sample/knowledge-graph.json" >/dev/null 2>&1; then
+  if scripts/import-corpus.sh "$ST" "$TOPIC" "$T/reports" "$T/config.json" >/dev/null 2>&1; then
+    local imp_n prov_n ns_ok
+    imp_n=$(find "$T/reports/$TOPIC/findings" -name '*.json' 2>/dev/null | grep -c .)
+    prov_n=$(find "$T/reports/$TOPIC/findings" -name '*.json' -exec jq -e '.provenance.sourceType=="external_import"' {} \; 2>/dev/null | grep -c true)
+    # The unit namespace must match the import topic id (no basename/topic drift).
+    ns_ok=$(find "$T/reports/$TOPIC/findings" -name '*.json' -exec jq -e --arg t "$TOPIC" '.namespace == ("harness/" + $t)' {} \; 2>/dev/null | grep -c true)
+    if [ "$imp_n" = "$staged_n" ] && [ "$prov_n" = "$imp_n" ] && [ "$ns_ok" = "$imp_n" ] \
+       && scripts/assert-graph-mif.sh "$T/reports/$TOPIC/knowledge-graph.json" >/dev/null 2>&1; then
       ok "converted sigint corpus imports with provenance + MIF-derived graph ($imp_n findings)"
     else
       bad "converted sigint import failed (imported=$imp_n prov=$prov_n)"
@@ -650,6 +680,20 @@ gate_m9() {
     bad "sigint fixture produced no internal:document citation to gate-test"
   fi
 
+  # 9d. The conversion path itself is CONFIG-GATED (features.sigintCorpusImport):
+  #     refused when the flag is disabled.
+  local conv_off=0 cfg_off ST2
+  cfg_off=$(mktemp); ST2=$(mktemp -d)
+  printf '{"features":{"sigintCorpusImport":false}}' > "$cfg_off"
+  HARNESS_CONFIG="$cfg_off" scripts/convert-sigint-corpus.sh "$SRC" "$ST2" "$TOPIC" >/dev/null 2>&1 || conv_off=1
+  if [ "$conv_off" = 1 ]; then
+    ok "sigint conversion is config-gated (refused when sigintCorpusImport disabled)"
+  else
+    bad "sigint conversion ran with sigintCorpusImport disabled (flag not enforced)"
+  fi
+  rm -f "$cfg_off"; rm -rf "$ST2"
+
+  rm -f "$cfg_on"
   rm -rf "$ST" "$T"
 }
 

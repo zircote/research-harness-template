@@ -129,6 +129,7 @@ def compact: with_entries(select(.value != null));
       "extensions": {
         "harness": {
           "dimension": $dim,
+          "sourceId": ($f.id // $idslug),
           "verification": {
             "verdict": (($f.verdict // $f.provenance.falsification_attempts[-1].verdict) | verdict_norm),
             "verdict_basis": (($f.verdict_basis // $f.provenance.falsification_attempts[-1].reason // "Imported from prior corpus; not re-verified in this harness.")[0:500])
