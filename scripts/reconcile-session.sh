@@ -79,7 +79,12 @@ done < <(list_findings)
 # belt-and-suspenders guard). Invalid findings count toward total, never toward done.
 state=$(jq -S -n --arg topic "$TOPIC" --argjson f "$records" '
   def isdone: .valid and (.verdict != "falsified");
-  ($f | sort_by(.id)) as $findings
+  # Collapse duplicate @ids (the same finding can appear in both findings/ and the
+  # flat legacy path). One record per id; prefer a DONE copy, else a valid copy, so
+  # a stale invalid duplicate never demotes a completed finding back to rework.
+  ($f | group_by(.id)
+      | map( ( map(select(isdone)) | first ) // ( map(select(.valid)) | first ) // .[0] )
+      | sort_by(.id)) as $findings
   | ($findings | group_by(.dimension) | map({
        key: .[0].dimension,
        value: { total: length, done: ([.[] | select(isdone)] | length) }

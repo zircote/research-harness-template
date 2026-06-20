@@ -88,10 +88,12 @@ The crash-safe resume checkpoint (SPEC §6b). `scripts/reconcile-session.sh
 <reports-dir>` derives `reports/<topic>/state.json` **purely from disk** — per
 finding `{id, dimension, valid, attempted_at, verdict}`, per-dimension
 `{total, done}`, and per completion-check `{check, passed}` — then prints the
-remaining-work plan. A finding is **done** only when it is schema-valid AND gated
-(`extensions.harness.verification.attempted_at` present); invalid findings and
-`*.tmp`/hidden partial writes are excluded from done-counts, so `/resume` never
-reworks completed findings. Reconcile is byte-deterministic and idempotent (no
+remaining-work plan. A finding is **done** when it is schema-valid — validity
+*requires* `extensions.harness.verification` with a verdict, so a valid finding has
+already been through the falsification gate — and not `falsified` (a falsified
+finding's dimension still needs a replacement). Invalid findings and `*.tmp`/hidden
+partial writes are excluded from done-counts, so `/resume` never reworks completed
+findings. Reconcile is byte-deterministic and idempotent (no
 wall-clock field; sorted records) — two runs over the same disk produce identical
 output. `scripts/write-finding.sh <src> <findings-dir> <name>` is the atomic-to-valid
 primitive for placing an **already-valid** finding (e.g. an import): it lands in

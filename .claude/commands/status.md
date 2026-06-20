@@ -56,19 +56,19 @@ jq -r '.dimensions | join(", ")' "$REPORTS_DIR/goal.json" 2>/dev/null
 jq -r '.completion_condition.checks[] | "- " + .id + ": " + .assertion' \
   "$REPORTS_DIR/goal.json" 2>/dev/null
 
-# Active findings = individual MIF units, excluding quarantine/ and archive/
-ACTIVE=$(ls "$REPORTS_DIR"/*.json 2>/dev/null | grep -v -e goal.json | wc -l | tr -d ' ')
+# Active findings = individual MIF units under findings/, excluding quarantine/
+ACTIVE=$(ls "$REPORTS_DIR"/findings/*.json 2>/dev/null | wc -l | tr -d ' ')
 QUARANTINED=$(ls "$REPORTS_DIR"/quarantine/*.json 2>/dev/null | wc -l | tr -d ' ')
 
 # Per-dimension active counts (read dimension from each finding)
-for f in "$REPORTS_DIR"/*.json; do
-  [ "$(basename "$f")" = goal.json ] && continue
+for f in "$REPORTS_DIR"/findings/*.json; do
+  [ -e "$f" ] || continue
   jq -r '.extensions.harness.dimension // "unassigned"' "$f" 2>/dev/null
 done | sort | uniq -c
 
 # Verdict roll-up over active findings
-for f in "$REPORTS_DIR"/*.json; do
-  [ "$(basename "$f")" = goal.json ] && continue
+for f in "$REPORTS_DIR"/findings/*.json; do
+  [ -e "$f" ] || continue
   jq -r '.extensions.harness.verification.verdict // "ungraded"' "$f" 2>/dev/null
 done | sort | uniq -c
 

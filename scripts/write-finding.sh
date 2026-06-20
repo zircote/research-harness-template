@@ -14,6 +14,11 @@ SRC="${1:?usage: write-finding.sh <source.json> <findings-dir> <dest-name.json>}
 FDIR="${2:?findings-dir required}"
 NAME="${3:?dest-name.json required}"
 [ -f "$SRC" ] || { echo "write-finding: source not found: $SRC" >&2; exit 2; }
+# NAME must be a bare filename: a '/' or '..' would let the stage/rename escape
+# the findings dir.
+case "$NAME" in
+  ""|*/*|*..*) echo "write-finding: dest-name must be a bare filename (no '/' or '..'): $NAME" >&2; exit 2 ;;
+esac
 mkdir -p "$FDIR"
 
 # Stage hidden + .json-extensioned, on the SAME filesystem as the destination so the
