@@ -1,0 +1,44 @@
+{
+  "@type": "Concordance",
+  "generator": "build-concordance.sh (MIF-native ontological spine; SPEC §8d)",
+  "nodes": [
+    {
+      "id": "urn:mif:concept:x/edu:f",
+      "kind": "concept",
+      "label": "Algebra textbook",
+      "topics": [
+        "edu"
+      ],
+      "entityType": "title",
+      "ontology": "k12-educational-publishing@0.1.0",
+      "verdict": "survived",
+      "flagged": false
+    },
+    {
+      "id": "urn:mif:entity:prog:math",
+      "kind": "entity",
+      "label": "Math Program",
+      "entityType": "program",
+      "topics": [
+        "edu"
+      ],
+      "flagged": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "urn:mif:concept:x/edu:f",
+      "target": "urn:mif:entity:prog:math",
+      "type": "belongs_to",
+      "strength": 1,
+      "via": "relationship"
+    },
+    {
+      "source": "urn:mif:concept:x/edu:f",
+      "target": "urn:mif:entity:prog:math",
+      "type": "mentions",
+      "strength": null,
+      "via": "entity"
+    }
+  ]
+}

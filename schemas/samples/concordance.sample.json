@@ -1,0 +1,59 @@
+{
+  "@type": "Concordance",
+  "generator": "build-concordance.sh (MIF-native ontological spine; SPEC §8d)",
+  "nodes": [
+    {
+      "id": "urn:mif:concept:x/edu:f1",
+      "kind": "concept",
+      "label": "Algebra textbook",
+      "topics": [
+        "edu"
+      ],
+      "entityType": "title",
+      "ontology": "k12-educational-publishing@0.1.0",
+      "verdict": "survived",
+      "flagged": false
+    },
+    {
+      "id": "urn:mif:concept:x/eng:f1",
+      "kind": "concept",
+      "label": "Kafka adoption",
+      "topics": [
+        "eng"
+      ],
+      "entityType": "component",
+      "ontology": "software-engineering@0.1.0",
+      "verdict": "falsified",
+      "flagged": true
+    },
+    {
+      "id": "urn:mif:entity:org:acme",
+      "kind": "entity",
+      "label": "Acme",
+      "topics": [
+        "edu",
+        "eng"
+      ],
+      "entityType": "organization",
+      "ontology": null,
+      "verdict": null,
+      "flagged": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "urn:mif:concept:x/edu:f1",
+      "target": "urn:mif:entity:org:acme",
+      "type": "mentions",
+      "via": "entity",
+      "strength": null
+    },
+    {
+      "source": "urn:mif:concept:x/eng:f1",
+      "target": "urn:mif:entity:org:acme",
+      "type": "mentions",
+      "via": "entity",
+      "strength": null
+    }
+  ]
+}

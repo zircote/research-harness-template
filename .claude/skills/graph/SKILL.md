@@ -106,3 +106,18 @@ concept node back to its finding for context.
 /graph --kind entity
 /graph --viz
 ```
+
+## Concordance mode — the cross-topic ontological spine (SPEC §8d)
+
+Beyond the per-topic graph, build the **concordance**: one unified, ontology-typed graph
+spanning every topic (concepts stamped with their ontology type + verdict; entities
+merged across topics by `urn:mif:` @id; falsified flagged, not excluded).
+
+```bash
+scripts/build-concordance.sh                       # writes reports/concordance.json over all topics
+scripts/validate-concordance.sh reports/concordance.json # fail-closed ontology conformance
+```
+
+`validate-concordance.sh` requires every node `entityType` and relationship `type` to be
+ontology-declared for its topic, with `from`/`to` domains satisfied (`gate_m13` enforces
+this). See `docs/explanation/ontological-spine.md`.

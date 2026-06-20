@@ -1093,9 +1093,127 @@ gate_m12() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 13 — Ontological spine (cross-topic concordance) (SPEC §8d)
+# One unified, ontology-typed, fail-closed concordance spanning 1..N topics:
+# concept nodes stamped with their resolved ontology entity_type + falsification
+# verdict; entity nodes merged across topics by urn:mif: @id; all findings present,
+# falsified flagged not excluded; every node/edge type ontology-conformant for its
+# topic (from/to domains enforced). Purely additive.
+# ---------------------------------------------------------------------------
+gate_m13() {
+  info "Milestone 13 — Ontological spine (concordance)"
+
+  # 13a. The concordance schema validates its sample.
+  if ajv_plain schemas/concordance.schema.json schemas/samples/concordance.sample.json; then
+    ok "concordance schema validates its sample"
+  else
+    bad "concordance schema does not validate its sample"
+  fi
+
+  # Fixture corpus: 2 topics (edu->k12, eng->software-engineering). edu finding is a
+  # 'title' that belongs_to a 'program'; eng finding is a 'component' (FALSIFIED) that
+  # depends_on a 'technology'; both reference a SHARED 'organization' entity.
+  local T; T="$(mktemp -d)"
+  cat > "$T/cat.json" <<JSON
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"k12-educational-publishing","version":"0.1.0","source":"packs/ontologies/k12-educational-publishing/k12-educational-publishing.ontology.yaml","core":false},
+ {"id":"software-engineering","version":"0.1.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
+]}
+JSON
+  echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["k12-educational-publishing"]},{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$T/cfg.json"
+  mkdir -p "$T/reports/edu/findings" "$T/reports/eng/findings"
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"Algebra textbook","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"survived","verdict_basis":"x"}}},"entity":{"name":"Algebra I","entity_type":"title"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:prog:math"},"name":"Math Program","entityType":"program"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"belongs_to","target":"urn:mif:entity:prog:math","strength":1}]}
+JSON
+  cat > "$T/reports/eng/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/eng:f1","title":"Kafka adoption","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"falsified","verdict_basis":"y"}}},"entity":{"name":"Service","entity_type":"component"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:tech:kafka"},"name":"Kafka","entityType":"technology"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"depends_on","target":"urn:mif:entity:tech:kafka","strength":1}]}
+JSON
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"k12-educational-publishing@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"software-engineering@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
+
+  CONFIG="$T/cfg.json" scripts/build-concordance.sh "$T/reports" "$T/concordance.json" >/dev/null 2>&1
+  vw() { scripts/validate-concordance.sh "$1" --config "$T/cfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; }
+
+  # 13b. build-concordance produces a concordance.json that validates against the schema.
+  if [ -f "$T/concordance.json" ] && ajv_plain schemas/concordance.schema.json "$T/concordance.json"; then
+    ok "build-concordance spans topics and the concordance validates against the schema"
+  else
+    bad "build-concordance did not produce a schema-valid concordance"
+  fi
+
+  # 13c. Conformance is fail-closed: undeclared entityType, undeclared relationship
+  #      type, and a from/to domain violation each FAIL validate-concordance.
+  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "wizard"' "$T/concordance.json" > "$T/u_type.json"
+  jq '(.edges[] | select(.via=="relationship" and (.type=="belongs_to")) | .type) = "frobnicate"' "$T/concordance.json" > "$T/u_rel.json"
+  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "author"' "$T/concordance.json" > "$T/dom.json"
+  if vw "$T/concordance.json" && ! vw "$T/u_type.json" && ! vw "$T/u_rel.json" && ! vw "$T/dom.json"; then
+    ok "conformance fail-closed: conformant passes; undeclared type / undeclared rel / domain violation each fail"
+  else
+    bad "conformance not fail-closed (good=$(vw "$T/concordance.json"; echo $?) badtype=$(vw "$T/u_type.json"; echo $?) badrel=$(vw "$T/u_rel.json"; echo $?) dom=$(vw "$T/dom.json"; echo $?))"
+  fi
+
+  # 13d. Concept nodes are stamped with their ontology entity_type + verdict.
+  local stamp
+  stamp=$(jq -r '.nodes[] | select(.id=="urn:mif:concept:x/edu:f1") | "\(.entityType)|\(.verdict)|\(.ontology)"' "$T/concordance.json")
+  if [ "$stamp" = "title|survived|k12-educational-publishing@0.1.0" ]; then
+    ok "concept nodes are stamped with resolved ontology entity_type + verdict (from ontology-map.json)"
+  else
+    bad "concept node not stamped (got '$stamp')"
+  fi
+
+  # 13e. Falsified findings are FLAGGED, not excluded.
+  local fals
+  fals=$(jq -r '[.nodes[] | select(.id=="urn:mif:concept:x/eng:f1")] | "\(length)|\(.[0].verdict)|\(.[0].flagged)"' "$T/concordance.json")
+  if [ "$fals" = "1|falsified|true" ]; then
+    ok "a falsified finding is present as a node, verdict=falsified and flagged (not excluded)"
+  else
+    bad "falsified handling wrong (got '$fals')"
+  fi
+
+  # 13f. Cross-topic merge: the shared entity is ONE node spanning both topics.
+  local merged
+  merged=$(jq -rc '[.nodes[] | select(.id=="urn:mif:entity:org:acme")] | "\(length)|\(.[0].topics|sort|join(","))"' "$T/concordance.json")
+  if [ "$merged" = "1|edu,eng" ]; then
+    ok "an entity referenced in two topics is ONE merged node spanning both (urn:mif @id merge)"
+  else
+    bad "cross-topic entity merge wrong (got '$merged')"
+  fi
+
+  # 13g. Deterministic / idempotent.
+  CONFIG="$T/cfg.json" scripts/build-concordance.sh "$T/reports" "$T/concordance2.json" >/dev/null 2>&1
+  if diff -q "$T/concordance.json" "$T/concordance2.json" >/dev/null 2>&1; then
+    ok "build-concordance is deterministic (two runs byte-identical)"
+  else
+    bad "build-concordance is not deterministic"
+  fi
+
+  # 13h. Real-sample guard: the SHIPPED corpus (reports/_meta) — which uses MIF built-in
+  #      entity types (Concept/Technology) and MIF-native relationships (supports/
+  #      contradicts/derived-from) — builds and CONFORMS. A curated fixture could pass
+  #      while real data fails; this pins it to the actual corpus.
+  scripts/build-concordance.sh reports/_meta "$T/real.json" >/dev/null 2>&1
+  # EVERY shipped finding must survive as a REAL concept node (carrying its verdict, not
+  # dropped to an external stub) — even when the topic has no ontology-map.json. Guards
+  # against the empty-stream lookup that silently dropped untyped findings.
+  local nfind nreal
+  nfind=$(find reports/_meta -path '*/findings/*.json' ! -name '.*' ! -name '*.tmp' 2>/dev/null | grep -c . || true)
+  nreal=$(jq '[.nodes[] | select(.kind=="concept" and (.external|not) and .verdict != null)] | length' "$T/real.json" 2>/dev/null)
+  if [ -s "$T/real.json" ] && [ "$(jq '.nodes|length' "$T/real.json" 2>/dev/null)" -gt 0 ] \
+     && [ "$nreal" = "$nfind" ] && [ "$nfind" -gt 0 ] && vw "$T/real.json"; then
+    ok "the shipped corpus builds, conforms, and ALL $nfind findings survive as real verdict-carrying nodes"
+  else
+    bad "the shipped corpus broke (findings $nfind, real concept nodes $nreal, or non-conformant)"
+  fi
+
+  rm -rf "$T"
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13)
 
 for g in "${GATES[@]}"; do "$g"; done
 

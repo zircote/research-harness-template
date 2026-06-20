@@ -139,3 +139,23 @@ unique; VENDOR.lock checksum-locks the contract only (ontology definitions unloc
 the `ontology-manager` skill scaffolds a new valid ontology (registry extensible);
 the resolver pass/fail matrix; fail-safe; binding
 → catalog → registry integrity; and the pack-enable path end to end.
+
+## Concordance — `schemas/concordance.schema.json`
+
+The ontological spine (SPEC §8d): one unified, ontology-typed graph spanning 1..N
+topics. `scripts/build-concordance.sh [<reports-dir>] [<out>]` merges every topic's findings
+into a single `concordance.json` — concept nodes (one per finding) stamped with their resolved
+ontology `entityType` + source `ontology` + falsification `verdict`; entity nodes
+**merged across topics by `urn:mif:` @id**; edges = typed `relationships[]` + `mentions`.
+ALL findings are nodes; **falsified are flagged, not excluded** (the full research
+record). Deterministic (sorted, no wall-clock) — "living" = on-demand rebuild.
+`scripts/validate-concordance.sh <concordance.json>` is the **fail-closed conformance** check: every
+node `entityType` and every relationship edge `type` must be declared by an ontology
+**bound to the node's topic(s)** (core ∪ bound), and each relationship's endpoints must
+satisfy the ontology's `from`/`to` domains — an undeclared type or a domain violation is
+non-zero; a broken toolchain/jq error aborts (never passes vacuously). `gate_m13`
+asserts: the schema validates its sample; the build spans topics and validates; the
+conformance fail-closed matrix (good passes; undeclared type / undeclared relationship /
+domain violation each fail); concept nodes are stamped; falsified is flagged-not-excluded;
+cross-topic @id merge; and determinism. See
+[../explanation/ontological-spine.md](../explanation/ontological-spine.md).
