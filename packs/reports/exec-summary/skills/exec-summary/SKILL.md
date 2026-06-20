@@ -57,5 +57,11 @@ URNs in the output. No bibliography — footnotes only.
 - Exclude any finding whose verification verdict is `falsified`. A falsified finding leaves
   ZERO trace in the document — do NOT mention its numbers, figures, claims, or source in any
   section, including Risks & Caveats. Do not reference, cite, hedge against, or restate
-  anything from a falsified finding. Treat it as if it never existed.
-- Use active voice throughout.
+  anything from a falsified finding. Treat it as if it never existed. If the falsified finding
+  would have supplied data that is now absent (e.g. a cost estimate), frame the gap as
+  "no validated data exists on this topic" — never as "a figure was considered but excluded"
+  or any other allusion to the act of exclusion itself.
+- Use active voice throughout. Avoid all passive constructions — including "is drawn from",
+  "was found to", "were identified", "is provided by", "it was determined". Rewrite as active:
+  write "Three controlled pilots show 40% efficiency gains" not "the 40% reduction is drawn
+  from three controlled pilots".
