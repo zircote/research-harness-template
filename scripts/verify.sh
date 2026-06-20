@@ -1093,9 +1093,109 @@ gate_m12() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 13 — Ontological spine (cross-topic world graph) (SPEC §8d)
+# One unified, ontology-typed, fail-closed world graph spanning 1..N topics:
+# concept nodes stamped with their resolved ontology entity_type + falsification
+# verdict; entity nodes merged across topics by urn:mif: @id; all findings present,
+# falsified flagged not excluded; every node/edge type ontology-conformant for its
+# topic (from/to domains enforced). Purely additive.
+# ---------------------------------------------------------------------------
+gate_m13() {
+  info "Milestone 13 — Ontological spine (world graph)"
+
+  # 13a. The world-graph schema validates its sample.
+  if ajv_plain schemas/world-graph.schema.json schemas/samples/world-graph.sample.json; then
+    ok "world-graph schema validates its sample"
+  else
+    bad "world-graph schema does not validate its sample"
+  fi
+
+  # Fixture corpus: 2 topics (edu->k12, eng->software-engineering). edu finding is a
+  # 'title' that belongs_to a 'program'; eng finding is a 'component' (FALSIFIED) that
+  # depends_on a 'technology'; both reference a SHARED 'organization' entity.
+  local T; T="$(mktemp -d)"
+  cat > "$T/cat.json" <<JSON
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"k12-educational-publishing","version":"0.1.0","source":"packs/ontologies/k12-educational-publishing/k12-educational-publishing.ontology.yaml","core":false},
+ {"id":"software-engineering","version":"0.1.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
+]}
+JSON
+  echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["k12-educational-publishing"]},{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$T/cfg.json"
+  mkdir -p "$T/reports/edu/findings" "$T/reports/eng/findings"
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"Algebra textbook","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"survived","verdict_basis":"x"}}},"entity":{"name":"Algebra I","entity_type":"title"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:prog:math"},"name":"Math Program","entityType":"program"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"belongs_to","target":"urn:mif:entity:prog:math","strength":1}]}
+JSON
+  cat > "$T/reports/eng/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/eng:f1","title":"Kafka adoption","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"falsified","verdict_basis":"y"}}},"entity":{"name":"Service","entity_type":"component"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:tech:kafka"},"name":"Kafka","entityType":"technology"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"depends_on","target":"urn:mif:entity:tech:kafka","strength":1}]}
+JSON
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"k12-educational-publishing@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"software-engineering@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
+
+  CONFIG="$T/cfg.json" scripts/build-world.sh "$T/reports" "$T/world.json" >/dev/null 2>&1
+  vw() { scripts/validate-world.sh "$1" --config "$T/cfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; }
+
+  # 13b. build-world produces a world.json that validates against the schema.
+  if [ -f "$T/world.json" ] && ajv_plain schemas/world-graph.schema.json "$T/world.json"; then
+    ok "build-world spans topics and the world graph validates against the schema"
+  else
+    bad "build-world did not produce a schema-valid world graph"
+  fi
+
+  # 13c. Conformance is fail-closed: undeclared entityType, undeclared relationship
+  #      type, and a from/to domain violation each FAIL validate-world.
+  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "wizard"' "$T/world.json" > "$T/u_type.json"
+  jq '(.edges[] | select(.via=="relationship" and (.type=="belongs_to")) | .type) = "frobnicate"' "$T/world.json" > "$T/u_rel.json"
+  jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "author"' "$T/world.json" > "$T/dom.json"
+  if vw "$T/world.json" && ! vw "$T/u_type.json" && ! vw "$T/u_rel.json" && ! vw "$T/dom.json"; then
+    ok "conformance fail-closed: conformant passes; undeclared type / undeclared rel / domain violation each fail"
+  else
+    bad "conformance not fail-closed (good=$(vw "$T/world.json"; echo $?) badtype=$(vw "$T/u_type.json"; echo $?) badrel=$(vw "$T/u_rel.json"; echo $?) dom=$(vw "$T/dom.json"; echo $?))"
+  fi
+
+  # 13d. Concept nodes are stamped with their ontology entity_type + verdict.
+  local stamp
+  stamp=$(jq -r '.nodes[] | select(.id=="urn:mif:concept:x/edu:f1") | "\(.entityType)|\(.verdict)|\(.ontology)"' "$T/world.json")
+  if [ "$stamp" = "title|survived|k12-educational-publishing@0.1.0" ]; then
+    ok "concept nodes are stamped with resolved ontology entity_type + verdict (from ontology-map.json)"
+  else
+    bad "concept node not stamped (got '$stamp')"
+  fi
+
+  # 13e. Falsified findings are FLAGGED, not excluded.
+  local fals
+  fals=$(jq -r '[.nodes[] | select(.id=="urn:mif:concept:x/eng:f1")] | "\(length)|\(.[0].verdict)|\(.[0].flagged)"' "$T/world.json")
+  if [ "$fals" = "1|falsified|true" ]; then
+    ok "a falsified finding is present as a node, verdict=falsified and flagged (not excluded)"
+  else
+    bad "falsified handling wrong (got '$fals')"
+  fi
+
+  # 13f. Cross-topic merge: the shared entity is ONE node spanning both topics.
+  local merged
+  merged=$(jq -rc '[.nodes[] | select(.id=="urn:mif:entity:org:acme")] | "\(length)|\(.[0].topics|sort|join(","))"' "$T/world.json")
+  if [ "$merged" = "1|edu,eng" ]; then
+    ok "an entity referenced in two topics is ONE merged node spanning both (urn:mif @id merge)"
+  else
+    bad "cross-topic entity merge wrong (got '$merged')"
+  fi
+
+  # 13g. Deterministic / idempotent.
+  CONFIG="$T/cfg.json" scripts/build-world.sh "$T/reports" "$T/world2.json" >/dev/null 2>&1
+  if diff -q "$T/world.json" "$T/world2.json" >/dev/null 2>&1; then
+    ok "build-world is deterministic (two runs byte-identical)"
+  else
+    bad "build-world is not deterministic"
+  fi
+
+  rm -rf "$T"
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13)
 
 for g in "${GATES[@]}"; do "$g"; done
 

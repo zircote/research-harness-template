@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.dev/schema/world-graph.schema.json",
+  "title": "Ontological Spine — World Graph",
+  "description": "A single unified, cross-topic, ontology-typed knowledge graph (SPEC §8d). Built by scripts/build-world.sh from every topic's findings: concept nodes (one per finding) stamped with their resolved ontology entity_type and falsification verdict; entity nodes merged across topics by urn:mif: @id. ALL findings are nodes; falsified are flagged, not excluded. scripts/validate-world.sh enforces that every entityType and relationship type is ontology-declared for its topic (fail-closed).",
+  "type": "object",
+  "required": ["@type", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "@type": { "const": "WorldGraph" },
+    "generator": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "label", "topics", "flagged"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string", "enum": ["concept", "entity"] },
+          "label": { "type": "string" },
+          "topics": { "type": "array", "items": { "type": "string" } },
+          "entityType": { "type": ["string", "null"] },
+          "ontology": { "type": ["string", "null"] },
+          "verdict": { "type": ["string", "null"], "enum": ["falsified", "weakened", "survived", "inconclusive", null] },
+          "flagged": { "type": "boolean" },
+          "external": { "type": "boolean" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "target", "type", "via"],
+        "additionalProperties": false,
+        "properties": {
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "type": { "type": "string" },
+          "via": { "type": "string", "enum": ["relationship", "entity"] },
+          "strength": { "type": ["number", "null"] }
+        }
+      }
+    }
+  }
+}
