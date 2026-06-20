@@ -159,8 +159,13 @@ Each finding is a single MIF concept. The fields **you** are responsible for:
   namespace; **never** an `f_<dimension>_<n>` id).
 - `title`, `content`, `summary`, `created`, and `tags` (lowercase-hyphenated).
 - The MIF **provenance** block (W3C-PROV): `sourceType`, `confidence` (0–1),
-  `trustLevel`. This is MIF's provenance — do **not** invent a parallel
-  `provenance.sources[]` array; evidence URLs live in `citations[]`, not here.
+  `trustLevel`. `sourceType` MUST be one of the MIF enum values exactly —
+  `user_explicit` | `user_implicit` | `agent_inferred` | `external_import` |
+  `system_generated`; for a finding you derived from web research the value is
+  **`agent_inferred`** (never invent values like `web_research` — they fail
+  `schemas/findings.schema.json` validation). This is MIF's provenance — do **not**
+  invent a parallel `provenance.sources[]` array; evidence URLs live in
+  `citations[]`, not here.
 - **`citations[]` — at least one** MIF Citation object per finding (citation-
   integrity is a core gate). Each Citation needs a well-formed `http(s)` `url`, a
   `citationRole` (e.g. `supports`), a `citationType`, a `title`, and `accessed`.
