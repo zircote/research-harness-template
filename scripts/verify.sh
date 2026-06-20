@@ -1024,6 +1024,25 @@ gate_m12() {
     bad "pack-enable path broken (k12 not cataloged or bound finding did not resolve)"
   fi
 
+  # 12i. Always-on generic typing + ambiguity. The generic core (mif-generic) types
+  #      ANY topic, including core-only; a type a generic and a bound domain ontology
+  #      both declare (technology) is ambiguous without an explicit ontology.id.
+  jq '(.ontologies[] | select(.id=="software-engineering") | .enabled) |= true' harness.config.json > "$T/se.cfg"
+  scripts/sync-packs.sh "$T/se.cfg" "$T/se.cat" "$T/se.set" >/dev/null 2>&1
+  jq '.topics = [{"id":"core","namespace":"x/c"},{"id":"eng","namespace":"x/e","ontologies":["software-engineering"]}]' "$T/se.cfg" > "$T/se.rcfg"
+  printf '{"@id":"g","entity":{"name":"REST","entity_type":"concept"}}\n' > "$T/gen.json"
+  printf '{"@id":"a","entity":{"name":"Kafka","entity_type":"technology","category":"infrastructure"}}\n' > "$T/amb.json"
+  printf '{"@id":"d","ontology":{"id":"software-engineering"},"entity":{"name":"Kafka","entity_type":"technology","category":"infrastructure"}}\n' > "$T/dis.json"
+  $RO "$T/gen.json" --topic core --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/g.map" >/dev/null 2>&1; local gen=$?
+  $RO "$T/amb.json" --topic eng  --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/a.map" >/dev/null 2>&1; local amb=$?
+  $RO "$T/dis.json" --topic eng  --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/d.map" >/dev/null 2>&1; local dis=$?
+  local genro; genro=$(jq -r '.[0].resolved_ontology' "$T/g.map" 2>/dev/null)
+  if [ "$gen" = 0 ] && [ "$genro" = "mif-generic@1.0.0" ] && [ "$amb" != 0 ] && [ "$dis" = 0 ]; then
+    ok "generic core types every topic; a generic/domain type collision is ambiguous without ontology.id"
+  else
+    bad "generic/ambiguity wrong (core-only generic=$gen ro=$genro ambiguous=$amb disambiguated=$dis)"
+  fi
+
   rm -rf "$T"
 }
 

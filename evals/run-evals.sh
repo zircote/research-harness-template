@@ -97,6 +97,8 @@ run     "ontology-untyped-ok"       bash -c "scripts/resolve-ontology.sh evals/f
 run_neg "ontology-undeclared-type"  bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/undecl.json  --topic edu  $OC --map \"$TMP/o5.json\""
 run_neg "ontology-missing-required" bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/missing.json --topic edu  $OC --map \"$TMP/o6.json\""
 run_neg "ontology-unbound-for-topic" bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/good.json   --topic bare $OC --map \"$TMP/o7.json\""
+run_neg "ontology-ambiguous"        bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/ambiguous.json --topic eng $OC --map \"$TMP/o8.json\""
+run     "ontology-disambiguated"    bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/disambig.json  --topic eng $OC --map \"$TMP/o9.json\""
 
 echo
 if [ "$FAIL" -gt 0 ]; then

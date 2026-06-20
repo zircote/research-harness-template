@@ -89,6 +89,15 @@ if [ -n "$TOPIC" ]; then
       echo "resolve-ontology: topic '$TOPIC' binds '$bid' which is not enabled/cataloged — fail" >&2
       record "$et" "" "unresolved" false; exit 1
     fi
+    # A version-pinned binding (id@x.y.z) must match the cataloged version.
+    case "$b" in
+      *@*) bver="${b#*@}"
+           cver=$(jq -r --arg id "$bid" '.ontologies[]? | select(.id==$id) | .version' "$CATALOG" | head -1)
+           if [ "$bver" != "$cver" ]; then
+             echo "resolve-ontology: topic '$TOPIC' binds '$bid@$bver' but the catalog has '$cver' — fail" >&2
+             record "$et" "" "unresolved" false; exit 1
+           fi ;;
+    esac
     allowed="$allowed $bid"
   done < <(jq -r --arg t "$TOPIC" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG")
 fi
