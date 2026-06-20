@@ -2,6 +2,10 @@
   "name": "github-discuss",
   "version": "1.0.0",
   "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "GitHub discussion bodies are emitted to an external service in its own markdown dialect, orthogonal to the MIF report; the MIF Level-3 source of truth lives in the generic report channel."
+  },
   "description": "Publish a synthesized deliverable to GitHub Discussions \u2014 an announcement of completed research, a Q&A thread about methodology, or a non-canonical observation",
   "license": "MIT",
   "author": {

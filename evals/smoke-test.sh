@@ -36,6 +36,24 @@ else
   note "FAIL: session goal does not validate"; fail=1
 fi
 
+# Phase 0b — inbound boundary (SPEC §10): a raw source is normalized into a MIF
+# source-envelope and validated at L3 before any analyst consumes it; an invalid
+# source (empty content) is refused.
+if scripts/wrap-source.sh --url "https://example.com/doc" --content-type "text/html" \
+     --namespace "harness/smoke" --slug "smoke-source" --out "$TMP/source.json" \
+     --content "A primary-source excerpt the analyst read." >/dev/null 2>&1 \
+   && ajv_mif schemas/mif/source-envelope.schema.json "$TMP/source.json"; then
+  note "inbound source normalized + validated as a MIF source-envelope"
+else
+  note "FAIL: inbound source did not normalize/validate at the boundary"; fail=1
+fi
+if scripts/wrap-source.sh --url "https://example.com/doc" --content-type "text/html" \
+     --namespace "harness/smoke" --slug "empty" --out "$TMP/empty.json" --content "" >/dev/null 2>&1; then
+  note "FAIL: empty-content source was accepted (should be refused)"; fail=1
+else
+  note "empty-content source refused at the boundary — as expected"
+fi
+
 # Phase 1 — dimension analysis: a candidate (pre-falsification) finding exists.
 # Before the gate runs it must NOT yet be schema-valid (no verification verdict).
 if ajv_mif schemas/findings.schema.json "$RAW"; then

@@ -51,6 +51,41 @@ run "outputs-blog-and-book" bash -c '
   scripts/render-artifact.sh "'"$TMP"'/a.json" book "'"$TMP"'/chapter.md" &&
   [ -s "'"$TMP"'/post.md" ] && [ -s "'"$TMP"'/chapter.md" ]'
 
+# 5. MIF I/O conformance (SPEC §10).
+# 5a. A compliant report projects to a valid MIF L3 finding; bad ones are rejected.
+run     "report-mif-good"           scripts/mif-project.sh schemas/samples/report.sample.md
+run_neg "report-mif-bad"            scripts/mif-project.sh evals/fixtures/report-bad.md
+run_neg "report-falsified-rejected" scripts/mif-project.sh evals/fixtures/report-falsified.md
+
+# 5b. The report channel emits a valid L3 report end-to-end (write-then-validate).
+run "report-channel-e2e" bash -c '
+  scripts/synthesize-artifact.sh "'"$SF"'" general "'"$TMP"'/r.json" &&
+  scripts/render-artifact.sh "'"$TMP"'/r.json" report "'"$TMP"'/report.md" evals/fixtures/report-verification.json &&
+  scripts/mif-project.sh "'"$TMP"'/report.md"'
+
+# 5b-2. The documented verdict path is real: a verdict PRODUCED by falsify.sh (not
+#       hand-authored) flows through extraction into a valid L3 report. Proves the
+#       falsify.sh -> verification-block -> report channel seam the agent doc uses.
+run "report-verdict-from-falsify" bash -c '
+  scripts/falsify.sh evals/fixtures/raw-finding.json evals/fixtures/evidence.json > "'"$TMP"'/ff.json" &&
+  jq ".extensions.harness.verification" "'"$TMP"'/ff.json" > "'"$TMP"'/vf.json" &&
+  scripts/synthesize-artifact.sh "'"$SF"'" general "'"$TMP"'/ra.json" &&
+  scripts/render-artifact.sh "'"$TMP"'/ra.json" report "'"$TMP"'/rr.md" "'"$TMP"'/vf.json" &&
+  scripts/mif-project.sh "'"$TMP"'/rr.md"'
+
+# 5c. Inbound source-envelope: a valid envelope passes; an invalid one is refused.
+run     "source-envelope-good" ajv validate --spec=draft2020 --strict=false -c ajv-formats \
+          -s schemas/mif/source-envelope.schema.json -r schemas/mif/mif.schema.json \
+          -r schemas/mif/definitions/entity-reference.schema.json -d schemas/samples/source-envelope.sample.json
+run_neg "source-envelope-bad"  ajv validate --spec=draft2020 --strict=false -c ajv-formats \
+          -s schemas/mif/source-envelope.schema.json -r schemas/mif/mif.schema.json \
+          -r schemas/mif/definitions/entity-reference.schema.json -d evals/fixtures/source-envelope-bad.json
+
+# 5d. Exemptions are declared (blog + book first-class, channel packs via mif.exempt).
+run "exempt-channels-declared" bash -c '
+  jq -e "[.outputs[]|select(.channel==\"blog\" or .channel==\"book\")|select(.mifExempt==true)]|length==2" harness.config.json >/dev/null &&
+  jq -e ".mif.exempt==true" packs/channels/pdf/.claude-plugin/plugin.json >/dev/null'
+
 echo
 if [ "$FAIL" -gt 0 ]; then
   printf '%srun-evals: %d passed, %d FAILED%s\n' "$RED" "$PASS" "$FAIL" "$RST"

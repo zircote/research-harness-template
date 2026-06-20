@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.dev/schema/source-envelope.schema.json",
+  "title": "MIF Source Envelope (inbound boundary)",
+  "description": "A raw ingested source normalized into a MIF v1.0 memory unit at the ingestion boundary (SPEC §10, inbound conformance). The base $ref points at the REAL vendored MIF schema (schemas/mif/mif.schema.json); this file only adds, never overrides. Harness-local requirements: a provenance block carrying a sourceType (W3C-PROV, the non-negotiable inbound invariant mirrored from import-corpus.sh), and extensions.harness.source carrying the fetch metadata (url, fetchedAt, contentType). Validated with the same ajv MIF closure as findings.",
+  "allOf": [
+    { "$ref": "https://mif-spec.dev/schema/mif.schema.json" },
+    {
+      "type": "object",
+      "required": ["provenance", "extensions"],
+      "properties": {
+        "provenance": {
+          "type": "object",
+          "required": ["sourceType"],
+          "properties": {
+            "sourceType": {
+              "type": "string",
+              "description": "How the source entered: agent_inferred for a live WebFetch/WebSearch, external_import for a corpus import.",
+              "enum": [
+                "user_explicit",
+                "user_implicit",
+                "agent_inferred",
+                "external_import",
+                "system_generated"
+              ]
+            }
+          }
+        },
+        "extensions": {
+          "type": "object",
+          "required": ["harness"],
+          "properties": {
+            "harness": {
+              "type": "object",
+              "required": ["source"],
+              "properties": {
+                "source": {
+                  "type": "object",
+                  "description": "Fetch-boundary metadata for the raw source this envelope wraps.",
+                  "required": ["url", "fetchedAt", "contentType"],
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Canonical URL (or file URI) the source was fetched from."
+                    },
+                    "fetchedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When the source was retrieved (ISO 8601)."
+                    },
+                    "contentType": {
+                      "type": "string",
+                      "description": "MIME type of the fetched source (text/html, application/pdf, text/plain, ...)."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,10 @@
   "name": "pdf",
   "version": "1.0.0",
   "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "PDF is a binary render format orthogonal to MIF markdown structure; the MIF Level-3 source of truth lives in the generic report channel."
+  },
   "description": "Render a synthesized deliverable to a styled PDF \u2014 GitHub-flavored Markdown, a generated title page, a table of contents, and rasterized Mermaid diagrams",
   "license": "MIT",
   "author": {

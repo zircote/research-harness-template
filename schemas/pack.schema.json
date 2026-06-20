@@ -22,6 +22,22 @@
       "enum": ["methodology", "genre", "channel", "ontology"],
       "description": "The pack taxonomy (SPEC §7b table): methodology adds dimensions/analyst skills; genre adds deliverable templates; channel adds render adapters; ontology adds MIF entity/relationship/trait extensions."
     },
+    "mif": {
+      "type": "object",
+      "description": "MIF output-conformance declaration (SPEC §10). A channel pack whose target format is orthogonal to MIF (pdf, audio, an external service body) declares exempt:true so the MIF I/O conformance gate skips and logs its outputs instead of requiring a Level-3 projection. Genre packs are L3 by default and MUST NOT declare exemption — exemption is for orthogonal FORMATS, never for genres.",
+      "additionalProperties": false,
+      "properties": {
+        "exempt": {
+          "type": "boolean",
+          "description": "When true, this pack's rendered outputs are exempt from the MIF Level-3 output-conformance gate."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why the format is orthogonal to the result (required to make an exemption auditable)."
+        }
+      }
+    },
     "license": { "type": "string" },
     "author": {
       "oneOf": [

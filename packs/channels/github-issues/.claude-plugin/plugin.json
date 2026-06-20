@@ -2,6 +2,10 @@
   "name": "github-issues",
   "version": "1.0.0",
   "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "GitHub issue bodies are emitted to an external service in its own markdown dialect, orthogonal to the MIF report; the MIF Level-3 source of truth lives in the generic report channel."
+  },
   "description": "Convert a synthesized deliverable into actionable GitHub issues \u2014 atomize its recommendations into sprint-sized, well-structured issues with acceptance criteria and evidence-justified priority",
   "license": "MIT",
   "author": {

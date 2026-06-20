@@ -115,6 +115,25 @@ Follow the resolved methodology:
 - **Capture provenance and citations as you go.** For each claim, record the exact
   source URL, a supporting snippet, and the fetch date.
 
+### Normalize each source at the boundary (MIF source-envelope, SPEC §10)
+
+Inbound conformance: a raw source is wrapped as a MIF source-envelope and
+validated **before** you compose findings from it, so a finding's citation traces
+back to a primary text the harness has captured and validated. For each source you
+rely on:
+
+```bash
+scripts/wrap-source.sh --url "<url>" --content-type "<mime>" \
+  --namespace "<topic-namespace>" --slug "<source-slug>" \
+  --out "reports/<topic>/sources/<source-slug>.json" \
+  --content-file <fetched-body-file>   # or --content "<excerpt>"
+```
+
+`wrap-source.sh` refuses (non-zero) any source that does not validate at MIF
+Level 3 — do not consume a refused source. Reference the envelope's
+`urn:mif:source:<ns>:<slug>` id from the finding's citation so the claim is
+traceable to the captured source.
+
 ### WebSearch retry protocol
 
 If a search fails or returns nothing: (1) retry once rephrased; (2) try a

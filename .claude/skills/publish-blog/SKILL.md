@@ -49,3 +49,8 @@ citation-integrity and citation-leak gates run uniformly across both.
   primary source; do not just delete the token.
 - The post is a projection of the artifact — to change the content, change the
   findings or the synthesis, not the rendered Markdown in place.
+- **`blog` is a MIF-exempt channel** (declared `mifExempt: true` in
+  `harness.config.json` `outputs[]`): its public prose is orthogonal to MIF, so the
+  MIF Level-3 source of truth lives in the generic `report` channel
+  (`reports/<topic>/<slug>.md`), not the post. The MIF I/O conformance gate skips
+  and logs the post; it does not require an L3 projection of it.

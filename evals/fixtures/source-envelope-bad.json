@@ -1,0 +1,15 @@
+{
+  "@context": "https://mif-spec.dev/schema/context.jsonld",
+  "@type": "Concept",
+  "@id": "urn:mif:source:harness/example-topic:bad",
+  "conceptType": "episodic",
+  "content": "raw body",
+  "created": "2026-06-19T12:00:00Z",
+  "provenance": {
+    "@type": "Provenance",
+    "sourceType": "agent_inferred"
+  },
+  "extensions": {
+    "harness": {}
+  }
+}

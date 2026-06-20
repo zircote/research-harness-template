@@ -48,3 +48,8 @@ a chapter must read as if written from public primary sources alone.
   only the public sources in its endnotes.
 - The chapter is a projection of the artifact; change the findings or synthesis,
   not the rendered Markdown in place.
+- **`book` is a MIF-exempt channel** (declared `mifExempt: true` in
+  `harness.config.json` `outputs[]`): its public prose is orthogonal to MIF, so the
+  MIF Level-3 source of truth lives in the generic `report` channel
+  (`reports/<topic>/<slug>.md`), not the chapter. The MIF I/O conformance gate skips
+  and logs the chapter; it does not require an L3 projection of it.

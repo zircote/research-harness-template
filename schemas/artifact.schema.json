@@ -16,6 +16,11 @@
       "pattern": "^[a-z][a-z0-9-]*$"
     },
     "audience": { "type": "string" },
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$",
+      "description": "The MIF namespace of the surviving finding set, carried through so the generic `report` projection can mint its urn:mif:report:<namespace>:<slug> id."
+    },
     "newsworthiness": {
       "type": "string",
       "enum": ["high", "medium", "low"],
@@ -49,13 +54,33 @@
     "sources": {
       "type": "array",
       "minItems": 1,
-      "description": "MIF-shaped citations (url required), deduplicated across the finding set.",
+      "description": "MIF-shaped citations, deduplicated across the finding set. citationType/citationRole carry the full MIF Level-3 citation shape so a report projection (reports/<topic>/<slug>.md) validates at L3, not just title+url.",
       "items": {
         "type": "object",
         "required": ["title", "url"],
         "properties": {
           "title": { "type": "string", "minLength": 1 },
-          "url": { "type": "string", "format": "uri" }
+          "url": { "type": "string", "format": "uri" },
+          "citationType": {
+            "type": "string",
+            "description": "MIF citation source category (article, paper, documentation, …) carried through for the L3 report projection."
+          },
+          "citationRole": {
+            "type": "string",
+            "description": "MIF citation relationship to the claim (supports, background, …) carried through for the L3 report projection."
+          }
+        }
+      }
+    },
+    "mif": {
+      "type": "object",
+      "description": "MIF output-conformance marker (SPEC §10). The report-synthesizer stamps how this artifact's report projection is to be treated by the MIF I/O conformance gate.",
+      "additionalProperties": false,
+      "properties": {
+        "conformanceLevel": {
+          "type": "integer",
+          "enum": [1, 2, 3],
+          "description": "The MIF level the generic `report` projection of this artifact meets (3 for a falsification-graded report)."
         }
       }
     }

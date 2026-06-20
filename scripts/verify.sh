@@ -698,9 +698,74 @@ gate_m9() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 10 — MIF I/O conformance (SPEC §10)
+# Every basic markdown report the harness emits is MIF Level 3 (same bar as a
+# finding); every ingested source is a validated MIF source-envelope; and the
+# only exceptions are channels explicitly declared exempt (logged, never silent).
+# ---------------------------------------------------------------------------
+gate_m10() {
+  info "Milestone 10 — MIF I/O conformance"
+
+  # 10a. The report sample is valid MIF L3 markdown (frontmatter+body projects to
+  #      a finding that validates against findings.schema.json + citation-integrity).
+  if scripts/mif-project.sh schemas/samples/report.sample.md >/dev/null 2>&1; then
+    ok "report sample is valid MIF L3 markdown (projects to a finding)"
+  else
+    bad "report sample does not project to a valid MIF L3 finding"
+  fi
+
+  # 10b. The source-envelope sample validates at MIF L3 (inbound contract).
+  if ajv_mif schemas/mif/source-envelope.schema.json schemas/samples/source-envelope.sample.json; then
+    ok "source-envelope sample validates at MIF L3"
+  else
+    bad "source-envelope sample does not validate at MIF L3"
+  fi
+
+  # 10c. Every emitted generic report (reports/<topic>/<slug>.md, excluding the
+  #      _meta scaffolding) projects to a valid L3 finding. Vacuously true in the
+  #      clean template; binds the moment an instance emits a report.
+  #      NOTE: this scans the `report` channel's known path — the only non-exempt
+  #      channel today. A future non-exempt channel emitting elsewhere would need
+  #      its path added here (cross-checked against outputs[] without mifExempt).
+  local md bad_r=""
+  while IFS= read -r md; do
+    [ -z "$md" ] && continue
+    scripts/mif-project.sh "$md" >/dev/null 2>&1 || bad_r="${bad_r}$md "
+  done < <(find reports -mindepth 2 -maxdepth 2 -name '*.md' -not -path 'reports/_meta/*' 2>/dev/null)
+  if [ -z "$bad_r" ]; then
+    ok "every emitted generic report projects to a valid MIF L3 finding"
+  else
+    bad "non-conformant report(s): $bad_r"
+  fi
+
+  # 10d. Every ingested source-envelope (reports/<topic>/sources/*.json) validates.
+  local sj bad_s=""
+  while IFS= read -r sj; do
+    [ -z "$sj" ] && continue
+    ajv_mif schemas/mif/source-envelope.schema.json "$sj" || bad_s="${bad_s}$sj "
+  done < <(find reports -path '*/sources/*.json' 2>/dev/null)
+  if [ -z "$bad_s" ]; then
+    ok "every ingested source-envelope validates at MIF L3"
+  else
+    bad "non-conformant source-envelope(s): $bad_s"
+  fi
+
+  # 10e. Exemptions are declared AND logged (no silent caps): first-class channels
+  #      via harness.config outputs[].mifExempt, channel packs via plugin.json mif.exempt.
+  local cexempt pexempt=""
+  cexempt=$(jq -r '[.outputs[]? | select(.mifExempt==true) | .channel] | join(", ")' harness.config.json 2>/dev/null)
+  local mf
+  while IFS= read -r mf; do
+    [ -z "$mf" ] && continue
+    jq -e '.mif.exempt==true' "$mf" >/dev/null 2>&1 && pexempt="${pexempt}$(jq -r '.name' "$mf") "
+  done < <(find packs -path '*/.claude-plugin/plugin.json' 2>/dev/null | sort)
+  ok "MIF-exempt channels (skipped + logged) — outputs: [${cexempt:-none}]; packs: [${pexempt:-none}]"
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10)
 
 for g in "${GATES[@]}"; do "$g"; done
 
