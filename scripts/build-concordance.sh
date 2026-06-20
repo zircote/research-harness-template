@@ -32,7 +32,7 @@ for fdir in "$RD"/*/findings; do
   c=$(jq -s --arg t "$topic" --argjson map "$mapdoc" '
     map( ."@id" as $fid
        | (.extensions.harness.verification.verdict // null) as $v
-       | ($map[] | select(.finding_id == $fid)) as $om
+       | (first($map[] | select(.finding_id == $fid)) // {}) as $om
        | { id:$fid, kind:"concept", label:(.title // $fid), topics:[$t],
            entityType:($om.entity_type // .entity.entity_type // null),
            ontology:($om.resolved_ontology // null),

@@ -1194,10 +1194,17 @@ JSON
   #      contradicts/derived-from) — builds and CONFORMS. A curated fixture could pass
   #      while real data fails; this pins it to the actual corpus.
   scripts/build-concordance.sh reports/_meta "$T/real.json" >/dev/null 2>&1
-  if [ -s "$T/real.json" ] && [ "$(jq '.nodes|length' "$T/real.json" 2>/dev/null)" -gt 0 ] && vw "$T/real.json"; then
-    ok "the shipped sample corpus builds and conforms (MIF core entity/relationship vocabulary recognized)"
+  # EVERY shipped finding must survive as a REAL concept node (carrying its verdict, not
+  # dropped to an external stub) — even when the topic has no ontology-map.json. Guards
+  # against the empty-stream lookup that silently dropped untyped findings.
+  local nfind nreal
+  nfind=$(find reports/_meta -path '*/findings/*.json' ! -name '.*' ! -name '*.tmp' 2>/dev/null | grep -c . || true)
+  nreal=$(jq '[.nodes[] | select(.kind=="concept" and (.external|not) and .verdict != null)] | length' "$T/real.json" 2>/dev/null)
+  if [ -s "$T/real.json" ] && [ "$(jq '.nodes|length' "$T/real.json" 2>/dev/null)" -gt 0 ] \
+     && [ "$nreal" = "$nfind" ] && [ "$nfind" -gt 0 ] && vw "$T/real.json"; then
+    ok "the shipped corpus builds, conforms, and ALL $nfind findings survive as real verdict-carrying nodes"
   else
-    bad "the shipped sample corpus does not build/conform"
+    bad "the shipped corpus broke (findings $nfind, real concept nodes $nreal, or non-conformant)"
   fi
 
   rm -rf "$T"

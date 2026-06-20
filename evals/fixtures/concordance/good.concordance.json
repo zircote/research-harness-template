@@ -1,6 +1,6 @@
 {
-  "@type": "WorldGraph",
-  "generator": "build-world.sh (MIF-native ontological spine; SPEC §8d)",
+  "@type": "Concordance",
+  "generator": "build-concordance.sh (MIF-native ontological spine; SPEC §8d)",
   "nodes": [
     {
       "id": "urn:mif:concept:x/edu:f",

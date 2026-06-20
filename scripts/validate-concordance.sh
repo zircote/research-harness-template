@@ -20,8 +20,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$GRAPH" ] && [ -f "$GRAPH" ] || { echo "validate-concordance: concordance not found: ${GRAPH:-<none>}" >&2; exit 2; }
-# Fail-safe: without the catalog we cannot determine bound ontologies — abort, never pass.
+# Fail-safe: without the catalog OR the config we cannot determine bound ontologies — abort,
+# never validate with an empty/unknowable binding set (which could pass a domain graph vacuously).
 [ -f "$CATALOG" ] || { echo "validate-concordance: catalog missing ($CATALOG) — run sync-packs.sh; refusing to validate" >&2; exit 3; }
+[ -f "$CONFIG" ]  || { echo "validate-concordance: config missing ($CONFIG) — topic bindings unknowable; refusing to validate" >&2; exit 3; }
 
 src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$CATALOG" | head -1; }
 core_ids=$(jq -r '.ontologies[]? | select(.core) | .id' "$CATALOG")
