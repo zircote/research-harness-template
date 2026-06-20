@@ -64,15 +64,19 @@ case "$CHANNEL" in
     fi
     # Emit YAML frontmatter from the concept JSON via yq (the YAML analog of jq;
     # the same tool mif-project.sh reads it back with — consistent jq/yq tooling).
-    { echo "---"; printf '%s' "$CONCEPT" | yq -p=json -o=yaml '.'; echo "---"; echo; printf '%s\n' "$BODY"; } > "$OUT"
-    # Write-then-validate: the report is not emitted until it projects to a valid
-    # MIF L3 finding (requires a real, non-falsified verification verdict).
-    if ! scripts/mif-project.sh "$OUT" >/dev/null 2>&1; then
-      echo "render: report $OUT does NOT project to a valid MIF L3 finding." >&2
+    # Write to a temp and move into place ONLY after it validates (atomic /
+    # fail-closed, like wrap-source.sh) so a rejected report never leaves an
+    # invalid or partially-written file behind at $OUT.
+    RTMPD="$(mktemp -d)"; RTMP="$RTMPD/report.md"
+    { echo "---"; printf '%s' "$CONCEPT" | yq -p=json -o=yaml '.'; echo "---"; echo; printf '%s\n' "$BODY"; } > "$RTMP"
+    if ! scripts/mif-project.sh "$RTMP" >/dev/null 2>&1; then
+      echo "render: report does NOT project to a valid MIF L3 finding (not written to $OUT)." >&2
       echo "render: run the falsification gate over the synthesised claims first and pass <verification.json>." >&2
-      scripts/mif-project.sh "$OUT" 2>&1 | sed 's/^/  /' >&2 || true
-      exit 1
+      scripts/mif-project.sh "$RTMP" 2>&1 | sed 's/^/  /' >&2 || true
+      rm -rf "$RTMPD"; exit 1
     fi
+    mkdir -p "$(dirname "$OUT")"
+    mv "$RTMP" "$OUT"; rm -rf "$RTMPD"
     ;;
   blog)
     # A blog post: title, lede, body sections as ## headings, a Sources list.

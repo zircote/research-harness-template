@@ -36,6 +36,13 @@
           "minLength": 1,
           "description": "Why the format is orthogonal to the result (required to make an exemption auditable)."
         }
+      },
+      "if": {
+        "properties": { "exempt": { "const": true } },
+        "required": ["exempt"]
+      },
+      "then": {
+        "required": ["reason"]
       }
     },
     "license": { "type": "string" },

@@ -35,21 +35,29 @@ done
 : "${URL:?--url required}" "${CT:?--content-type required}" "${NS:?--namespace required}" \
   "${SLUG:?--slug required}" "${OUT:?--out required}"
 
-if [ -n "$CFILE" ]; then
-  [ -f "$CFILE" ] || { echo "wrap-source: content file not found: $CFILE" >&2; exit 2; }
-  CONTENT="$(cat "$CFILE")"
-elif [ -z "$CONTENT" ] && [ ! -t 0 ]; then
-  CONTENT="$(cat)"
-fi
-[ -n "$CONTENT" ] || { echo "wrap-source: empty content (provide --content-file, --content, or stdin)" >&2; exit 2; }
 [ -n "$TITLE" ] || TITLE="$SLUG"
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-mkdir -p "$(dirname "$OUT")"
 # Compose into a .json temp (ajv-cli picks its parser by extension; .tmp is
 # mis-parsed) so validation runs before the envelope reaches its final path.
 TMPD="$(mktemp -d)"; TMP="$TMPD/envelope.json"; trap 'rm -rf "$TMPD"' EXIT
-if ! jq -n --arg ns "$NS" --arg slug "$SLUG" --arg title "$TITLE" --arg content "$CONTENT" \
+
+# Keep the source body ON DISK and let jq read it with --rawfile. A large source
+# (source-chunker's use case) must not be slurped into a shell variable / jq --arg,
+# which is memory-heavy and can hit argument-size limits.
+CONTENT_FILE="$TMPD/content"
+if [ -n "$CFILE" ]; then
+  [ -f "$CFILE" ] || { echo "wrap-source: content file not found: $CFILE" >&2; exit 2; }
+  CONTENT_FILE="$CFILE"
+elif [ -n "$CONTENT" ]; then
+  printf '%s' "$CONTENT" > "$CONTENT_FILE"
+elif [ ! -t 0 ]; then
+  cat > "$CONTENT_FILE"
+fi
+[ -s "$CONTENT_FILE" ] || { echo "wrap-source: empty content (provide --content-file, --content, or stdin)" >&2; exit 2; }
+
+mkdir -p "$(dirname "$OUT")"
+if ! jq -n --arg ns "$NS" --arg slug "$SLUG" --arg title "$TITLE" --rawfile content "$CONTENT_FILE" \
           --arg created "$NOW" --arg url "$URL" --arg ct "$CT" --arg st "$STYPE" '
   {
     "@context": "https://mif-spec.dev/schema/context.jsonld",

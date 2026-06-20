@@ -57,17 +57,17 @@
       "description": "MIF-shaped citations, deduplicated across the finding set. citationType/citationRole carry the full MIF Level-3 citation shape so a report projection (reports/<topic>/<slug>.md) validates at L3, not just title+url.",
       "items": {
         "type": "object",
-        "required": ["title", "url"],
+        "required": ["title", "url", "citationType", "citationRole"],
         "properties": {
           "title": { "type": "string", "minLength": 1 },
           "url": { "type": "string", "format": "uri" },
           "citationType": {
             "type": "string",
-            "description": "MIF citation source category (article, paper, documentation, …) carried through for the L3 report projection."
+            "description": "MIF citation source category (article, paper, documentation, …). Required so a report projection (reports/<topic>/<slug>.md) satisfies the MIF Level-3 citation shape — an artifact missing it cannot be rendered/validated as a report."
           },
           "citationRole": {
             "type": "string",
-            "description": "MIF citation relationship to the claim (supports, background, …) carried through for the L3 report projection."
+            "description": "MIF citation relationship to the claim (supports, background, …). Required for the same L3 report-projection reason as citationType."
           }
         }
       }
