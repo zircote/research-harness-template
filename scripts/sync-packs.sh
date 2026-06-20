@@ -80,3 +80,24 @@ settings["enabledPlugins"] = enabled_plugins
 json.dump(settings, open(settings_path, "w"), indent=2); open(settings_path, "a").write("\n")
 print(f"sync-packs: {len(enabled)} pack(s) enabled -> {settings_path} enabledPlugins + {out_path}")
 PY
+
+# --- Ontology catalog (SPEC §8c) ---
+# Append the enabled ontology subset to the sidecar. Version is read from the
+# vendored YAML with yq (the python pass above is stdlib-only — no PyPI YAML).
+# Core ontologies (schemas/ontologies/) are ALWAYS cataloged; extended ontologies
+# (packs/ontologies/<id>/) only when enabled in the config's ontologies[]. A topic
+# may bind only a cataloged id (gate_m12 enforces binding -> catalog -> registry).
+onto='[]'
+add_onto(){ onto=$(jq -c --arg id "$1" --arg v "$2" --arg s "$3" --argjson core "$4" \
+  '. + [{id:$id, version:$v, source:$s, core:$core}]' <<<"$onto"); }
+for y in schemas/ontologies/*/*.yaml; do
+  [ -e "$y" ] || continue
+  add_onto "$(yq -r '.ontology.id' "$y")" "$(yq -r '.ontology.version' "$y")" "$y" true
+done
+while IFS= read -r oid; do
+  [ -z "$oid" ] && continue
+  y="packs/ontologies/$oid/$oid.ontology.yaml"
+  [ -f "$y" ] && add_onto "$oid" "$(yq -r '.ontology.version' "$y")" "$y" false
+done < <(jq -r '.ontologies[]? | select(.enabled) | .id' "$CFG")
+jq --argjson onto "$onto" '.ontologies = $onto' "$OUT" > "$OUT.onto.tmp" && mv "$OUT.onto.tmp" "$OUT"
+echo "sync-packs: cataloged $(jq '.ontologies | length' "$OUT") ontolog(ies) (core + enabled)"
