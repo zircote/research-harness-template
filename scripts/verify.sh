@@ -580,9 +580,79 @@ gate_m8() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 9 — Sigint -> MIF corpus conversion
+# ---------------------------------------------------------------------------
+gate_m9() {
+  info "Milestone 9 — Sigint->MIF corpus conversion"
+  local SRC="evals/fixtures/sample-sigint-corpus"
+  local ST T cfg
+  ST=$(mktemp -d); T=$(mktemp -d)
+
+  # 9a. The converter turns a legacy sigint corpus (aggregated findings_<dim>.json
+  #     wrappers) into individual MIF units — every unit validates and the count
+  #     matches the source findings (lossless conversion).
+  scripts/convert-sigint-corpus.sh "$SRC" "$ST" >/dev/null 2>&1
+  local src_n staged_n valid_n=0
+  src_n=$(jq 'if type=="array" then length else ((.findings//[])|length) end' "$SRC"/findings_*.json | awk '{s+=$1} END{print s+0}')
+  staged_n=$(find "$ST/findings" -name '*.json' 2>/dev/null | grep -c .)
+  for u in "$ST/findings"/*.json; do
+    ajv validate --spec=draft2020 --strict=false -c ajv-formats \
+      -s schemas/findings.schema.json \
+      -r schemas/mif/mif.schema.json \
+      -r schemas/mif/definitions/entity-reference.schema.json \
+      -d "$u" >/dev/null 2>&1 && valid_n=$((valid_n+1))
+  done
+  if [ "$staged_n" -gt 0 ] && [ "$staged_n" = "$src_n" ] && [ "$valid_n" = "$staged_n" ]; then
+    ok "sigint->MIF conversion is lossless ($staged_n/$src_n findings, all MIF-valid)"
+  else
+    bad "sigint->MIF conversion incomplete (src=$src_n staged=$staged_n valid=$valid_n)"
+  fi
+
+  # 9b. The converted corpus imports into a FRESH harness with provenance and a
+  #     MIF-derived graph intact (entities + a typed relationship carried from
+  #     updates_finding) — the same acceptance as gate_m8, over converted input.
+  cp harness.config.json "$T/config.json"
+  if scripts/import-corpus.sh "$ST" sigint-sample "$T/reports" "$T/config.json" >/dev/null 2>&1; then
+    local imp_n prov_n
+    imp_n=$(find "$T/reports/sigint-sample/findings" -name '*.json' 2>/dev/null | grep -c .)
+    prov_n=$(find "$T/reports/sigint-sample/findings" -name '*.json' -exec jq -e '.provenance.sourceType=="external_import"' {} \; 2>/dev/null | grep -c true)
+    if [ "$imp_n" = "$staged_n" ] && [ "$prov_n" = "$imp_n" ] \
+       && scripts/assert-graph-mif.sh "$T/reports/sigint-sample/knowledge-graph.json" >/dev/null 2>&1; then
+      ok "converted sigint corpus imports with provenance + MIF-derived graph ($imp_n findings)"
+    else
+      bad "converted sigint import failed (imported=$imp_n prov=$prov_n)"
+    fi
+  else
+    bad "converted sigint corpus failed to import"
+  fi
+
+  # 9c. Internal/document citations are CONFIG-GATED (features.internalCitations):
+  #     refused under the strict default, accepted only when the flag is enabled.
+  local intf off_refused=0 on_accepted=0
+  intf=$(grep -l 'internal:document' "$ST/findings"/*.json 2>/dev/null | head -1)
+  if [ -n "$intf" ]; then
+    cfg=$(mktemp)
+    printf '{"features":{"internalCitations":false}}' > "$cfg"
+    HARNESS_CONFIG="$cfg" scripts/check-citation-integrity.sh "$intf" >/dev/null 2>&1 || off_refused=1
+    printf '{"features":{"internalCitations":true}}' > "$cfg"
+    HARNESS_CONFIG="$cfg" scripts/check-citation-integrity.sh "$intf" >/dev/null 2>&1 && on_accepted=1
+    if [ "$off_refused" = 1 ] && [ "$on_accepted" = 1 ]; then
+      ok "internal-citation feature is config-gated (refused strict, accepted when enabled)"
+    else
+      bad "internal-citation feature flag not enforced (strict_refused=$off_refused enabled_accepted=$on_accepted)"
+    fi
+    rm -f "$cfg"
+  else
+    bad "sigint fixture produced no internal:document citation to gate-test"
+  fi
+
+  rm -rf "$ST" "$T"
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9)
 
 for g in "${GATES[@]}"; do "$g"; done
 

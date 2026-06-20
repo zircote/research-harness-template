@@ -18,6 +18,21 @@
       "enum": [1, 2, 3],
       "description": "Minimum MIF conformance level the harness emits. SPEC §10 fixes this at Level 3 (provenance + citations + entities + extensions)."
     },
+    "features": {
+      "type": "object",
+      "description": "Opt-in feature flags. The template ships strict; each flag defaults to false and an instance enables only what it needs. Off-by-default keeps the core's guarantees intact for clones that don't opt in.",
+      "additionalProperties": false,
+      "properties": {
+        "internalCitations": {
+          "type": "boolean",
+          "description": "When true, the citation-integrity gate also accepts internal/document citations (citationType ^internal: carrying the quoted evidence in `note`) as traceable, alongside http(s) URLs. For importing legacy corpora whose findings cite internal documents (ADRs, named reports) without a web URL. Default false (strict http-only)."
+        },
+        "sigintCorpusImport": {
+          "type": "boolean",
+          "description": "When true, enables the sigint->MIF corpus conversion path (scripts/convert-sigint-corpus.sh) for bringing a legacy sigint corpus forward into the MIF substrate. Default false."
+        }
+      }
+    },
     "topics": {
       "type": "array",
       "description": "The multi-topic registry. Each topic maps to one MIF namespace under reports/<topic>/.",
