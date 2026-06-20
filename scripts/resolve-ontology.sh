@@ -121,6 +121,7 @@ for aid in $allowed; do
 done
 matches=$(printf '%s' "$matches" | tr ' ' '\n' | sed '/^$/d' | sort -u)
 mcount=$(printf '%s\n' "$matches" | grep -c . || true)
+[ -n "${RO_DEBUG:-}" ] && echo "RO_DEBUG et='$et' allowed='$allowed' matches='$(echo $matches)' mcount='$mcount' catalog='$CATALOG' root='$ROOT'" >&2
 
 resolved=""
 if [ "$mcount" -eq 0 ]; then
