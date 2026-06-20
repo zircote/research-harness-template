@@ -213,6 +213,27 @@ never visible to reconcile):
 mv "$S" "$REPORTS_DIR/findings/finding-<slug>.json"
 ```
 
+### Step 5b — Classify against the topic's ontology (SPEC §8c)
+
+If the topic binds an ontology (`harness.config.json` `topics[].ontologies` is
+non-empty), **classify** the finding against that ontology's entity types and stamp
+the mapping so it becomes ontology-typed. Inspect the bound ontology's types, and if
+the finding clearly *is* one of them, set the MIF `entity` block
+(`{name, entity_type, …domain fields}`) — optionally `ontology.{id,version}` to
+disambiguate — then re-validate and atomically rewrite the finding:
+
+```bash
+ONTO=$(jq -r --arg t "$TOPIC_SLUG" '.topics[]|select(.id==$t)|.ontologies[0]//empty' harness.config.json)
+[ -n "$ONTO" ] && bash .claude/skills/ontology-manager/scripts/inspect_ontology.sh \
+  "$(jq -r --arg o "$ONTO" '.ontologies[]|select(.id==$o)|.source' .claude/enabled-packs.json)" --section entities
+```
+
+Stamp only a type you are confident in (entity fields must satisfy that type's
+declared schema — required fields and any enum/pattern). If no type fits, **leave the
+finding untyped** — that is valid; do not invent a mapping. The deterministic
+`scripts/resolve-ontology.sh` (run by the orchestrator) validates and records every
+mapping; a finding you stamp with a type that does not resolve will fail that gate.
+
 ## Step 6 — Self-reflection (max 2 refinement iterations)
 
 Before signaling completion, verify research quality:

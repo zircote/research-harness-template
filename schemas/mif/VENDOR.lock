@@ -98,6 +98,12 @@
       "upstream": ".claude/skills/ontology-manager/references/schema-reference.md",
       "sha256": "42ed55f8f433ec6f7bc1732291f79f2ef316da45250659697409b0a008aecae0",
       "verbatim": false
+    },
+    {
+      "path": "schemas/ontologies/mif-generic/1.0.0.yaml",
+      "upstream": "AUTHORED from mif.schema entity-reference enum (Concept/Person/Organization/Technology/File)",
+      "sha256": "3ee2efa82d97dd6715fdee93e6162365ab9f82beb061828d4175d1b839d7301b",
+      "verbatim": false
     }
   ]
 }
