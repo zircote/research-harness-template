@@ -1,0 +1,92 @@
+{
+  "skill_name": "readme",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build and validate the navigation README for a topic from its MIF findings. Run exactly:\n\n  OUTDIR=$(pwd)\n  bash $CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh example-topic --findings $CLAUDE_PROJECT_DIR/reports/_meta/sample-session/findings --out $OUTDIR/README.md\n  bash $CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh example-topic --findings $CLAUDE_PROJECT_DIR/reports/_meta/sample-session/findings --out $OUTDIR/README.md --check\n\nConfirm the README has the required sections, the finding and source counts match the substrate, and the structural check passes.",
+      "expected_output": "README.md with an H1 title, a metadata header (Research ID, Created/Updated, Findings/Sources), and Purpose, Dimensions, Key Findings, Reports, and Tags sections. Findings is 3 and Sources is 2 (computed from the sample substrate, not hand-authored). The --check gate exits 0.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "README.md",
+          "description": "the navigation README was created"
+        },
+        {
+          "type": "file_contains",
+          "file": "README.md",
+          "literal": "**Findings:** 3 | **Sources:** 2",
+          "description": "counts are computed from the substrate (3 findings, 2 distinct source URLs)"
+        },
+        {
+          "type": "file_contains",
+          "file": "README.md",
+          "literal": "## Key Findings",
+          "description": "the README carries a Key Findings section"
+        },
+        {
+          "type": "file_contains",
+          "file": "README.md",
+          "literal": "## Dimensions",
+          "description": "the README carries a Dimensions section"
+        },
+        {
+          "type": "shell_command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh\" example-topic --findings \"$CLAUDE_PROJECT_DIR/reports/_meta/sample-session/findings\" --out README.md --check",
+          "description": "the structural validation gate passes (sections present, counts match, no dangling links)"
+        }
+      ],
+      "expectations": [
+        "The README is a navigation index, not a MIF report — it has an H1 title and no MIF frontmatter.",
+        "Findings and Sources counts are projected from the findings substrate, never invented.",
+        "The structural check passes before the README is reported reconciled."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The validation gate must fail closed when a README is missing or drifted. Demonstrate it. Run:\n\n  OUTDIR=$(pwd)\n  bash $CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh example-topic --out $OUTDIR/none.md --check ; echo \"check exit: $?\"\n\nThe check must exit non-zero (the README does not exist), so a missing/invalid README can never be reported as reconciled.",
+      "expected_output": "build-topic-readme.sh --check exits non-zero because reports/none.md does not exist; the gate fails closed.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "shell_command",
+          "command": "! bash \"$CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh\" example-topic --out none.md --check 2>/dev/null",
+          "description": "the validation gate exits non-zero for a missing README (fails closed)"
+        }
+      ],
+      "expectations": [
+        "The check is a real gate, not advisory — a missing or invalid README returns non-zero.",
+        "The agent reports the failure honestly rather than claiming the README shipped."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A just-created topic with zero findings must still get a valid README (the 'created' trigger). Run:\n\n  OUTDIR=$(pwd)\n  mkdir -p $OUTDIR/empty-findings\n  bash $CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh example-topic --findings $OUTDIR/empty-findings --out $OUTDIR/README.md\n  bash $CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh example-topic --findings $OUTDIR/empty-findings --out $OUTDIR/README.md --check\n\nConfirm the zero-findings README is valid and passes the check.",
+      "expected_output": "A README with Findings: 0, a 'No findings yet' Key Findings bullet, and all required sections; the --check gate passes.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_contains",
+          "file": "README.md",
+          "literal": "**Findings:** 0 | **Sources:** 0",
+          "description": "a created-but-unstarted topic reports zero findings/sources"
+        },
+        {
+          "type": "file_contains",
+          "file": "README.md",
+          "literal": "No findings yet",
+          "description": "empty state is handled without erroring"
+        },
+        {
+          "type": "shell_command",
+          "command": "mkdir -p empty-findings && bash \"$CLAUDE_PROJECT_DIR/scripts/build-topic-readme.sh\" example-topic --findings empty-findings --out README.md --check",
+          "description": "the zero-findings README passes the structural gate"
+        }
+      ],
+      "expectations": [
+        "The 'created' trigger produces a valid README even before any research has run.",
+        "Empty/partial state never errors the build or the check."
+      ]
+    }
+  ]
+}
