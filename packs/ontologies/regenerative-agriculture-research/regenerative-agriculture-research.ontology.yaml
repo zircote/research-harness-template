@@ -385,7 +385,7 @@ traits:
 
 # Relationships
 relationships:
-  relates_to:
+  relates-to:
     description: "General association"
     from: []
     to: []

@@ -1111,8 +1111,8 @@ gate_m13() {
   fi
 
   # Fixture corpus: 2 topics (edu->k12, eng->software-engineering). edu finding is a
-  # 'title' that belongs_to a 'program'; eng finding is a 'component' (FALSIFIED) that
-  # depends_on a 'technology'; both reference a SHARED 'organization' entity.
+  # 'title' that belongs-to a 'program'; eng finding is a 'component' (FALSIFIED) that
+  # depends-on a 'technology'; both reference a SHARED 'organization' entity.
   local T; T="$(mktemp -d)"
   cat > "$T/cat.json" <<JSON
 {"ontologies":[
@@ -1125,10 +1125,10 @@ JSON
   echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["k12-educational-publishing"]},{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$T/cfg.json"
   mkdir -p "$T/reports/edu/findings" "$T/reports/eng/findings"
   cat > "$T/reports/edu/findings/f1.json" <<'JSON'
-{"@id":"urn:mif:concept:x/edu:f1","title":"Algebra textbook","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"survived","verdict_basis":"x"}}},"entity":{"name":"Algebra I","entity_type":"title"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:prog:math"},"name":"Math Program","entityType":"program"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"belongs_to","target":"urn:mif:entity:prog:math","strength":1}]}
+{"@id":"urn:mif:concept:x/edu:f1","title":"Algebra textbook","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"survived","verdict_basis":"x"}}},"entity":{"name":"Algebra I","entity_type":"title"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:prog:math"},"name":"Math Program","entityType":"program"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"belongs-to","target":"urn:mif:entity:prog:math","strength":1}]}
 JSON
   cat > "$T/reports/eng/findings/f1.json" <<'JSON'
-{"@id":"urn:mif:concept:x/eng:f1","title":"Kafka adoption","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"falsified","verdict_basis":"y"}}},"entity":{"name":"Service","entity_type":"component"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:tech:kafka"},"name":"Kafka","entityType":"technology"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"depends_on","target":"urn:mif:entity:tech:kafka","strength":1}]}
+{"@id":"urn:mif:concept:x/eng:f1","title":"Kafka adoption","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"falsified","verdict_basis":"y"}}},"entity":{"name":"Service","entity_type":"component"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:tech:kafka"},"name":"Kafka","entityType":"technology"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"depends-on","target":"urn:mif:entity:tech:kafka","strength":1}]}
 JSON
   echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"k12-educational-publishing@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
   echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"software-engineering@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
@@ -1146,7 +1146,7 @@ JSON
   # 13c. Conformance is fail-closed: undeclared entityType, undeclared relationship
   #      type, and a from/to domain violation each FAIL validate-concordance.
   jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "wizard"' "$T/concordance.json" > "$T/u_type.json"
-  jq '(.edges[] | select(.via=="relationship" and (.type=="belongs_to")) | .type) = "frobnicate"' "$T/concordance.json" > "$T/u_rel.json"
+  jq '(.edges[] | select(.via=="relationship" and (.type=="belongs-to")) | .type) = "frobnicate"' "$T/concordance.json" > "$T/u_rel.json"
   jq '(.nodes[] | select(.id|endswith("prog:math")) | .entityType) = "author"' "$T/concordance.json" > "$T/dom.json"
   if vw "$T/concordance.json" && ! vw "$T/u_type.json" && ! vw "$T/u_rel.json" && ! vw "$T/dom.json"; then
     ok "conformance fail-closed: conformant passes; undeclared type / undeclared rel / domain violation each fail"

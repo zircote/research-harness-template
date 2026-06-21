@@ -37,7 +37,7 @@ labelled:
   ontologies. An undeclared type **fails**.
 - Every relationship edge `type` must be declared by a bound ontology, and the edge's
   endpoints must satisfy that relationship's `from`/`to` **domains** (e.g. k12
-  `belongs_to` only goes `title → program`). An undeclared type or a domain violation
+  `belongs-to` only goes `title → program`). An undeclared type or a domain violation
   **fails**.
 - It fails closed on a broken toolchain or a jq error — never passes vacuously.
 

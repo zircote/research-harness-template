@@ -511,7 +511,7 @@ traits:
               type: string
 # Relationships
 relationships:
-  depends_on:
+  depends-on:
     description: "Component dependency relationship"
     from:
       - component
@@ -527,7 +527,7 @@ relationships:
       - design-pattern
       - architectural-decision
     symmetric: false
-  caused_by:
+  caused-by:
     description: "Incident causality"
     from:
       - incident-report

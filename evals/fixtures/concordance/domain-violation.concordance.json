@@ -29,7 +29,7 @@
     {
       "source": "urn:mif:concept:x/edu:f",
       "target": "urn:mif:entity:prog:math",
-      "type": "belongs_to",
+      "type": "belongs-to",
       "strength": 1,
       "via": "relationship"
     },
