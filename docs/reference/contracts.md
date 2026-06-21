@@ -12,6 +12,12 @@ two harness-local requirements (§8b):
 - `extensions.harness` — `dimension` (the config-declared dimension) and
   `verification` (the adversarial-falsification verdict: one of `falsified`,
   `weakened`, `survived`, `inconclusive`, with a `verdict_basis`).
+- `extensions.harness.gathered_under` (optional, SPEC §11) — the single goal
+  version (`gv-…`) whose research first produced the finding (provenance).
+- `extensions.harness.goal_versions[]` (optional, derived) — the goal versions the
+  finding is in scope for. A re-derivable membership mirror; the per-version
+  members files (`reports/<topic>/goals/goal-<hash>.members.json`) are authority,
+  and `build-index.sh` projects this onto each index entry (with `stale_in[]`).
 
 Validate with the vendored MIF closure registered:
 
@@ -27,7 +33,16 @@ ajv validate --spec=draft2020 --strict=false -c ajv-formats \
 
 The deploy contract. Required: `version`, `topics`, `dimensions`, `packs`.
 `packs[].source` is either the `"bundled"` constant or an external/private
-plugin object (`{type, url, ref}`). See `harness.config.json` for a sample.
+plugin object (`{type, url, ref}`). Optional `freshness` (SPEC §11) sets
+source-type decay for finding staleness: `{ default_days, by_citation_type:{
+<MIF citationType>: days } }` — a finding's window is the MIN over its citations'
+types. See `harness.config.json` for a sample.
+
+The **goal** (`schemas/goal.schema.json`, harness-side, not MIF) gains optional
+lineage fields (SPEC §11): `version` (`gv-<sha256(normalized goal)[:12]>`,
+computed by `scripts/goal-version.sh`), `supersedes`, and `revision`
+(`{rationale, changed[], date}`). Versions are append-only and immutable; a goal
+with no `version` is the implicit unversioned baseline.
 
 ## Pack — `schemas/pack.schema.json`
 
