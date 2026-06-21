@@ -21,8 +21,9 @@
 #
 # Evidence fixture: a JSON object keyed by finding @id, each value
 #   { "verdict": "...", "basis": "...", "disconfirming": ["url", ...] }.
-# A finding with no fixture entry defaults to `survived` (no disconfirming
-# evidence found). Output: the updated finding JSON on stdout.
+# A finding with no fixture entry is recorded as a PLACEHOLDER `inconclusive` (it was not
+# adversarially tested) WITHOUT `attempted_at`, so a later real gate run can still overwrite
+# it. Output: the updated finding JSON on stdout.
 
 set -uo pipefail
 
@@ -42,7 +43,7 @@ if jq -e '.extensions.harness.verification.attempted_at? // empty | length > 0' 
   exit 0
 fi
 
-# Resolve the verdict from the fixture (or default to survived).
+# Resolve the verdict from the fixture (or a placeholder `inconclusive` if none).
 if [ -n "$FIXTURE" ] && [ -f "$FIXTURE" ]; then
   ENTRY=$(jq -c --arg id "$ID" '.[$id] // {}' "$FIXTURE")
 else
@@ -50,12 +51,15 @@ else
 fi
 
 # An EXPLICIT fixture verdict is recorded as-is. A finding with NO fixture entry was not
-# adversarially tested this run, so we WITHHOLD a pass: default to `inconclusive`, never
-# `survived`. A default `survived` is a false pass — and the one-round rule below makes it
-# permanent, the exact contamination a stray (non-gate) invocation caused.
+# adversarially tested this run, so we WITHHOLD a pass: it is a PLACEHOLDER `inconclusive`
+# (never `survived`, which would be a false pass). A placeholder OMITS `attempted_at` (below)
+# so the one-round rule does NOT treat it as graded — a later REAL gate can still overwrite it.
+# (A real verdict carries `attempted_at` and the one-round rule protects it from re-grading.)
+PLACEHOLDER=
 if [ -z "$(jq -r '.verdict // empty' <<<"$ENTRY")" ]; then
   VERDICT="inconclusive"
   BASIS="No disconfirming-evidence entry supplied — finding was not adversarially tested this run."
+  PLACEHOLDER=1
 else
   VERDICT=$(jq -r '.verdict' <<<"$ENTRY")
   BASIS=$(jq -r '.basis // "Adversarial queries executed; no disconfirming evidence found."' <<<"$ENTRY")
@@ -67,14 +71,16 @@ ATTEMPTED=$(jq -r '.attempted_at // "1970-01-01T00:00:00Z"' <<<"$ENTRY")
 
 echo "falsification-gate: run ($ID -> $VERDICT)" >&2
 
-jq --arg v "$VERDICT" --arg b "$BASIS" --arg t "$ATTEMPTED" \
+jq --arg v "$VERDICT" --arg b "$BASIS" --arg t "$ATTEMPTED" --arg ph "$PLACEHOLDER" \
    --argjson dis "$(jq -c '.disconfirming // []' <<<"$ENTRY")" '
   .extensions = (.extensions // {})
   | .extensions.harness = (.extensions.harness // {})
-  | .extensions.harness.verification = {
+  # A placeholder (no fixture entry) OMITS attempted_at, so the one-round rule does not treat
+  # it as graded and a later REAL gate can still overwrite it. A real verdict records
+  # attempted_at and is protected from re-grading.
+  | .extensions.harness.verification = ({
       verdict: $v,
       verdict_basis: $b,
-      attempted_at: $t,
       disconfirming_evidence: $dis
-    }
+    } + (if $ph == "1" then {} else {attempted_at: $t} end))
 ' "$FINDING"

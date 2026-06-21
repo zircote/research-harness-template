@@ -1286,11 +1286,14 @@ gate_m14() {
   #      defaults to `inconclusive`, never a false `survived` (which the one-round rule would
   #      make permanent — the contamination a stray, non-gate invocation caused).
   printf '{"@id":"urn:mif:concept:t:f1","title":"x"}\n' > "$T/f.json"
-  local vd; vd=$(scripts/falsify.sh "$T/f.json" 2>/dev/null | jq -r '.extensions.harness.verification.verdict')
-  if [ "$vd" = "inconclusive" ]; then
-    ok "falsify.sh no-fixture default is 'inconclusive' (no false 'survived' pass)"
+  local vd vph; vd=$(scripts/falsify.sh "$T/f.json" 2>/dev/null | jq -r '.extensions.harness.verification.verdict')
+  # The placeholder must OMIT attempted_at so the one-round rule does not lock it — a later
+  # real gate can still overwrite it (it isn't permanently blocked, just withheld).
+  vph=$(scripts/falsify.sh "$T/f.json" 2>/dev/null | jq -r '.extensions.harness.verification | has("attempted_at")')
+  if [ "$vd" = "inconclusive" ] && [ "$vph" = "false" ]; then
+    ok "falsify.sh no-fixture is a placeholder 'inconclusive' WITHOUT attempted_at (no false pass, not gate-locked)"
   else
-    bad "falsify.sh no-fixture default is '$vd' (want inconclusive)"
+    bad "falsify.sh no-fixture wrong (verdict=$vd has_attempted_at=$vph)"
   fi
 
   # 14b. An EXPLICIT fixture verdict is recorded unchanged.
@@ -1317,10 +1320,15 @@ gate_m14() {
   # A STALE marker (left by a crashed gate) ages out of the freshness window -> denied.
   touch -t 200001010000 "$T/reports/tA/.gate-active"
   d_stale=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json fx"}}')
-  if [ "$d_no" = deny ] && [ "$d_yes" = allow ] && [ "$d_rep" = allow ] && [ "$d_stale" = deny ]; then
-    ok "phase-gate hook: denied without the window, allowed within a fresh window, denied on a STALE window; report-finding always allowed"
+  # MULTI-TOPIC: one topic's window must not authorize grading another's. tA open, tB closed
+  # -> the whole command is denied.
+  local d_multi; mkdir -p "$T/reports/tB/findings"; rm -f "$T/reports/tB/.gate-active"
+  rm -f "$T/reports/tA/.gate-active"; touch "$T/reports/tA/.gate-active"
+  d_multi=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json; scripts/falsify.sh reports/tB/findings/g.json"}}')
+  if [ "$d_no" = deny ] && [ "$d_yes" = allow ] && [ "$d_rep" = allow ] && [ "$d_stale" = deny ] && [ "$d_multi" = deny ]; then
+    ok "phase-gate hook: denied without the window, allowed within a fresh window, denied on STALE; report-finding allowed; multi-topic denied when any window is closed"
   else
-    bad "phase-gate hook wrong (no-window=$d_no fresh=$d_yes report=$d_rep stale=$d_stale)"
+    bad "phase-gate hook wrong (no-window=$d_no fresh=$d_yes report=$d_rep stale=$d_stale multi=$d_multi)"
   fi
 
   rm -rf "$T"

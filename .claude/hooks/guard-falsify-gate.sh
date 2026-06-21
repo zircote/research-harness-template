@@ -29,7 +29,8 @@
 # absence means the harness is already non-functional, not a bypass an analyst can induce
 # (the analyst does not author this hook's stdin).
 set -uo pipefail
-ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+# Repo root: CLAUDE_PROJECT_DIR in the hook, else two levels up from .claude/hooks/<this>.
+ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 
 INPUT=$(cat /dev/stdin 2>/dev/null)
 CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
@@ -39,19 +40,26 @@ printf '%s' "$CMD" | grep -qF 'falsify.sh' || exit 0
 
 # Only guard grading of a topic's SESSION FINDINGS (reports/<topic>/findings/*.json).
 # Anything else (report-finding, fixtures) is a legit non-gate use -> allow.
-FINDING=$(printf '%s' "$CMD" | grep -oE '[^[:space:]]*reports/[^[:space:]]+/findings/[^[:space:]]+\.json' | head -1)
-[ -n "$FINDING" ] || exit 0
+FINDINGS=$(printf '%s' "$CMD" | grep -oE '[^[:space:]]*reports/[^[:space:]]+/findings/[^[:space:]]+\.json')
+[ -n "$FINDINGS" ] || exit 0
 
-# Derive the per-topic gate marker: reports/<topic>/findings/<f>.json -> reports/<topic>/.gate-active
-TOPIC_DIR=$(dirname "$(dirname "$FINDING")")
-case "$TOPIC_DIR" in
-  /*) MARKER="$TOPIC_DIR/.gate-active" ;;
-  *)  MARKER="$ROOT/$TOPIC_DIR/.gate-active" ;;
-esac
-# Allow while THIS topic's gate window is open AND fresh. A marker left behind by a crashed
-# gate (a `touch` with no matching `rm`) stops authorizing once it ages past the window, so a
-# stale window cannot silently re-open the gate for a later analyst (bounds the crash-leak).
-if [ -f "$MARKER" ] && [ -n "$(find "$MARKER" -mmin -240 2>/dev/null)" ]; then exit 0; fi
+# EVERY targeted topic must have an open + fresh gate window — a command grading findings in
+# more than one topic is denied unless EACH topic's window is open (one topic's window cannot
+# authorize grading another's). A marker left by a crashed gate ages out of the freshness
+# window, so a stale window cannot silently re-open the gate for a later analyst.
+while IFS= read -r FINDING; do
+  [ -n "$FINDING" ] || continue
+  TOPIC_DIR=$(dirname "$(dirname "$FINDING")")
+  case "$TOPIC_DIR" in
+    /*) MARKER="$TOPIC_DIR/.gate-active" ;;
+    *)  MARKER="$ROOT/$TOPIC_DIR/.gate-active" ;;
+  esac
+  if [ -f "$MARKER" ] && [ -n "$(find "$MARKER" -mmin -240 2>/dev/null)" ]; then continue; fi
+  DENIED=1; break
+done <<EOF
+$FINDINGS
+EOF
+[ "${DENIED:-}" = 1 ] || exit 0
 
 # Outside the window: DENY (JSON contract, same shape md_guard uses).
 REASON="Blocked: scripts/falsify.sh is the orchestrator's SINGLE Phase-2 falsification gate, and this topic's gate window is not open (${TOPIC_DIR}/.gate-active is absent). A dimension-analyst must NEVER grade the session findings — a premature, fixture-less stamp is permanent under the one-round rule and corrupts siblings. The orchestrator (Phase 2) and the /falsify command open the per-topic window and own the single pass; let them run it."

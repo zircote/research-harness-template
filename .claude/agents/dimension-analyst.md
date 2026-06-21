@@ -175,10 +175,11 @@ Each finding is a single MIF concept. The fields **you** are responsible for:
 gate yourself** — not `scripts/falsify.sh`, not `/falsify`, not by grading any
 finding. You research *before* the gate, so you cannot honestly know a verdict.
 The gate is the **orchestrator's single Phase-2 pass over the WHOLE finding set**,
-run once after every dimension finishes. If you run it you stamp a premature,
-evidence-less verdict (an un-fixtured finding defaults to `survived`) that the
-one-round rule makes **permanent** — the real gate then *skips* it, silently
-corrupting the verification of every finding you touched, your siblings' included.
+run once after every dimension finishes. If you run it you stamp premature,
+evidence-less verdicts (an un-fixtured finding is recorded a placeholder
+`inconclusive`; any verdict you *do* supply is made **permanent** by the one-round
+rule and the real gate then *skips* it) — silently corrupting the verification of
+every finding you touched, your siblings' included.
 Emitting `dimension` + `citations[]` + provenance is your half of the contract;
 the gate completes it.
 
