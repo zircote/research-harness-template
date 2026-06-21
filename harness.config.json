@@ -38,15 +38,14 @@
       "enabled": true,
       "mifExempt": true,
       "mifExemptReason": "Published blog prose is orthogonal to MIF: the citation-leak gate keeps it free of internal MIF identity, so the MIF source of truth lives in the report channel, not the post."
-    },
-    {
-      "channel": "book",
-      "enabled": true,
-      "mifExempt": true,
-      "mifExemptReason": "Published book prose is orthogonal to MIF for the same reason as blog; the report channel carries the L3 MIF source of truth."
     }
   ],
   "packs": [
+    {
+      "name": "book",
+      "enabled": false,
+      "source": "bundled"
+    },
     {
       "name": "github-discuss",
       "enabled": false,

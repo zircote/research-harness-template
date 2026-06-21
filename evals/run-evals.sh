@@ -81,9 +81,11 @@ run_neg "source-envelope-bad"  ajv validate --spec=draft2020 --strict=false -c a
           -s schemas/mif/source-envelope.schema.json -r schemas/mif/mif.schema.json \
           -r schemas/mif/definitions/entity-reference.schema.json -d evals/fixtures/source-envelope-bad.json
 
-# 5d. Exemptions are declared (blog + book first-class, channel packs via mif.exempt).
+# 5d. Exemptions are declared (blog is the always-on exempt output; book/pdf channel packs
+#     declare mif.exempt in their plugin.json).
 run "exempt-channels-declared" bash -c '
-  jq -e "[.outputs[]|select(.channel==\"blog\" or .channel==\"book\")|select(.mifExempt==true)]|length==2" harness.config.json >/dev/null &&
+  jq -e "[.outputs[]|select(.channel==\"blog\")|select(.mifExempt==true)]|length==1" harness.config.json >/dev/null &&
+  jq -e ".mif.exempt==true" packs/channels/book/.claude-plugin/plugin.json >/dev/null &&
   jq -e ".mif.exempt==true" packs/channels/pdf/.claude-plugin/plugin.json >/dev/null'
 
 # 5d. Ontology resolution (SPEC §8c): a finding's entity_type resolves to exactly one

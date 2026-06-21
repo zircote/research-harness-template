@@ -425,17 +425,23 @@ gate_m6() {
   local SF="reports/_meta/sample-session/findings"
   local T; T=$(mktemp -d)
 
-  # 6a. blog and book are first-class skills (flat, in the core, not a pack).
+  # 6a. blog is the first-class always-on channel skill (flat, in the core). book is now an
+  #     OPTIONAL channel pack (packs/channels/book) — not a flat core skill.
   local s smiss=""
-  for s in publish-blog book-author; do
+  for s in publish-blog; do
     if [ -f ".claude/skills/$s/SKILL.md" ] && grep -q '^description:' ".claude/skills/$s/SKILL.md"; then :; else
       smiss="${smiss}${s} "
     fi
   done
+  # book-author must NOT remain a flat core skill, and must live in the book channel pack.
+  [ -f ".claude/skills/book-author/SKILL.md" ] && smiss="${smiss}book-author-still-flat "
+  if [ -f "packs/channels/book/skills/book-author/SKILL.md" ] && grep -q '"kind": "channel"' packs/channels/book/.claude-plugin/plugin.json; then :; else
+    smiss="${smiss}book-pack-missing "
+  fi
   if [ -z "$smiss" ]; then
-    ok "blog and book are first-class flat skills"
+    ok "blog is the first-class flat skill; book is an optional channel pack"
   else
-    bad "missing first-class output skills: $smiss"
+    bad "channel skill layout wrong: $smiss"
   fi
 
   # 6b. A sample findings set renders to BOTH a blog post and a book chapter

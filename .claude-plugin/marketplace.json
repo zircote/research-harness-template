@@ -9,6 +9,11 @@
   },
   "plugins": [
     {
+      "name": "book",
+      "source": "./packs/channels/book",
+      "description": "[channels/channel] Author a long-form, multi-chapter book from a research session's surviving findings"
+    },
+    {
       "name": "github-discuss",
       "source": "./packs/channels/github-discuss",
       "description": "[channels/channel] Publish a synthesized deliverable to GitHub Discussions \u2014 an announcement of completed research, a Q&A thread about methodology, or a non-canonical observation"

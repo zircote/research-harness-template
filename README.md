@@ -19,8 +19,8 @@ The repository has four layers, all present on clone (design spec §5):
 3. **Harness services** — multi-topic registry, knowledge graph, search,
    discovery, reindex — operating directly on the MIF substrate.
 4. **Outputs** — the generic `report` channel is the canonical MIF Level-3 source
-   of truth (`reports/<topic>/<slug>.md`); blog and book are first-class published
-   projections; other channels and all deliverable genres arrive as optional
+   of truth (`reports/<topic>/<slug>.md`); blog is the first-class published
+   projection; book, other channels, and all deliverable genres arrive as optional
    **plugins** — one per skill under `packs/<family>/<skill>/`, enabled selectively
    (see [docs/explanation/pack-structure.md](docs/explanation/pack-structure.md)).
    All information in and out of the harness is MIF (see

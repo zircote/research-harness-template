@@ -30,8 +30,8 @@ findings are quarantined; weakened ones have their confidence lowered.
 ## 4. Synthesize and publish
 
 `report-synthesizer` consumes the surviving findings. Outputs render through the
-typed findings→artifact contract — blog and book are first-class; other channels
-arrive via the channels pack.
+typed findings→artifact contract — blog is first-class; book and other channels
+arrive via optional channel packs.
 
 ## Continuity
 
