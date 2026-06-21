@@ -36,11 +36,14 @@ case "$REL_PATH" in
     ;;
   reports/*/findings/*.json|reports/*/findings_*.json)
     TOPIC=$(printf '%s' "$REL_PATH" | sed -E 's#reports/([^/]+)/.*#\1#')
+    # _meta is scaffolding (sample sessions, templates), not a registered topic.
+    [ "$TOPIC" = "_meta" ] && exit 0
     emit "Findings changed for topic '$TOPIC'. Reconcile its navigation README before reporting the topic complete: run the readme skill ('readme --topic $TOPIC') or 'bash scripts/build-topic-readme.sh $TOPIC' then '--check'. New/changed findings must be falsified first (see the research-lifecycle reminder)."
     ;;
   reports/*/*.md)
     TOPIC=$(printf '%s' "$REL_PATH" | sed -E 's#reports/([^/]+)/.*#\1#')
-    emit "Report '$REL_PATH' changed. Update topic '$TOPIC's navigation README so its Reports table and counts stay accurate: run the readme skill ('readme --topic $TOPIC') or 'bash scripts/build-topic-readme.sh $TOPIC' then '--check'."
+    [ "$TOPIC" = "_meta" ] && exit 0
+    emit "Report '$REL_PATH' changed. Update the navigation README for topic '$TOPIC' so its Reports table and counts stay accurate: run the readme skill ('readme --topic $TOPIC') or 'bash scripts/build-topic-readme.sh $TOPIC' then '--check'."
     ;;
   harness.config.json)
     emit "harness.config.json changed (the topic registry). Reconcile every topic README so the indices match the manifest: run the readme skill with '--all', or 'bash scripts/build-topic-readme.sh <topic>' for each affected topic, then '--check'."

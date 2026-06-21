@@ -170,7 +170,10 @@ build_readme() {
 
   printf '## Reports\n\n'
   local reports
-  reports=$(find "$TOPIC_DIR" -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null | sort)
+  # research-progress.md is a continuity/audit log, not a rendered report — exclude
+  # it (and README.md) so it never appears as a report link or defeats the empty state.
+  reports=$(find "$TOPIC_DIR" -maxdepth 1 -name '*.md' \
+    ! -name 'README.md' ! -name 'research-progress.md' 2>/dev/null | sort)
   if [ -z "$reports" ]; then
     printf 'No reports rendered yet.\n\n'
   else
