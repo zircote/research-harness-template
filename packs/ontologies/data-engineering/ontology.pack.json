@@ -1,0 +1,9 @@
+{
+  "name": "data-engineering",
+  "version": "0.1.0",
+  "kind": "ontology",
+  "description": "Data engineering domain ontology",
+  "provides": {
+    "ontologies": ["data-engineering"]
+  }
+}

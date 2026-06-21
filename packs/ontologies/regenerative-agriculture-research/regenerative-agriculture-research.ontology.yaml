@@ -1,0 +1,419 @@
+---
+# MIF Ontology: regenerative-agriculture-research
+#
+# A research-oriented ontology for agriculture / regenerative-farming research
+# findings. Types describe RESEARCH OBSERVATIONS about farming practices,
+# infrastructure, funding, and technology — not farm records. Includes the
+# cross-cutting technology/security research types so infrastructure- and
+# security-flavored farm topics resolve.
+#
+# Compatible with: mif-base v0.1.0
+# Version: 0.1.0
+# Last Updated: 2026-06-20
+
+ontology:
+  id: regenerative-agriculture-research
+  version: "0.1.0"
+  description: >-
+    Agriculture / farm research ontology — research-oriented entity types for
+    husbandry, agronomy, farm infrastructure, grants, equipment, plus
+    cross-cutting technology and security research types.
+  schema_url: >-
+    https://mif-spec.dev/schema/ontology/ontology.schema.json
+  extends:
+    - mif-base
+
+# Namespace Hierarchy (Cognitive Triad)
+namespaces:
+  semantic:
+    children:
+      husbandry:
+        description: "Animal husbandry and livestock care knowledge"
+        type_hint: semantic
+      agronomy:
+        description: "Grazing, soil, crop, and pasture practices"
+        type_hint: semantic
+      infrastructure:
+        description: "Farm infrastructure: fencing, irrigation, IoT, networks"
+        type_hint: semantic
+      funding:
+        description: "Grants, cost-share, and funding programs"
+        type_hint: semantic
+
+# Entity Types
+entity_types:
+  - name: husbandry-practice
+    description: "An animal-husbandry or livestock-care practice (lambing, newborn care, health management)"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - practice_name
+      properties:
+        practice_name:
+          type: string
+          description: "Name of the husbandry practice"
+        species:
+          type: string
+          description: "Target species (e.g. sheep, goat, cattle)"
+        stage:
+          type: string
+          description: "Life or production stage (e.g. lambing, weaning, gestation)"
+        guidance:
+          type: string
+          description: "Recommended action or protocol"
+  - name: agronomic-practice
+    description: "A grazing, soil, pasture, or crop-management practice"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - practice_name
+      properties:
+        practice_name:
+          type: string
+          description: "Name of the agronomic practice"
+        context:
+          type: string
+          description: "When or where the practice applies"
+        method:
+          type: string
+          description: "How the practice is carried out"
+        outcome:
+          type: string
+          description: "Expected agronomic outcome"
+  - name: farm-infrastructure
+    description: "A farm infrastructure system or component: fencing, irrigation, IoT, networks, towers, power"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: "Infrastructure system or component name"
+        purpose:
+          type: string
+          description: "What the infrastructure does"
+        components:
+          type: string
+          description: "Constituent parts or subsystems"
+        considerations:
+          type: string
+          description: "Design, siting, or operational considerations"
+  - name: grant-program
+    description: "An agricultural grant, cost-share, or funding program"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - program_name
+      properties:
+        program_name:
+          type: string
+          description: "Name of the grant or funding program"
+        funder:
+          type: string
+          description: "Funding organization or agency"
+        eligibility:
+          type: string
+          description: "Who is eligible"
+        scope:
+          type: string
+          description: "What the program funds and at what level"
+  - name: equipment-or-input
+    description: "A piece of farm equipment, hardware, device, or production input"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: "Equipment, device, or input name"
+        use_case:
+          type: string
+          description: "Where or why it is used"
+        vendor:
+          type: string
+          description: "Manufacturer or supplier"
+        specifications:
+          type: string
+          description: "Notable specifications, ratings, or pricing"
+  # --- Cross-cutting technology / security research types (ported faithfully) ---
+  - name: technology
+    description: "A technology, framework, protocol, or tool"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - name
+        - category
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          enum:
+            - database
+            - framework
+            - language
+            - infrastructure
+            - tool
+            - library
+        website:
+          type: string
+          format: uri
+        license:
+          type: string
+        use_case:
+          type: string
+          description: "Why/where this technology is used"
+  - name: design-pattern
+    description: "A design pattern or architectural pattern"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - pattern_name
+        - context
+        - solution
+      properties:
+        pattern_name:
+          type: string
+        context:
+          type: string
+          description: "When to use this pattern"
+        solution:
+          type: string
+          description: "How the pattern solves the problem"
+        consequences:
+          type: object
+          description: "Trade-offs and implications"
+        related_patterns:
+          type: array
+          items:
+            type: string
+  - name: adoption-trend
+    description: "A momentum, maturation, or standardization signal in the direction of travel"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - trend_name
+        - direction
+      properties:
+        trend_name:
+          type: string
+        direction:
+          type: string
+          description: "Where the trend is heading"
+        evidence:
+          type: string
+          description: "Signals supporting the trend"
+        maturity:
+          type: string
+          description: "How established the trend is (e.g. emerging, mainstream)"
+  - name: delivery-metric
+    description: "A measurable metric, threshold, or quantified specification"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - metric_name
+      properties:
+        metric_name:
+          type: string
+        definition:
+          type: string
+          description: "What the metric measures"
+        benchmark:
+          type: string
+          description: "Target or reference value"
+        source:
+          type: string
+          description: "Originating framework or study"
+  - name: compliance-regulation
+    description: "A law, regulation, code, or government mandate"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - regulation_name
+        - jurisdiction
+      properties:
+        regulation_name:
+          type: string
+        jurisdiction:
+          type: string
+          description: "Governing jurisdiction (e.g. US federal, FCC, FAA)"
+        key_obligations:
+          type: string
+          description: "Core obligations the regulation imposes"
+        effective_dates:
+          type: string
+          description: "Relevant entry-into-force or compliance deadlines"
+  - name: security-framework
+    description: "A security or assurance framework, taxonomy, or standard (e.g. NDAA 889, NIST)"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - framework_name
+        - scope
+      properties:
+        framework_name:
+          type: string
+        scope:
+          type: string
+          description: "What the framework governs"
+        maintainer:
+          type: string
+          description: "Organization that maintains the framework"
+        relationship:
+          type: string
+          description: "How it relates to or composes with other frameworks"
+  - name: security-threat
+    description: "A security threat, attack class, or vulnerability"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - threat_name
+        - attack_vector
+      properties:
+        threat_name:
+          type: string
+        attack_vector:
+          type: string
+          description: "How the threat is exploited"
+        impact:
+          type: string
+          description: "What an attacker gains or breaks"
+        mitigation_summary:
+          type: string
+          description: "Primary defenses against this threat"
+        references:
+          type: array
+          items:
+            type: string
+  - name: architectural-decision
+    description: "An architecture or engineering decision with rationale"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - decision
+        - rationale
+      properties:
+        decision:
+          type: string
+          description: "The decision made"
+        rationale:
+          type: string
+          description: "Why this decision was made"
+        alternatives:
+          type: array
+          description: "Alternatives considered"
+          items:
+            type: object
+        consequences:
+          type: object
+          description: "Known consequences and trade-offs"
+  - name: engineering-practice
+    description: "An organizational, operational, or reliability practice"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - practice_name
+      properties:
+        practice_name:
+          type: string
+        description:
+          type: string
+          description: "What the practice is"
+        evidence:
+          type: string
+          description: "Empirical support or outcome"
+        origin:
+          type: string
+          description: "Originating model, study, or author"
+  - name: process-discipline
+    description: "A governance, planning, or production-readiness discipline"
+    base: semantic
+    traits:
+      - cited
+    schema:
+      required:
+        - discipline_name
+      properties:
+        discipline_name:
+          type: string
+        purpose:
+          type: string
+          description: "What the discipline governs"
+        criteria:
+          type: string
+          description: "Acceptance or gating criteria"
+        stage:
+          type: string
+          description: "Stage where it applies"
+
+# Traits (Mixins)
+traits:
+  cited:
+    description: "Requires citations/sources"
+    requires:
+      - citations
+
+# Relationships
+relationships:
+  relates_to:
+    description: "General association"
+    from: []
+    to: []
+    symmetric: true
+  enables:
+    description: "Infrastructure or input enables an agronomic or husbandry practice"
+    from:
+      - farm-infrastructure
+      - equipment-or-input
+    to:
+      - agronomic-practice
+      - husbandry-practice
+    symmetric: false
+
+# Discovery Configuration
+discovery:
+  enabled: true
+  confidence_threshold: 0.8
+  patterns:
+    - content_pattern: "\\b(lambing|ewe|newborn|colostrum|dystocia)\\b"
+      suggest_entity: husbandry-practice
+      suggest_namespace: semantic/husbandry
+    - content_pattern: "\\b(grazing|pasture|soil|forage|rotational)\\b"
+      suggest_entity: agronomic-practice
+      suggest_namespace: semantic/agronomy
+    - content_pattern: "\\b(fence|fencing|irrigation|tower|PoE|LoRaWAN|mesh)\\b"
+      suggest_entity: farm-infrastructure
+      suggest_namespace: semantic/infrastructure
+    - content_pattern: "\\b(grant|cost-share|EQIP|NRCS|funding|program)\\b"
+      suggest_entity: grant-program
+      suggest_namespace: semantic/funding
