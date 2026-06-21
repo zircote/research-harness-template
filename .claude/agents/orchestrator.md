@@ -91,9 +91,9 @@ You receive one mode in your spawn prompt:
 - `GOAL_FILE` — path to the validated session goal JSON.
 - `TOPIC` / `TOPIC_SLUG` — topic id; `REPORTS_DIR` = `reports/<topic_slug>`.
 - `MODE` — `full | update | augment`.
-- `DIMENSION` — `augment` mode only: the single config-declared dimension to deepen,
-  honored unconditionally. Empty/absent in augment mode means deepen EVERY
-  config-declared dimension. Ignored in `full` / `update`.
+- `DIMENSION` — `augment` mode only: the single goal dimension to deepen, honored
+  unconditionally. Empty/absent in augment mode means deepen EVERY goal dimension.
+  Ignored in `full` / `update`.
 - `MAX_CONCURRENCY` — cap on simultaneous dimension-analysts (default 3).
 - `QUERY_BUDGET` / `CLAIM_BUDGET` — falsification budgets passed through to the
   gate (defaults 6 and 50). These are spawn-prompt parameters, not config fields.
@@ -160,8 +160,8 @@ You receive one mode in your spawn prompt:
 ## Phase 1: Fan out dimension-analysts (capped concurrency)
 
 For each dimension in the resolved working set `WORK_DIMS` (Phase 0 step 1 —
-full/update: every goal dimension; augment: the named `DIMENSION`, or every dimension
-when none is named), running at most `MAX_CONCURRENCY` at a time:
+full/update: every goal dimension; augment: the named `DIMENSION`, or every goal
+dimension when none is named), running at most `MAX_CONCURRENCY` at a time:
 
 1. Create a task for your own tracking: `TaskCreate("Research: {dimension}")` —
    capture the returned id as `{taskId}` (no `owner`: the analyst is a nameless
@@ -438,7 +438,7 @@ Append to the progress file:
    - Quarantined: {N} (falsified — see quarantine/)
 
    ## Next Steps
-   - `/start --augment [<dimension>]` — deepen a dimension (every declared dimension if omitted)
+   - `/start --augment [<dimension>]` — deepen a dimension (every goal dimension if omitted)
    - `/start --update` — refresh with latest data
    - `/resume` — continue this session
    ```

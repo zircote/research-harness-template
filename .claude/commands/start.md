@@ -1,6 +1,6 @@
 ---
 name: start
-description: Start or extend a research session. Full mode (default) ensures a goal exists, registers the topic, and delegates to the orchestrator; --augment [<dimension>] deepens one dimension (or every declared dimension if omitted) and --update refreshes the whole session against the existing goal.
+description: Start or extend a research session. Full mode (default) ensures a goal exists, registers the topic, and delegates to the orchestrator; --augment [<dimension>] deepens one dimension (or every goal dimension if omitted) and --update refreshes the whole session against the existing goal.
 argument-hint: "[--topic <id>] [--goal <path>] [--augment [<dimension>]] [--update] [<research ask>]"
 allowed-tools:
   - Agent
@@ -32,8 +32,8 @@ backticks and angle brackets.
 - `--goal <path>` — path to an existing validated `goal.json`. If omitted, look
   for `reports/<topic>/goal.json`.
 - `--augment [<dimension>]` — extend an EXISTING session (orchestrator `augment`
-  mode): with a dimension, re-research that single config-declared dimension to add
-  more findings; with no dimension, re-research EVERY config-declared dimension. The
+  mode): with a dimension, re-research that single dimension to add
+  more findings; with no dimension, re-research EVERY goal dimension. The
   named dimension is honored unconditionally — the harness does not second-guess
   which dimensions "need" it. Gates the new findings and merges. Requires an existing
   goal and prior findings; never authors a goal or overwrites progress.
@@ -155,7 +155,7 @@ core-only is valid — its findings simply stay untyped.
 
 Spawn the `orchestrator` agent in the resolved `{MODE}` with the inputs its
 "Inputs (spawn prompt)" contract requires. Pass `DIMENSION` only in `augment` mode
-(the single dimension to deepen, or empty to deepen every config-declared dimension); omit it
+(the single dimension to deepen, or empty to deepen every goal dimension); omit it
 otherwise:
 
 ```text
@@ -167,7 +167,7 @@ Agent(
 
     MODE: {MODE}                      — full | update | augment
     DIMENSION: {DIMENSION}            — augment mode only: the single dimension to deepen
-                                        (empty = deepen every config-declared dimension)
+                                        (empty = deepen every goal dimension)
     GOAL_FILE: {GOAL_FILE}            — the validated session goal; research toward it
     TOPIC: <user_input>{topic}</user_input>
     TOPIC_SLUG: {TOPIC}
@@ -179,7 +179,7 @@ Agent(
     Execute the goal-driven orchestration for this MODE per your agent definition:
     Phase 0 (load+validate goal, progress) → Phase 1 (fan out dimension-analysts —
     full: every goal dimension; update: every goal dimension (refresh); augment: the single
-    DIMENSION, or every declared dimension when DIMENSION is empty) → Phase 2 (single
+    DIMENSION, or every goal dimension when DIMENSION is empty) → Phase 2 (single
     falsification gate over the new findings) → Phase 3 (completion check / loop to
     bound) → Phase 4 (synthesize surviving findings, render progress, cleanup).
 
