@@ -9,6 +9,7 @@ allowed-tools:
   - Glob
   - Grep
   - Read
+  - Skill
   - Write
 ---
 
@@ -190,6 +191,21 @@ Agent(
 
 Wait for the orchestrator to complete. It handles all user-facing progress
 updates and confirmations.
+
+## Reconcile the topic README
+
+The orchestrator's Phase 4 already rebuilt the deterministic README
+(`reports/<topic>/README.md`) from the substrate via
+`scripts/build-topic-readme.sh`. Now invoke the `readme` skill to refine its
+Purpose and Key Findings prose and confirm the validation gate:
+
+```text
+Skill(readme, "--topic {TOPIC}")
+```
+
+The skill preserves and improves the prose, leaving the deterministic metadata
+(counts, dates, dimensions, reports, tags) intact, and re-runs the `--check`
+gate. Skip this only if the orchestrator did not complete.
 
 ## Error handling
 

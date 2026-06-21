@@ -520,7 +520,24 @@ Append to the progress file:
      -s harness.config.schema.json -d harness.config.json
    ```
 
-4. **Finish.** Your worker subagents have already returned — there is no team to
+4. **Reconcile the topic README** (the navigation index — every topic-mutating
+   run leaves it current). Rebuild the deterministic README from the substrate,
+   then validate it:
+
+   ```bash
+   bash scripts/build-topic-readme.sh "$TOPIC_SLUG"
+   bash scripts/build-topic-readme.sh "$TOPIC_SLUG" --check
+   ```
+
+   The README at `reports/<topic>/README.md` is a navigation projection (title,
+   counts, purpose, dimensions, key findings, report table, tags), modeled on a
+   research corpus's per-directory READMEs — **not** a MIF Level-3 report, so it
+   carries no frontmatter and is exempt from the output-conformance gate. For
+   sharper Purpose/Key Findings prose, invoke the `readme` skill, which refines
+   those two sections on top of this deterministic build; the `--check` gate
+   (sections present, counts match the substrate, no dangling links) must pass.
+
+5. **Finish.** Your worker subagents have already returned — there is no team to
    tear down. **Release the run lock** so the topic is free for the next run:
 
    ```bash

@@ -107,6 +107,29 @@ else
   note "FAIL: gate re-ran on an already-falsified finding ($RERUN)"; fail=1
 fi
 
+# Phase 7 — the topic README reconcile (orchestrator Phase 4) is deterministic
+# and self-validating: build from the sample substrate, then assert the structural
+# gate passes (sections present, counts projected from findings, no dangling links).
+RM="$TMP/README.md"
+if bash scripts/build-topic-readme.sh example-topic \
+      --findings reports/_meta/sample-session/findings --out "$RM" >/dev/null 2>&1 \
+   && bash scripts/build-topic-readme.sh example-topic \
+      --findings reports/_meta/sample-session/findings --out "$RM" --check >/dev/null 2>&1; then
+  note "topic README builds from the substrate and passes its validation gate"
+else
+  note "FAIL: topic README build/check failed"; fail=1
+fi
+
+# The 'created' trigger: a topic with zero findings still yields a valid README.
+mkdir -p "$TMP/empty"
+if bash scripts/build-topic-readme.sh example-topic --findings "$TMP/empty" \
+      --out "$TMP/empty-README.md" >/dev/null 2>&1 \
+   && grep -qF '**Findings:** 0' "$TMP/empty-README.md"; then
+  note "created-but-unstarted topic gets a valid zero-findings README"
+else
+  note "FAIL: zero-findings README not produced"; fail=1
+fi
+
 if [ "$fail" -eq 0 ]; then
   echo "smoke-test: PASS"
   exit 0

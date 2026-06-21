@@ -33,6 +33,10 @@ findings are quarantined; weakened ones have their confidence lowered.
 typed findings→artifact contract — blog is first-class; book and other channels
 arrive via optional channel packs.
 
+In the same phase the orchestrator reconciles the topic's navigation
+`README.md` so its counts, dimensions, key findings, and report table stay
+current — see [Maintain topic READMEs](maintain-topic-readmes.md).
+
 ## Continuity
 
 Progress is written to a progress file on every phase transition, so a session
