@@ -83,7 +83,7 @@ You receive one mode in your spawn prompt:
 | Mode | Spawned by | Behaviour |
 | --- | --- | --- |
 | `full` | `start` | New session: load goal → fan out all goal dimensions → gate → synthesize |
-| `update` | `update` | Load prior findings → re-run changed dimensions → light delta diff → gate → synthesize |
+| `update` | `update` | Load prior findings → re-run every dimension (refresh) → light delta diff → gate → synthesize |
 | `augment` | `augment` | Run a single additional dimension → gate the new findings → merge |
 
 ## Inputs (spawn prompt)
@@ -102,7 +102,7 @@ You receive one mode in your spawn prompt:
 
 ## Phase 0: Initialize
 
-1. **Load and validate the goal.**
+1. **Load and validate the goal, then resolve the working dimension set for this `MODE`.**
 
    ```bash
    ajv validate --spec=draft2020 --strict=false \
@@ -110,10 +110,21 @@ You receive one mode in your spawn prompt:
    DIMENSIONS=$(jq -r '.dimensions[]' "$GOAL_FILE")
    MAX_ROUNDS=$(jq -r '.bound.max_rounds // 3' "$GOAL_FILE")
    MIN_DIMS=$(jq -r '.bound.min_dimensions_complete // 1' "$GOAL_FILE")
+
+   # WORK_DIMS — the dimensions THIS run fans out (Phase 1 loops WORK_DIMS, not DIMENSIONS):
+   #   full    -> every goal dimension
+   #   update  -> every goal dimension (a full refresh; Phase 4 diffs the delta)
+   #   augment -> the named DIMENSION if given, else every goal dimension
+   case "$MODE" in
+     augment) WORK_DIMS="${DIMENSION:-$DIMENSIONS}" ;;
+     *)       WORK_DIMS="$DIMENSIONS" ;;
+   esac
    ```
 
    If the goal is missing or invalid, report the error and stop — there is no
-   session without a goal.
+   session without a goal. `augment`/`update` require an existing goal (they never
+   author one). In `augment` mode, if a named `DIMENSION` is **not** among the goal's
+   `dimensions[]`, report it and stop rather than researching an unknown lens.
 
 2. **Create the directory.**
 
@@ -148,10 +159,9 @@ You receive one mode in your spawn prompt:
 
 ## Phase 1: Fan out dimension-analysts (capped concurrency)
 
-For each dimension in the goal's `dimensions[]` (in `update` mode, only changed
-dimensions; in `augment` mode, the single `DIMENSION` from the spawn prompt — or,
-when `DIMENSION` is empty, every config-declared dimension), running at most
-`MAX_CONCURRENCY` at a time:
+For each dimension in the resolved working set `WORK_DIMS` (Phase 0 step 1 —
+full/update: every goal dimension; augment: the named `DIMENSION`, or every dimension
+when none is named), running at most `MAX_CONCURRENCY` at a time:
 
 1. Create a task for your own tracking: `TaskCreate("Research: {dimension}")` —
    capture the returned id as `{taskId}` (no `owner`: the analyst is a nameless
@@ -274,8 +284,20 @@ analyst from self-grading siblings. Open the window for this single pass by crea
 orchestrator-owned marker, and **remove it the moment the analyst returns** (a stale marker
 leaves the gate runnable):
 
+**Size the gate budget to the finding set — this is a DEEP harness.** A thorough
+dimension yields tens of findings; the gate must verify EVERY one, so `CLAIM_BUDGET`
+scales UP to the active finding count. Never cap the analyst's output or truncate the
+working set to fit a fixed budget — the breadth is the point; the gate grows to match
+it. Also scope the gate to what this run produced:
+
 ```bash
 touch "$REPORTS_DIR/.gate-active"   # opens THIS topic's single Phase-2 gate window
+# Budget the gate to the actual active set so the harness's own depth never trips the
+# falsification-analyst's fail-loud overflow guard (CLAIM_BUDGET is a FLOOR, not a cap):
+FCOUNT=$(ls "$REPORTS_DIR"/findings/*.json 2>/dev/null | wc -l | tr -d ' ')
+GATE_CLAIM_BUDGET=$(( FCOUNT > CLAIM_BUDGET ? FCOUNT : CLAIM_BUDGET ))
+# augment over a single named dimension grades only that dimension's set; else grade all.
+if [ "$MODE" = augment ] && [ -n "${DIMENSION:-}" ]; then GATE_SCOPE="dimension:$DIMENSION"; else GATE_SCOPE="all"; fi
 ```
 
 ```text
@@ -286,9 +308,9 @@ Agent(
   prompt: """
     Adversarially falsify the findings written this session.
     REPORTS_DIR: {REPORTS_DIR}
-    SCOPE: all (or finding:{id} / dimension:{dim} in augment mode)
+    SCOPE: {GATE_SCOPE}
     QUERY_BUDGET: {QUERY_BUDGET}
-    CLAIM_BUDGET: {CLAIM_BUDGET}
+    CLAIM_BUDGET: {GATE_CLAIM_BUDGET}
 
     Follow your agent definition. Web-only evidence (WebSearch/WebFetch). Write
     each verdict through scripts/falsify.sh semantics into
@@ -416,7 +438,7 @@ Append to the progress file:
    - Quarantined: {N} (falsified — see quarantine/)
 
    ## Next Steps
-   - `/start --augment [<dimension>]` — deepen a dimension (all thin if omitted)
+   - `/start --augment [<dimension>]` — deepen a dimension (every declared dimension if omitted)
    - `/start --update` — refresh with latest data
    - `/resume` — continue this session
    ```
