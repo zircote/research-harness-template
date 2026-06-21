@@ -147,6 +147,14 @@
     {
       "id": "csi-5w1h",
       "enabled": false
+    },
+    {
+      "id": "data-engineering",
+      "enabled": false
+    },
+    {
+      "id": "regenerative-agriculture-research",
+      "enabled": false
     }
   ]
 }

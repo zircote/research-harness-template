@@ -17,35 +17,35 @@ entity_types:
     schema:
       required: [name]
       properties:
-        name: { type: string, description: Concept name }
+        name: {type: string, description: Concept name}
   - name: person
     base: semantic
     description: An individual human actor.
     schema:
       required: [name]
       properties:
-        name: { type: string, description: Person name }
+        name: {type: string, description: Person name}
   - name: organization
     base: semantic
     description: A company, institution, agency, or group.
     schema:
       required: [name]
       properties:
-        name: { type: string, description: Organization name }
+        name: {type: string, description: Organization name}
   - name: technology
     base: semantic
     description: A tool, system, framework, standard, or product.
     schema:
       required: [name]
       properties:
-        name: { type: string, description: Technology name }
+        name: {type: string, description: Technology name}
   - name: file
     base: semantic
     description: A document, dataset, or artifact.
     schema:
       required: [name]
       properties:
-        name: { type: string, description: File name or path }
+        name: {type: string, description: File name or path}
 # MIF-native STRUCTURAL relationships — the core, domain-agnostic links that connect
 # any concept/entity across the corpus (SPEC relationship vocabulary). They are core
 # (always available) and NOT from/to-constrained; validate-concordance.sh treats
@@ -86,3 +86,17 @@ relationships:
     description: The source depends on the target.
     from: [concept, person, organization, technology, file]
     to: [concept, person, organization, technology, file]
+  updates:
+    description: The source updates or revises the target (a later finding that updates an earlier one).
+    from:
+      - concept
+      - person
+      - organization
+      - technology
+      - file
+    to:
+      - concept
+      - person
+      - organization
+      - technology
+      - file
