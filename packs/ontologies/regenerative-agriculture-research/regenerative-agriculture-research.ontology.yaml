@@ -390,8 +390,8 @@ relationships:
     from: []
     to: []
     symmetric: true
-  enables:
-    description: "Infrastructure or input enables an agronomic or husbandry practice"
+  supports:
+    description: "Infrastructure or practice supports an operation"
     from:
       - farm-infrastructure
       - equipment-or-input
