@@ -206,3 +206,9 @@ rounds and report unmet checks; remedy a thin dimension with `/augment <dimensio
   file), AND emit the `/goal` prose. Do not leave the JSON as prose only.
 - NEVER use placeholders. Use real values; when one is genuinely unknown, add a
   concise clarifying question to the prose.
+- **DO NOT DIRECT-SPAWN — USE `/start` TO BEGIN.** Authoring the goal is the END of
+  this command's job. Do NOT directly spawn the orchestrator or any research agent
+  (dimension-analyst, falsification-analyst, etc.) yourself. The research session is
+  begun by the user with `/start`, which loads the `goal.json` and runs the
+  orchestrator under its phase/continuity machinery. Emit the `goal.json` + the
+  `/goal` prose, tell the user to run `/start` to begin, then STOP.

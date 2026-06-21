@@ -82,28 +82,43 @@ src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$C
 
 # Deterministic classification fallback — reuses the ontology's OWN discovery metadata
 # (NOT a separate classifier): apply the topic's bound DOMAIN ontologies' discovery
-# content_patterns (content_pattern -> suggest_entity) to the finding text. Echoes
-# "<entity_type>\t<ontology_id>" on a match (suggest_entity must be a type the ontology
-# declares), empty otherwise. Deterministic (ontologies + patterns sorted).
+# content_patterns (content_pattern -> suggest_entity) to the finding's CONTENT text.
+# Echoes "<entity_type>\t<ontology_id>\t<version>" on a single UNAMBIGUOUS match
+# (suggest_entity must be a declared type; a match spanning >1 distinct type OR ontology is
+# ambiguous -> classify nothing, mirroring the typed path's refusal to silently pick). Empty
+# otherwise. Fail CLOSED: a broken yq/jq or version-mismatched binding aborts/skips, never
+# silently mis-resolves.
 classify_from_discovery() {
   [ -n "$TOPIC" ] && [ -f "$CATALOG" ] || return 0
-  local bound aid src od disc='[]' text hit
-  bound=$(jq -r --arg t "$TOPIC" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG" 2>/dev/null | sed 's/@.*//' | sort -u)
+  local bound bspec bid bver cver src od disc='[]' text hit
+  bound=$(jq -r --arg t "$TOPIC" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG" 2>/dev/null | sort -u)
   [ -n "$bound" ] || return 0
-  for aid in $bound; do
-    src="$(src_of "$aid")"; [ -z "$src" ] && continue
-    od=$(yq -o=json '.' "$ROOT/$src" 2>/dev/null) || continue
-    disc=$(jq -c --arg ont "$aid" --argjson o "$od" '
+  for bspec in $bound; do
+    bid="${bspec%@*}"
+    src="$(src_of "$bid")"; [ -z "$src" ] && continue   # not cataloged -> typed path fails it; discovery skips
+    case "$bspec" in                                     # a version-pinned binding must match the catalog
+      *@*) bver="${bspec#*@}"; cver=$(jq -r --arg id "$bid" '.ontologies[]? | select(.id==$id) | .version' "$CATALOG" | head -1)
+           [ "$bver" = "$cver" ] || continue ;;
+    esac
+    if ! od=$(yq -o=json '.' "$ROOT/$src" 2>/dev/null); then
+      echo "resolve-ontology: yq failed reading '$bid' ($src) during discovery — aborting (fail closed)" >&2; exit 4
+    fi
+    if ! disc=$(jq -c --arg ont "$bid" --argjson o "$od" '
       . + ([ ($o.entity_types // [] | map(.name)) as $types
              | ($o.discovery.patterns // [])[] | . as $p
              | select($p.content_pattern and $p.suggest_entity and ($types | index($p.suggest_entity)))
-             | {pattern:$p.content_pattern, type:$p.suggest_entity, ont:$ont} ])' <<<"$disc" 2>/dev/null) || return 0
+             | {pattern:$p.content_pattern, type:$p.suggest_entity, ont:$ont, ver:($o.ontology.version // "")} ])' <<<"$disc"); then
+      echo "resolve-ontology: jq failed building discovery patterns for '$bid' — aborting (fail closed)" >&2; exit 4
+    fi
   done
-  text=$(jq -r 'del(.["@context","@type","@id"]) | [.. | strings] | join(" ")' "$FINDING" 2>/dev/null)
+  # Match the finding's CONTENT (top-level non-@ string fields) — NOT nested citations,
+  # urls, or entity ids, which would cause incidental false positives.
+  text=$(jq -r '[ to_entries[] | select(.key | startswith("@") | not) | .value | strings ] | join(" ")' "$FINDING" 2>/dev/null)
   [ -n "$text" ] || return 0
   hit=$(jq -rn --arg t "$text" --argjson d "$disc" '
-    [ $d[] | . as $e | select(try ($t | test($e.pattern; "i")) catch false) ]
-    | sort_by(.type, .ont) | if length==0 then "" else "\(.[0].type)\t\(.[0].ont)" end' 2>/dev/null)
+    [ $d[] | . as $e | select(try ($t | test($e.pattern; "i")) catch false) ] | unique_by([.type,.ont]) as $m
+    | if (($m | map(.type) | unique | length) == 1) and (($m | map(.ont) | unique | length) == 1) and ($m[0].ver != "")
+      then "\($m[0].type)\t\($m[0].ont)\t\($m[0].ver)" else "" end' 2>/dev/null)
   printf '%s' "$hit"
 }
 
@@ -113,8 +128,7 @@ has_entity=false; jq -e 'has("entity") and (.entity != null)' "$FINDING" >/dev/n
 if [ -z "$et" ] && [ -z "$oid" ] && [ "$has_entity" != true ]; then
   dhit=$(classify_from_discovery)
   if [ -n "$dhit" ]; then
-    det=$(printf '%s' "$dhit" | cut -f1); dont=$(printf '%s' "$dhit" | cut -f2)
-    dver=$(yq -r '.ontology.version' "$ROOT/$(src_of "$dont")" 2>/dev/null)
+    det=$(printf '%s' "$dhit" | cut -f1); dont=$(printf '%s' "$dhit" | cut -f2); dver=$(printf '%s' "$dhit" | cut -f3)
     record "$det" "$dont@$dver" "discovery" true
     echo "resolve-ontology: $fid classified as $det via $dont discovery pattern — ok"
     exit 0
