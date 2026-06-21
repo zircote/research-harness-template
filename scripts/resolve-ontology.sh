@@ -104,10 +104,12 @@ classify_from_discovery() {
       echo "resolve-ontology: yq failed reading '$bid' ($src) during discovery — aborting (fail closed)" >&2; exit 4
     fi
     if ! disc=$(jq -c --arg ont "$bid" --argjson o "$od" '
-      . + ([ ($o.entity_types // [] | map(.name)) as $types
-             | ($o.discovery.patterns // [])[] | . as $p
-             | select($p.content_pattern and $p.suggest_entity and ($types | index($p.suggest_entity)))
-             | {pattern:$p.content_pattern, type:$p.suggest_entity, ont:$ont, ver:($o.ontology.version // "")} ])' <<<"$disc"); then
+      . + (if ($o.discovery.enabled != false) then          # respect discovery.enabled (jq // treats false as null, so test != false)
+             [ ($o.entity_types // [] | map(.name)) as $types
+               | ($o.discovery.patterns // [])[] | . as $p
+               | select($p.content_pattern and $p.suggest_entity and ($types | index($p.suggest_entity)))
+               | {pattern:$p.content_pattern, type:$p.suggest_entity, ont:$ont, ver:($o.ontology.version // "")} ]
+           else [] end)' <<<"$disc"); then
       echo "resolve-ontology: jq failed building discovery patterns for '$bid' — aborting (fail closed)" >&2; exit 4
     fi
   done
