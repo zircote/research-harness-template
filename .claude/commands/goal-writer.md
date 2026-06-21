@@ -138,9 +138,12 @@ ajv validate --spec=draft2020 --strict=false \
 ```
 
 Then return the goal JSON and the `/goal` prose in two labelled code blocks. The
-`/goal` prose MUST END with the verbatim begin-with-`/start` reminder shown below —
-it travels INSIDE the goal text, so the agent that later reads the ACTIVE goal is
-told not to bypass the harness by hand-spawning agents:
+`/goal` prose is a SUMMARY — the full, checkable completion conditions live in the
+goal.json (they do not fit Claude Code's /goal character limit), so the prose MUST
+point at the goal.json as the source of truth AND MUST END with the verbatim begin-
+with-`/start` reminder shown below. It travels INSIDE the goal text, so the agent that
+later reads the ACTIVE goal is told where the real checks are and not to bypass the
+harness by hand-spawning agents:
 
 ```json
 // reports/<topic>/goal.json — validates against schemas/goal.schema.json
@@ -148,13 +151,18 @@ told not to bypass the harness by hand-spawning agents:
 ```
 
 ```text
-/goal prose: [the same measurable end state in plain language, ready to paste
+/goal prose: [the measurable end state in plain language — a SUMMARY, ready to paste
 into Claude Code's /goal, including any clarifying question needed to proceed.]
 
-To begin, run `/start` — DO NOT directly spawn the orchestrator or any research
-agent (dimension-analyst, falsification-analyst, …) yourself. `/start` loads this
-goal.json and runs them under the harness's phase + continuity machinery; hand-
-spawning bypasses it. Author/clarify the goal, then STOP and wait for `/start`.
+The authoritative, checkable completion conditions are defined in
+reports/<topic>/goal.json (`completion_condition.checks`) — too many to inline here.
+This run is COMPLETE only when the orchestrator reports that EVERY one of those checks
+holds (it prints each check's pass/fail); treat that orchestrator report as the
+completion signal, not this summary. To begin, run `/start` — DO NOT directly spawn the
+orchestrator or any research agent (dimension-analyst, falsification-analyst, …)
+yourself. `/start` loads this goal.json and runs them under the harness's phase +
+continuity machinery; hand-spawning bypasses it. Author/clarify the goal, then STOP
+and wait for `/start`.
 ```
 
 ## Example
@@ -198,10 +206,13 @@ Constraints: findings are individual MIF units under reports/template-distributi
 no fabricated URLs; surviving findings only feed synthesis. Bound: stop after 3
 rounds and report unmet checks; remedy a thin dimension with `/augment <dimension>`.
 
-To begin, run `/start` — DO NOT directly spawn the orchestrator or any research
-agent (dimension-analyst, falsification-analyst, …) yourself. `/start` loads this
-goal.json and runs them under the harness's phase + continuity machinery; hand-
-spawning bypasses it. Author/clarify the goal, then STOP and wait for `/start`.
+The authoritative completion checks are defined in
+reports/template-distribution/goal.json (`completion_condition.checks`); this run is
+complete only when the orchestrator reports every one of them holds. To begin, run
+`/start` — DO NOT directly spawn the orchestrator or any research agent (dimension-
+analyst, falsification-analyst, …) yourself. `/start` loads this goal.json and runs
+them under the harness's phase + continuity machinery; hand-spawning bypasses it.
+Author/clarify the goal, then STOP and wait for `/start`.
 ```
 
 ## Critical rules
@@ -217,6 +228,12 @@ spawning bypasses it. Author/clarify the goal, then STOP and wait for `/start`.
   evaluator runs nothing and reads only the transcript.
 - Write the validated `goal.json` to `reports/<topic>/` (the orchestrator loads a
   file), AND emit the `/goal` prose. Do not leave the JSON as prose only.
+- The `/goal` prose is a SUMMARY, not the contract. The full `completion_condition.checks`
+  do not fit Claude Code's /goal character limit, so the prose MUST name
+  `reports/<topic>/goal.json` as where the authoritative checks live, and MUST define
+  completion as "the orchestrator reports every check holds" — Claude Code's `/goal` Stop
+  hook only sees the transcript, so point it at the orchestrator's printed check results,
+  never imply the prose paragraph itself is the full set of conditions.
 - NEVER use placeholders. Use real values; when one is genuinely unknown, add a
   concise clarifying question to the prose.
 - **DO NOT DIRECT-SPAWN — and make the goal SAY SO.** Authoring the goal is the END of
