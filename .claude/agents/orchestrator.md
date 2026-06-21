@@ -264,6 +264,16 @@ This is the **only** verification gate (SPEC §4 / §6b — the four codex revie
 gates are explicitly cut). Spawn ONE `falsification-analyst` as a **nameless
 subagent** over the full set of new findings.
 
+**Open the gate window first.** `scripts/falsify.sh` is blocked outside this pass by a
+PreToolUse hook (`.claude/hooks/guard-falsify-gate.sh`) — that is what stops a dimension-
+analyst from self-grading siblings. Open the window for this single pass by creating the
+orchestrator-owned marker, and **remove it the moment the analyst returns** (a stale marker
+leaves the gate runnable):
+
+```bash
+touch "$REPORTS_DIR/.gate-active"   # opens THIS topic's single Phase-2 gate window
+```
+
 ```text
 TaskCreate("Falsify findings")   # capture the returned id as {taskId}
 Agent(
@@ -287,7 +297,12 @@ Agent(
 ```
 
 Wait for the subagent to return its roll-up (`falsified`, `weakened`, `survived`,
-`inconclusive` counts); then mark the task complete:
+`inconclusive` counts); then **close the gate window** and mark the task complete:
+
+```bash
+rm -f "$REPORTS_DIR/.gate-active"   # closes the window — falsify.sh is blocked again
+```
+
 `TaskUpdate(taskId, status: "completed")`. **If the return is empty or missing**
 (the subagent died after writing verdicts but before returning), recover the
 counts from disk rather than blocking or logging a zero gate — read the

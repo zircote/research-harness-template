@@ -1272,10 +1272,55 @@ JSON
   rm -rf "$T"
 }
 
+gate_m14() {
+  info "Milestone 14 — Falsification gate safety (honest default + phase-gate hook)"
+  local T; T="$(mktemp -d)"
+
+  # 14a. A finding with NO evidence-fixture entry was not adversarially tested -> the gate
+  #      defaults to `inconclusive`, never a false `survived` (which the one-round rule would
+  #      make permanent — the contamination a stray, non-gate invocation caused).
+  printf '{"@id":"urn:mif:concept:t:f1","title":"x"}\n' > "$T/f.json"
+  local vd; vd=$(scripts/falsify.sh "$T/f.json" 2>/dev/null | jq -r '.extensions.harness.verification.verdict')
+  if [ "$vd" = "inconclusive" ]; then
+    ok "falsify.sh no-fixture default is 'inconclusive' (no false 'survived' pass)"
+  else
+    bad "falsify.sh no-fixture default is '$vd' (want inconclusive)"
+  fi
+
+  # 14b. An EXPLICIT fixture verdict is recorded unchanged.
+  printf '{"urn:mif:concept:t:f1":{"verdict":"survived"}}\n' > "$T/ev.json"
+  local vf; vf=$(scripts/falsify.sh "$T/f.json" "$T/ev.json" 2>/dev/null | jq -r '.extensions.harness.verification.verdict')
+  if [ "$vf" = "survived" ]; then
+    ok "falsify.sh records an explicit fixture verdict unchanged"
+  else
+    bad "falsify.sh changed an explicit fixture verdict to '$vf'"
+  fi
+
+  # 14c. Phase-gate PreToolUse hook: a findings-grade tool-command is DENIED without the
+  #      topic's gate window and ALLOWED with it; a report-finding (non-findings target) is a
+  #      legit non-gate use (report-synthesizer / publish-report) and is always allowed.
+  local HK=".claude/hooks/guard-falsify-gate.sh"
+  mkdir -p "$T/reports/tA/findings"
+  hd() { local o; o=$(printf '%s' "$1" | CLAUDE_PROJECT_DIR="$T" bash "$HK" 2>/dev/null); [ -z "$o" ] && echo allow || printf '%s' "$o" | jq -r '.hookSpecificOutput.permissionDecision'; }
+  local d_no d_yes d_rep
+  rm -f "$T/reports/tA/.gate-active"
+  d_no=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json fx"}}')
+  touch "$T/reports/tA/.gate-active"
+  d_yes=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json fx"}}')
+  d_rep=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/report-finding.json fx"}}')
+  if [ "$d_no" = deny ] && [ "$d_yes" = allow ] && [ "$d_rep" = allow ]; then
+    ok "phase-gate hook: findings-grade denied without the topic window, allowed within it; report-finding always allowed"
+  else
+    bad "phase-gate hook wrong (no-window=$d_no window=$d_yes report=$d_rep)"
+  fi
+
+  rm -rf "$T"
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14)
 
 for g in "${GATES[@]}"; do "$g"; done
 

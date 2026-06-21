@@ -81,6 +81,14 @@ Spawn the analyst as a **nameless background subagent** and read its return — 
 team, no `SendMessage`. (The platform roster is flat; coordination is via the
 finding files the analyst writes and its return value.)
 
+**Open the gate window first.** `scripts/falsify.sh` is blocked outside an open gate window
+by a PreToolUse hook (`.claude/hooks/guard-falsify-gate.sh`), so no stray caller can grade
+findings. Create the marker before spawning and remove it after the analyst returns:
+
+```bash
+touch "$REPORTS_DIR/.gate-active"   # opens THIS topic's gate window for this pass
+```
+
 ```text
 Agent(
   subagent_type: "falsification-analyst",
@@ -100,6 +108,12 @@ Agent(
     FINAL MESSAGE is your return value: the verdict roll-up.
   """
 )
+```
+
+When the analyst returns, **close the gate window**:
+
+```bash
+rm -f "$REPORTS_DIR/.gate-active"   # closes the window — falsify.sh is blocked again
 ```
 
 ## Phase 3: Receive verdicts and report
