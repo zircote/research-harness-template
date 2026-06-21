@@ -33,19 +33,29 @@
 #   run-lock.sh steal   <reports_dir> [label]   # force re-acquire (recovery; e.g. operator-driven /resume)
 set -uo pipefail
 STALE_MIN="${RUN_LOCK_STALE_MIN:-240}"
+# Validate: an empty/non-numeric/zero value would make `find -mmin` error and fresh()
+# mis-judge a LIVE lock as stale (then steal it — the corruption this prevents). Fall
+# back to the safe default rather than fail open.
+case "$STALE_MIN" in ''|*[!0-9]*|0) STALE_MIN=240 ;; esac
 
 CMD="${1:?usage: run-lock.sh acquire|refresh|release|steal <reports_dir> [label]}"
 DIR="${2:?usage: run-lock.sh <cmd> <reports_dir> [label]}"
 LABEL="${3:-run}"
 LOCK="$DIR/.run-lock"
 
-# A lock is FRESH if its directory mtime is within the staleness window.
-fresh() { [ -d "$LOCK" ] && [ -n "$(find "$LOCK" -maxdepth 0 -mmin "-$STALE_MIN" 2>/dev/null)" ]; }
+# A lock is FRESH if its directory mtime is within the staleness window. Fail SAFE: if
+# `find` errors, treat the lock as fresh/owned (return 0) so acquire DENIES, never steals.
+fresh() {
+  [ -d "$LOCK" ] || return 1
+  local hit
+  hit=$(find "$LOCK" -maxdepth 0 -mmin "-$STALE_MIN" 2>/dev/null) || return 0
+  [ -n "$hit" ]
+}
 write_owner() { printf '%s\n' "$LABEL" > "$LOCK/owner" 2>/dev/null || true; }
 
 case "$CMD" in
   acquire)
-    mkdir -p "$DIR" 2>/dev/null || true
+    mkdir -p "$DIR" || { echo "run-lock: cannot create $DIR — lock protocol inactive, refusing to proceed." >&2; exit 2; }
     if mkdir "$LOCK" 2>/dev/null; then   # atomic: succeeds only if no holder existed
       write_owner
       echo "run-lock: acquired ($DIR)" >&2
@@ -80,11 +90,16 @@ case "$CMD" in
     exit 0
     ;;
   steal)
-    rm -rf "$LOCK"
-    mkdir -p "$LOCK" 2>/dev/null || true
-    touch "$LOCK"; write_owner
-    echo "run-lock: stole lock on $DIR (forced)" >&2
-    exit 0
+    # Forced recovery. Verify each step — if we cannot (re)create the lock the topic is
+    # left UNLOCKED, so fail non-zero rather than claim success and let callers proceed.
+    rm -rf "$LOCK" 2>/dev/null
+    if mkdir "$LOCK" 2>/dev/null && touch "$LOCK" 2>/dev/null; then
+      write_owner
+      echo "run-lock: stole lock on $DIR (forced)" >&2
+      exit 0
+    fi
+    echo "run-lock: steal FAILED on $DIR — could not (re)create the lock; topic is NOT locked, do not proceed." >&2
+    exit 3
     ;;
   *)
     echo "run-lock: unknown command '$CMD' (acquire|refresh|release|steal)" >&2

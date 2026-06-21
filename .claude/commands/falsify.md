@@ -91,7 +91,14 @@ is blocked outside the window by the `guard-falsify-gate.sh` PreToolUse hook). T
 run lock serializes this standalone gate against a concurrent orchestrator (or a
 second `/falsify`) on the same topic — both mutate the shared `findings/`, and two
 at once corrupt it. If the lock is held by a live run, STOP and tell the user a run
-already owns this topic; do not gate. Release it in Phase 4.
+already owns this topic; do not gate. **Release the lock on EVERY exit path** — in
+Phase 4 on success AND immediately if you abort or error at any point (clear
+`.gate-active`/`.gate-batch` in the same step). A hard crash or interrupt you cannot
+catch is bounded by the lock's staleness window — it ages out and `/resume` (or
+`run-lock.sh steal`) re-acquires, so the topic never wedges permanently. (A bash
+`trap` is NOT used here: this gate spans many tool calls, so a `trap … EXIT` would
+fire when the acquire snippet's shell exits — before the gate runs — and release the
+lock prematurely.)
 
 ```bash
 if ! scripts/run-lock.sh acquire "$REPORTS_DIR" "falsify"; then

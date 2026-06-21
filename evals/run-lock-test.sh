@@ -57,7 +57,9 @@ fi
 # 5. Staleness discriminates by AGE under the DEFAULT window — a genuinely OLD lock
 #    is stolen, a FRESH one is not (proves age-based staleness, not blanket-steal).
 #    Backdate the lock dir mtime to 2020 (far past 240m) to simulate a crashed run.
-"$LOCK" acquire "$D" "crashed" 2>/dev/null
+if ! "$LOCK" acquire "$D" "crashed" 2>/dev/null || [ ! -d "$D/.run-lock" ]; then
+  note "FAIL: setup — acquire did not create the .run-lock DIRECTORY (test can't validate staleness)"; fail=1
+fi
 touch -t 202001010000 "$D/.run-lock"
 if "$LOCK" acquire "$D" "recovery" 2>/dev/null; then
   note "an OLD (backdated) lock is stolen under the default window"
