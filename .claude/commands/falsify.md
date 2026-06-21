@@ -91,17 +91,21 @@ resumes cleanly (this is also what makes re-running `/falsify` safe).
 
 ```bash
 touch "$REPORTS_DIR/.gate-active"          # opens THIS topic's gate window
-BATCH=12; NOPROG=0                          # slice size; consecutive no-progress rounds
+CLAIM_BUDGET={claim_budget}                 # the gate budget passed to each slice (default 50)
+BATCH=$(( CLAIM_BUDGET < 12 ? CLAIM_BUDGET : 12 ))   # a slice must NOT exceed CLAIM_BUDGET or the analyst fail-louds
+NOPROG=0                                     # consecutive no-progress rounds
 # @ids of UNGATED findings (missing verification.attempted_at). For SCOPE narrow the set:
 #   dimension:<d> -> add `select(.extensions.harness.dimension=="<d>")`; finding:<id> -> just that file.
-ungated(){ for f in "$REPORTS_DIR"/findings/*.json; do
+ungated(){ for f in "$REPORTS_DIR"/findings/*.json; do [ -e "$f" ] || continue   # guard the empty-dir glob
   jq -e '.extensions.harness.verification.attempted_at? // empty | length>0' "$f" >/dev/null 2>&1 \
     || jq -r '.["@id"]' "$f"; done; }
 ```
 
 Each round:
 
-1. `ungated | head -n "$BATCH" > "$REPORTS_DIR/.gate-batch"`; `REM=$(ungated | wc -l)`.
+1. **Refresh the window** — `touch "$REPORTS_DIR/.gate-active"` so the marker never ages past the
+   hook's freshness bound (`-mmin -240`) during a long multi-slice loop. Then
+   `ungated | head -n "$BATCH" > "$REPORTS_DIR/.gate-batch"`; `REM=$(ungated | wc -l)`.
 2. **If `REM` is 0 the gate is COMPLETE** — break the loop.
 3. Spawn ONE analyst over the slice (`SCOPE: batch:$REPORTS_DIR/.gate-batch`), Phase 2b below.
    Then **do NOT block on its return — poll disk**: in a bounded `Bash` loop, `sleep` a short
@@ -154,6 +158,7 @@ findings (no `attempted_at`):
 
 ```bash
 for f in "$REPORTS_DIR"/findings/*.json "$REPORTS_DIR"/quarantine/*.json; do
+  [ -e "$f" ] || continue   # skip unmatched globs (e.g. empty quarantine/) so jq sees no literal path
   jq -r '.extensions.harness.verification.verdict // "ungated"' "$f" 2>/dev/null
 done | sort | uniq -c
 ```

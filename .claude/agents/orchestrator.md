@@ -296,28 +296,32 @@ the bounded loop, not a budget knob, is what lets the gate scale to depth.
 
 ```bash
 touch "$REPORTS_DIR/.gate-active"   # opens THIS topic's single Phase-2 gate window
-BATCH=12; NOPROG=0                  # slice size; consecutive no-progress rounds
+BATCH=$(( CLAIM_BUDGET < 12 ? CLAIM_BUDGET : 12 ))   # a slice must NOT exceed CLAIM_BUDGET or the analyst fail-louds
+NOPROG=0                            # consecutive no-progress rounds
 # @ids of UNGATED findings (missing verification.attempted_at). In augment over a single named
 # DIMENSION, narrow with `select(.extensions.harness.dimension=="$DIMENSION")`:
-ungated(){ for f in "$REPORTS_DIR"/findings/*.json; do
+ungated(){ for f in "$REPORTS_DIR"/findings/*.json; do [ -e "$f" ] || continue   # guard the empty-dir glob
   jq -e '.extensions.harness.verification.attempted_at? // empty | length>0' "$f" >/dev/null 2>&1 \
     || jq -r '.["@id"]' "$f"; done; }
 ```
 
 `TaskCreate("Falsify findings")` — capture the returned id as `{taskId}`. Then loop:
 
-1. `ungated | head -n "$BATCH" > "$REPORTS_DIR/.gate-batch"`; `REM=$(ungated | wc -l)`.
+1. **Refresh the window** (`touch "$REPORTS_DIR/.gate-active"`) so the marker never ages past the
+   hook's `-mmin -240` freshness bound during a long loop. Then
+   `ungated | head -n "$BATCH" > "$REPORTS_DIR/.gate-batch"`; `REM=$(ungated | wc -l)`.
 2. If `REM` is 0 the gate is **COMPLETE** — break.
 3. Spawn ONE `falsification-analyst` (`run_in_background: true`) over the slice with
    `SCOPE: batch:$REPORTS_DIR/.gate-batch`, `QUERY_BUDGET: {QUERY_BUDGET}`,
    `CLAIM_BUDGET: {CLAIM_BUDGET}`, and the usual prompt (web-only evidence; write each verdict
    through `scripts/falsify.sh`; one-round rule; remediation; append to the
    `{YYYY-MM-DD}-falsification-report.md`; FINAL MESSAGE = the batch roll-up).
-   Then **do NOT block on its return — poll**: in a bounded `Bash` loop `sleep` ~20s and re-count
-   how many of the batch's `@id`s now carry `attempted_at` (and `TaskGet {taskId}` for the slice's
-   status). Stop polling when the batch is fully gated OR no new finding gates across ~3 consecutive
-   polls (the slice hung or was interrupted), then go to step 4. Disk state and task status — not the
-   return — are the signals you act on, so you move past a non-returning slice instead of hanging.
+   Then **do NOT block on its return — poll disk**: in a bounded `Bash` loop `sleep` ~20s and
+   re-count how many of the batch's `@id`s now carry `attempted_at`. Stop polling when the batch is
+   fully gated OR no new finding gates across ~3 consecutive polls (the slice hung or was
+   interrupted), then go to step 4. Disk state — not the sub-agent's return — is the signal you act
+   on, so you move past a non-returning slice instead of hanging. (`{taskId}` is the single overall
+   gate task for `TaskUpdate`, not per-slice — do not `TaskGet` it for slice progress.)
 4. Re-read disk. If the round gated **zero** new findings, `NOPROG=$((NOPROG+1))`; else `0`.
 5. If `NOPROG` reaches 2, STOP — do not hang or fake a verdict; the remaining ungated findings
    are reported PARTIAL (below) and `/falsify` finishes them.
