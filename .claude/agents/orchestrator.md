@@ -187,7 +187,10 @@ dimension when none is named), running at most `MAX_CONCURRENCY` at a time:
                                        canonical dir synthesize/graph/index/reconcile read)
 
        Read harness.config.json dimensions[] for this dimension's description.
-       Conduct web research scoped to your dimension and the goal. Emit each
+       Conduct EXHAUSTIVE web research scoped to your dimension and the goal —
+       enumerate the dimension's FULL germane set (a broad domain yields dozens to
+       hundreds of entities; research to saturation, not to a handful). Under-capturing
+       forces costly re-runs and is the failure mode to avoid. Emit each
        finding as an individual MIF memory unit (set extensions.harness.dimension
        = '{dimension}'; leave extensions.harness.verification to the gate) and
        validate the structure you are responsible for — the falsification gate
@@ -233,9 +236,32 @@ dimension when none is named), running at most `MAX_CONCURRENCY` at a time:
    `extensions.harness.dimension`, so they join that dimension's finding set
    automatically (the analyst is already done — do not try to message it).
 
-Wait for every analyst subagent to return (or time out a straggler and exclude
-it, noting the omission). Collect the finding file paths from the returns and from
-`REPORTS_DIR`.
+Wait for every analyst subagent to return, then **reap failures from disk — never
+silently exclude a dimension.** A dimension whose analyst returned a rate-limit / error
+notice (e.g. `"You've hit your session limit"`), or that has **zero** findings under
+`$REPORTS_DIR/findings/` with `extensions.harness.dimension == {dim}`, FAILED this pass:
+
+```bash
+# dimensions that produced nothing this pass (drive off disk, not the return):
+for d in $WORK_DIMS; do
+  n=$(for f in "$REPORTS_DIR"/findings/*.json; do [ -e "$f" ] || continue
+        jq -e --arg d "$d" '.extensions.harness.dimension==$d' "$f" >/dev/null 2>&1 && echo x; done | wc -l)
+  [ "$n" -eq 0 ] && echo "$d"
+done
+```
+
+- **Retry** each failed dimension by re-spawning its analyst (a fresh sub-agent clears a
+  transient or per-sub-agent rate-limit), up to **2** retries per dimension.
+- If a dimension STILL produces zero after retries, the account is hard rate-limited
+  (`resets <time>`): **stop fanning out, record those dimensions as `rate_limited` /
+  incomplete in `research-progress.md` and `state.json`, and report plainly** — e.g.
+  "dimensions X, Y produced 0 findings: your Claude session limit was hit (resets <time>);
+  re-run `/resume` after it resets to finish them." Mark the session **PARTIAL**. NEVER
+  mark a zero/rate-killed dimension complete and NEVER proceed to the gate or synthesis as
+  if the corpus is whole (a zero-finding dimension stays `done < total`, so `/resume` and
+  the Phase 3 loop re-fan it out).
+
+Collect the finding file paths from the returns and from `REPORTS_DIR`.
 
 **Checkpoint.** Snapshot durable state from disk so a crash/interrupt here is
 recoverable without re-running completed work:
