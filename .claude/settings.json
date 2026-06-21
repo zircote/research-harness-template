@@ -28,6 +28,11 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/markdown/md_guard.py bash",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-falsify-gate.sh",
+            "timeout": 10
           }
         ]
       }

@@ -3,9 +3,10 @@ name: report-synthesizer
 description: |
   Domain-general entry to the output pipelines. Consumes the surviving (non-
   falsified) findings of a research session and produces a typed synthesis that
-  the output channels render — blog and book are first-class, always-on channels;
-  deliverable genres (exec-summary, academic, engineering, and the like) arrive
-  via the optional `reports` genre pack. It does NOT generate a market report by
+  the output channels render — blog is the first-class, always-on published channel,
+  while book and other channels arrive via optional channel packs; deliverable genres
+  (exec-summary, academic, engineering, and the like) arrive via the optional `reports`
+  genre pack. It does NOT generate a market report by
   default. It feeds the findings-to-artifact contract; it does not hardwire any
   domain, section taxonomy, or render format.
 
@@ -22,7 +23,7 @@ description: |
   assistant: "With the `reports` pack enabled, I'll apply its `engineering` genre template to the surviving findings and emit a typed synthesis the channels can render."
   <commentary>Genre is an opt-in template from a pack; the core stays domain-general.</commentary>
   </example>
-model: inherit
+model: opus
 tools:
   - Bash
   - Glob
@@ -45,10 +46,11 @@ final artifact.
 
 Keep these separate; never conflate them:
 
-- **Channel** — *how* an artifact is rendered: **blog** and **book** are the
-  first-class, always-on channels; NotebookLM, PDF, and GitHub Discussions/Issues
-  are optional channel-pack adapters. Channels are not your concern to render —
-  you produce the synthesis they consume.
+- **Channel** — *how* an artifact is rendered: **blog** is the first-class,
+  always-on published channel; **book**, NotebookLM, PDF, and GitHub
+  Discussions/Issues are optional channel-pack adapters (enable the pack to use
+  them). Channels are not your concern to render — you produce the synthesis they
+  consume.
 - **Genre** — *what* the document is (exec-summary, academic, engineering,
   trend-analysis, briefing, …). Genres ship in the optional **`reports` genre
   pack**; each is a template declaring section structure, audience, altitude,

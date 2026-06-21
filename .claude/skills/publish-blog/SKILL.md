@@ -8,8 +8,9 @@ allowed-tools: Read, Bash, Edit, Glob, Grep
 
 # publish-blog — research → blog post
 
-Blog is one of the two **first-class** harness outputs (SPEC §6d): it ships in the
-core, always on, not as a pack. It renders a published post from the surviving
+Blog is the **first-class** published harness output (SPEC §6d): it ships in the
+core, always on, not as a pack (book and other channels arrive via optional channel
+packs). It renders a published post from the surviving
 findings of a session through the **typed findings→artifact contract**
 (`schemas/artifact.schema.json`) — the same contract the book output uses, so the
 citation-integrity and citation-leak gates run uniformly across both.

@@ -9,7 +9,7 @@ description: |
   report-synthesizer. Loops until the goal's completion_condition.checks hold or
   the stated bound is hit. Owns continuity (research-progress.md + /resume).
   Spawned by the start, update, and augment commands with a mode parameter.
-model: inherit
+model: sonnet
 color: cyan
 tools:
   - Agent
@@ -232,9 +232,10 @@ scripts/reconcile-session.sh "$REPORTS_DIR"   # writes $REPORTS_DIR/state.json +
 
 **Ontology resolution (SPEC §8c).** If the topic binds an ontology
 (`harness.config.json` `topics[].ontologies`), resolve every finding's mapping and
-record it. Findings the analyst left untyped stay untyped (core); a finding whose
-stamped `entity_type` does not resolve against the topic's bound ontologies is a
-real error to fix, not to ignore:
+record it. Findings the analyst left untyped are auto-classified by the resolver from the
+bound ontologies' discovery patterns (`content_pattern` → `suggest_entity`) where one
+unambiguously matches, else recorded untyped (core); a finding whose stamped `entity_type`
+does not resolve against the topic's bound ontologies is a real error to fix, not to ignore:
 
 ```bash
 for f in "$REPORTS_DIR"/findings/*.json; do
@@ -263,6 +264,16 @@ This is the **only** verification gate (SPEC §4 / §6b — the four codex revie
 gates are explicitly cut). Spawn ONE `falsification-analyst` as a **nameless
 subagent** over the full set of new findings.
 
+**Open the gate window first.** `scripts/falsify.sh` is blocked outside this pass by a
+PreToolUse hook (`.claude/hooks/guard-falsify-gate.sh`) — that is what stops a dimension-
+analyst from self-grading siblings. Open the window for this single pass by creating the
+orchestrator-owned marker, and **remove it the moment the analyst returns** (a stale marker
+leaves the gate runnable):
+
+```bash
+touch "$REPORTS_DIR/.gate-active"   # opens THIS topic's single Phase-2 gate window
+```
+
 ```text
 TaskCreate("Falsify findings")   # capture the returned id as {taskId}
 Agent(
@@ -286,7 +297,12 @@ Agent(
 ```
 
 Wait for the subagent to return its roll-up (`falsified`, `weakened`, `survived`,
-`inconclusive` counts); then mark the task complete:
+`inconclusive` counts); then **close the gate window** and mark the task complete:
+
+```bash
+rm -f "$REPORTS_DIR/.gate-active"   # closes the window — falsify.sh is blocked again
+```
+
 `TaskUpdate(taskId, status: "completed")`. **If the return is empty or missing**
 (the subagent died after writing verdicts but before returning), recover the
 counts from disk rather than blocking or logging a zero gate — read the

@@ -1,0 +1,22 @@
+{
+  "name": "book",
+  "version": "1.0.0",
+  "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "Published book prose is orthogonal to MIF markdown; the citation-leak gate keeps it free of internal MIF identity, so the MIF Level-3 source of truth lives in the generic report channel, not the book."
+  },
+  "description": "Author a long-form, multi-chapter book from a research session's surviving findings.",
+  "license": "MIT",
+  "author": {
+    "name": "zircote"
+  },
+  "provides": {
+    "skills": [
+      "book-author"
+    ],
+    "channels": [
+      "book"
+    ]
+  }
+}

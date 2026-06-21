@@ -425,17 +425,23 @@ gate_m6() {
   local SF="reports/_meta/sample-session/findings"
   local T; T=$(mktemp -d)
 
-  # 6a. blog and book are first-class skills (flat, in the core, not a pack).
+  # 6a. blog is the first-class always-on channel skill (flat, in the core). book is now an
+  #     OPTIONAL channel pack (packs/channels/book) — not a flat core skill.
   local s smiss=""
-  for s in publish-blog book-author; do
+  for s in publish-blog; do
     if [ -f ".claude/skills/$s/SKILL.md" ] && grep -q '^description:' ".claude/skills/$s/SKILL.md"; then :; else
       smiss="${smiss}${s} "
     fi
   done
+  # book-author must NOT remain a flat core skill, and must live in the book channel pack.
+  [ -f ".claude/skills/book-author/SKILL.md" ] && smiss="${smiss}book-author-still-flat "
+  if [ -f "packs/channels/book/skills/book-author/SKILL.md" ] && jq -e '.kind=="channel"' packs/channels/book/.claude-plugin/plugin.json >/dev/null 2>&1; then :; else
+    smiss="${smiss}book-pack-missing "
+  fi
   if [ -z "$smiss" ]; then
-    ok "blog and book are first-class flat skills"
+    ok "blog is the first-class flat skill; book is an optional channel pack"
   else
-    bad "missing first-class output skills: $smiss"
+    bad "channel skill layout wrong: $smiss"
   fi
 
   # 6b. A sample findings set renders to BOTH a blog post and a book chapter
@@ -1272,10 +1278,66 @@ JSON
   rm -rf "$T"
 }
 
+gate_m14() {
+  info "Milestone 14 — Falsification gate safety (honest default + phase-gate hook)"
+  local T; T="$(mktemp -d)"
+
+  # 14a. A finding with NO evidence-fixture entry was not adversarially tested -> the gate
+  #      defaults to `inconclusive`, never a false `survived` (which the one-round rule would
+  #      make permanent — the contamination a stray, non-gate invocation caused).
+  printf '{"@id":"urn:mif:concept:t:f1","title":"x"}\n' > "$T/f.json"
+  local vd vph; vd=$(scripts/falsify.sh "$T/f.json" 2>/dev/null | jq -r '.extensions.harness.verification.verdict')
+  # The placeholder must OMIT attempted_at so the one-round rule does not lock it — a later
+  # real gate can still overwrite it (it isn't permanently blocked, just withheld).
+  vph=$(scripts/falsify.sh "$T/f.json" 2>/dev/null | jq -r '.extensions.harness.verification | has("attempted_at")')
+  if [ "$vd" = "inconclusive" ] && [ "$vph" = "false" ]; then
+    ok "falsify.sh no-fixture is a placeholder 'inconclusive' WITHOUT attempted_at (no false pass, not gate-locked)"
+  else
+    bad "falsify.sh no-fixture wrong (verdict=$vd has_attempted_at=$vph)"
+  fi
+
+  # 14b. An EXPLICIT fixture verdict is recorded unchanged.
+  printf '{"urn:mif:concept:t:f1":{"verdict":"survived"}}\n' > "$T/ev.json"
+  local vf; vf=$(scripts/falsify.sh "$T/f.json" "$T/ev.json" 2>/dev/null | jq -r '.extensions.harness.verification.verdict')
+  if [ "$vf" = "survived" ]; then
+    ok "falsify.sh records an explicit fixture verdict unchanged"
+  else
+    bad "falsify.sh changed an explicit fixture verdict to '$vf'"
+  fi
+
+  # 14c. Phase-gate PreToolUse hook: a findings-grade tool-command is DENIED without the
+  #      topic's gate window and ALLOWED with it; a report-finding (non-findings target) is a
+  #      legit non-gate use (report-synthesizer / publish-report) and is always allowed.
+  local HK=".claude/hooks/guard-falsify-gate.sh"
+  mkdir -p "$T/reports/tA/findings"
+  hd() { local o; o=$(printf '%s' "$1" | CLAUDE_PROJECT_DIR="$T" bash "$HK" 2>/dev/null); [ -z "$o" ] && echo allow || printf '%s' "$o" | jq -r '.hookSpecificOutput.permissionDecision'; }
+  local d_no d_yes d_rep d_stale
+  rm -f "$T/reports/tA/.gate-active"
+  d_no=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json fx"}}')
+  touch "$T/reports/tA/.gate-active"
+  d_yes=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json fx"}}')
+  d_rep=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/report-finding.json fx"}}')
+  # A STALE marker (left by a crashed gate) ages out of the freshness window -> denied.
+  touch -t 200001010000 "$T/reports/tA/.gate-active"
+  d_stale=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json fx"}}')
+  # MULTI-TOPIC: one topic's window must not authorize grading another's. tA open, tB closed
+  # -> the whole command is denied.
+  local d_multi; mkdir -p "$T/reports/tB/findings"; rm -f "$T/reports/tB/.gate-active"
+  rm -f "$T/reports/tA/.gate-active"; touch "$T/reports/tA/.gate-active"
+  d_multi=$(hd '{"tool_input":{"command":"scripts/falsify.sh reports/tA/findings/f.json; scripts/falsify.sh reports/tB/findings/g.json"}}')
+  if [ "$d_no" = deny ] && [ "$d_yes" = allow ] && [ "$d_rep" = allow ] && [ "$d_stale" = deny ] && [ "$d_multi" = deny ]; then
+    ok "phase-gate hook: denied without the window, allowed within a fresh window, denied on STALE; report-finding allowed; multi-topic denied when any window is closed"
+  else
+    bad "phase-gate hook wrong (no-window=$d_no fresh=$d_yes report=$d_rep stale=$d_stale multi=$d_multi)"
+  fi
+
+  rm -rf "$T"
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14)
 
 for g in "${GATES[@]}"; do "$g"; done
 

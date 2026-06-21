@@ -8,7 +8,9 @@
 #            falsification verdict (extensions.harness.verification) is REQUIRED,
 #            so the falsification gate must run over the synthesised claims BEFORE
 #            rendering — pass the resulting verdict as <verification.json>.
-#   blog/book — first-class PUBLISHED channels (MIF-exempt by declaration). Prose
+#   blog — the first-class PUBLISHED channel; book + channel packs — optional PUBLISHED
+#            channels (all MIF-exempt by declaration). This renderer is channel-agnostic
+#            and still renders `book` on demand. Prose
 #            is written from the artifact's synthesised body + public citations
 #            only; it carries no internal finding ids, so the citation-leak gate
 #            stays green.
