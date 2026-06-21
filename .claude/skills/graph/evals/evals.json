@@ -72,7 +72,7 @@
         }
       ],
       "expectations": [
-        "The by_edge_type array contains entries for all relationship types in the graph: contradicts (1 edge), derived-from (2 edges), mentions (6 edges), and supports (1 edge).",
+        "The by_edge_type array contains entries for exactly four distinct edge types and no others: contradicts (1 edge), derived-from (2 edges), mentions (6 edges), and supports (1 edge).",
         "The skill also reports the most-connected nodes by degree, identifying urn:mif:entity:concept:update-propagation as the most-referenced entity node with 3 incoming mention edges."
       ]
     },

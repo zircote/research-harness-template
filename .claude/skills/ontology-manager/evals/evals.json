@@ -138,8 +138,14 @@
         {
           "type": "file_contains",
           "file": "broken-validate.txt",
-          "literal": "ERROR",
-          "description": "at least one ERROR line is present in validation output"
+          "literal": "must match",
+          "description": "the bad-ID error is reported explicitly (ontology.id ... must match)"
+        },
+        {
+          "type": "file_contains",
+          "file": "broken-validate.txt",
+          "literal": "is not valid semver",
+          "description": "the bad-version error is reported explicitly (ontology.version ... is not valid semver)"
         },
         {
           "type": "file_contains",
