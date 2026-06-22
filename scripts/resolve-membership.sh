@@ -29,9 +29,11 @@ set -uo pipefail
 die() { echo "resolve-membership: $*" >&2; exit 2; }
 command -v jq >/dev/null 2>&1 || die "jq is required"
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
-CONFIG="$PROJECT_DIR/harness.config.json"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Anchor to the repo root (the script lives in <root>/scripts) when not told
+# otherwise, so the script is runnable from any working directory.
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$HERE/.." && pwd)}"
+CONFIG="$PROJECT_DIR/harness.config.json"
 
 TOPIC="${1:?usage: resolve-membership.sh <topic> [<goal-version>]}"
 TOPIC_DIR="$PROJECT_DIR/reports/$TOPIC"

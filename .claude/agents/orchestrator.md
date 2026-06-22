@@ -218,7 +218,10 @@ gap dims=[$(echo $WORK_DIMS | tr '\n' ' ')]; stale to re-verify=$(jq '.stale|len
 
    ```bash
    GV=$(bash scripts/goal-version.sh "$GOAL_FILE")
-   PRE_IDS=$(jq -r '.["@id"] // empty' "$REPORTS_DIR"/findings/*.json 2>/dev/null | sort -u)
+   # find-based so an empty/absent findings dir yields an empty snapshot rather
+   # than a literal-glob error.
+   PRE_IDS=$(find "$REPORTS_DIR/findings" -maxdepth 1 -name '*.json' \
+     -exec jq -r '.["@id"] // empty' {} + 2>/dev/null | sort -u)
    ```
 
    `PRE_IDS` is the set of finding ids that already existed before fan-out;

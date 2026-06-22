@@ -82,6 +82,7 @@
       "type": "object",
       "description": "What changed when this version was minted, and why. Provenance for the lineage; never part of the content hash.",
       "additionalProperties": false,
+      "required": ["rationale", "changed", "date"],
       "properties": {
         "rationale": { "type": "string", "minLength": 1 },
         "changed": { "type": "array", "items": { "type": "string" } },

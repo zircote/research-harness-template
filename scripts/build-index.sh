@@ -37,9 +37,13 @@ MEMBERS=()
 while IFS= read -r -d '' f; do MEMBERS+=("$f"); done \
   < <(find "$DIR/../goals" -maxdepth 1 -name '*.members.json' -print0 2>/dev/null | sort -z)
 if [ ${#MEMBERS[@]} -gt 0 ]; then
+  # Skip any members file without a string `version` (legacy/partial) so a null
+  # version is never projected into goal_versions[]/stale_in[] as a fake id.
   MEMBERSHIP=$(jq -s 'reduce .[] as $m ({};
-    reduce (($m.members // [])[]) as $id (.; .[$id].goal_versions += [$m.version])
-    | reduce (($m.stale // [])[]) as $id (.; .[$id].stale_in     += [$m.version]) )' \
+    if ($m.version | type) == "string" then
+      reduce (($m.members // [])[]) as $id (.; .[$id].goal_versions += [$m.version])
+      | reduce (($m.stale // [])[]) as $id (.; .[$id].stale_in     += [$m.version])
+    else . end )' \
     "${MEMBERS[@]}") || { echo "build-index: failed to fold membership files" >&2; exit 2; }
 else
   MEMBERSHIP='{}'
