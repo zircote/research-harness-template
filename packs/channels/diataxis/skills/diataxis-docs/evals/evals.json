@@ -30,7 +30,17 @@
         { "type": "file_not_contains", "file": "docs/reference/technical/copier-provides-update-propagation-to-instantiated-projects.md", "literal": "reports/_meta", "description": "No corpus paths in a reference page" },
         { "type": "regex_not_match", "file": "docs/reference/technical/copier-provides-update-propagation-to-instantiated-projects.md", "pattern": "f_[a-z]+_[0-9]+", "description": "No internal f_<dimension>_<n> finding handles in a reference page" },
         { "type": "file_not_contains", "file": "docs/explanation/technical.md", "literal": "urn:mif:concept:", "description": "No finding-concept URN identity leaks into an explanation page" },
-        { "type": "file_not_contains", "file": "docs/tutorials/getting-started.md", "literal": "urn:mif:concept:", "description": "No finding-concept URN identity leaks into the tutorial" }
+        { "type": "file_not_contains", "file": "docs/explanation/technical.md", "literal": "extensions.harness", "description": "No harness schema paths in an explanation page" },
+        { "type": "file_not_contains", "file": "docs/explanation/technical.md", "literal": "reports/_meta", "description": "No corpus paths in an explanation page" },
+        { "type": "regex_not_match", "file": "docs/explanation/technical.md", "pattern": "f_[a-z]+_[0-9]+", "description": "No internal f_<dimension>_<n> finding handles in an explanation page" },
+        { "type": "file_not_contains", "file": "docs/how-to/apply-technical.md", "literal": "urn:mif:concept:", "description": "No finding-concept URN identity leaks into a how-to page" },
+        { "type": "file_not_contains", "file": "docs/how-to/apply-technical.md", "literal": "extensions.harness", "description": "No harness schema paths in a how-to page" },
+        { "type": "file_not_contains", "file": "docs/how-to/apply-technical.md", "literal": "reports/_meta", "description": "No corpus paths in a how-to page" },
+        { "type": "regex_not_match", "file": "docs/how-to/apply-technical.md", "pattern": "f_[a-z]+_[0-9]+", "description": "No internal f_<dimension>_<n> finding handles in a how-to page" },
+        { "type": "file_not_contains", "file": "docs/tutorials/getting-started.md", "literal": "urn:mif:concept:", "description": "No finding-concept URN identity leaks into the tutorial" },
+        { "type": "file_not_contains", "file": "docs/tutorials/getting-started.md", "literal": "extensions.harness", "description": "No harness schema paths in the tutorial" },
+        { "type": "file_not_contains", "file": "docs/tutorials/getting-started.md", "literal": "reports/_meta", "description": "No corpus paths in the tutorial" },
+        { "type": "regex_not_match", "file": "docs/tutorials/getting-started.md", "pattern": "f_[a-z]+_[0-9]+", "description": "No internal f_<dimension>_<n> finding handles in the tutorial" }
       ]
     }
   ]

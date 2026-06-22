@@ -1543,9 +1543,14 @@ gate_m16() {
       ajv_mif schemas/diataxis-doc.schema.json "$D/c.json" || l1=0
       # diataxis_type counted in the FRONTMATTER slice; the single body H1 counted
       # fence-aware in the BODY (a '#' inside a finding's fenced code block must not count).
+      # exactly one diataxis_type marker, NO frontmatter title: key (a title: plus the
+      # body H1 trips markdownlint MD025 — enforced here so it cannot regress when
+      # markdownlint is unavailable), and exactly one fence-aware body H1.
       { [ "$(grep -cE '^diataxis_type:' "$D/fm.yaml")" = 1 ] \
+        && [ "$(grep -cE '^title:' "$D/fm.yaml")" = 0 ] \
         && [ "$(awk '/^[ \t]*(```|~~~)/{fc=!fc} (!fc && /^# /){c++} END{print c+0}' "$D/body.md")" = 1 ]; } || dx=0
-      grep -q 'urn:mif:' "$D/body.md" && body=0
+      # body carries no internal-research identity in ANY of its disallowed forms.
+      grep -qE 'urn:mif:|f_[a-z]+_[0-9]+|extensions\.harness|reports/[a-z0-9-]+/(findings|_meta)' "$D/body.md" && body=0
       [ "$have_ml" = 1 ] && { markdownlint-cli2 --config .markdownlint-cli2.jsonc "$f" >/dev/null 2>&1 || lint=0; }
       rm -rf "$D"
     done < <(find "$T/docs" -name '*.md')

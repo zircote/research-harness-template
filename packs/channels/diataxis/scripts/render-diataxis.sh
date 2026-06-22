@@ -44,8 +44,13 @@ FILES=("$FINDINGS"/*.json)
 [ "${#FILES[@]}" -gt 0 ] || { echo "render-diataxis: no findings in $FINDINGS" >&2; exit 2; }
 
 ALL="$(mktemp)"; MAN="$(mktemp)"; trap 'rm -f "$ALL" "$MAN"' EXIT
-jq -s '[ .[] | select((.extensions.harness.verification.verdict // "") != "falsified") ]' "${FILES[@]}" > "$ALL"
-COUNT=$(jq 'length' "$ALL")
+# Fail loudly if any finding is malformed JSON (jq -s aborts) rather than emitting a
+# partial tree: this script does not use `set -e`, so the critical jq steps below
+# (slurp, manifest) are error-checked explicitly.
+if ! jq -s '[ .[] | select((.extensions.harness.verification.verdict // "") != "falsified") ]' "${FILES[@]}" > "$ALL"; then
+  echo "render-diataxis: failed to read findings (malformed finding JSON in $FINDINGS?)" >&2; exit 2
+fi
+COUNT=$(jq 'length' "$ALL") || { echo "render-diataxis: failed to count findings" >&2; exit 2; }
 [ "$COUNT" -gt 0 ] || { echo "render-diataxis: no surviving findings to document" >&2; exit 2; }
 NS=$(jq -r '.[0].namespace // "harness/doc"' "$ALL")
 TOPIC="${3:-$(basename "$NS")}"
@@ -62,9 +67,13 @@ DEF='
     | gsub("reports/[a-z0-9][a-z0-9-]*/[A-Za-z0-9_./-]+"; "[internal-ref]")
     | gsub("\\bf_[a-z]+_[0-9]+\\b"; "[internal-ref]")
     | gsub("extensions\\.harness[A-Za-z0-9_.]*"; "[internal-ref]");
-  # Fence-aware body normalizer: outside a code fence, escape a line-leading "#" so
-  # content cannot inject a top-level heading (MD025); on a bare opening fence add a
-  # language (MD040); INSIDE a fence leave every line untouched (never corrupt code).
+  # Fence-aware STRUCTURAL normalizer: outside a code fence, escape a line-leading "#"
+  # so content cannot inject a top-level heading (MD025); on a bare opening fence add a
+  # language (MD040); INSIDE a fence it touches no line, so it never corrupts code
+  # STRUCTURE. (Note: cleanprose runs `scrub` BEFORE normbody, and scrub is deliberately
+  # NOT fence-aware — it redacts internal identity everywhere, including inside code
+  # fences, so no urn:mif:/reports/ id can hide in a code block. That is the no-leak
+  # guarantee, not corruption.)
   def normbody:
     (split("\n")) as $L
     | reduce range(0; ($L|length)) as $k ({fence:false, out:[]};
@@ -114,18 +123,21 @@ emit() {
   local out="$OUT/$rel" id idslug tmp
   idslug="$(printf '%s' "$rel" | sed 's#\.md$##; s#/#-#g; s#[^A-Za-z0-9-]#-#g')"
   id="urn:mif:doc:${NS}:${idslug}"
-  mkdir -p "$(dirname "$out")" || { echo "render-diataxis: cannot create dir for $rel" >&2; return 1; }
-  tmp="$(mktemp)" || return 1
+  local dir; dir="$(dirname "$out")"
+  mkdir -p "$dir" || { echo "render-diataxis: cannot create dir for $rel" >&2; return 1; }
+  # Temp lands in the target dir (not the system temp): the mv is same-filesystem and
+  # therefore atomic, and nothing is ever written outside <out-dir>.
+  tmp="$(mktemp "$dir/.render-XXXXXX")" || { echo "render-diataxis: cannot create temp for $rel" >&2; return 1; }
   if jq -r --arg id "$id" --arg ctype "$ctype" --arg dtype "$dtype" \
         --arg created "$CREATED" --arg ns "$NS" --arg topic "$TOPIC" \
         "$@" "$DEF $prog" "$ALL" > "$tmp"; then
-    mv "$tmp" "$out"
+    mv "$tmp" "$out" || { rm -f "$tmp"; echo "render-diataxis: failed to install $rel (mv)" >&2; return 1; }
   else
-    rm -f "$tmp"; echo "render-diataxis: failed to render $rel" >&2; return 1
+    rm -f "$tmp"; echo "render-diataxis: failed to render $rel (jq)" >&2; return 1
   fi
 }
 
-jq "$DEF"' manifest' "$ALL" > "$MAN"
+jq "$DEF"' manifest' "$ALL" > "$MAN" || { echo "render-diataxis: failed to build slug manifest" >&2; exit 1; }
 
 # ── jq programs ─────────────────────────────────────────────────────────────────
 REF='
