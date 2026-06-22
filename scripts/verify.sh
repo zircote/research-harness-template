@@ -1464,9 +1464,85 @@ gate_m15() {
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 16 — Diátaxis channel MIF Level-1 frontmatter (SPEC §6d, §10)
+# The `diataxis` channel pack emits MIF Level-1 concept frontmatter — a base MIF
+# v1.0 concept (schemas/mif/mif.schema.json) plus the diataxis_type marker,
+# validated by schemas/diataxis-doc.schema.json. It carries stable typed identity
+# but NOT the L3 additions (provenance/citations/entities/verdict) that
+# findings.schema.json requires; the report channel stays the canonical L3 source
+# of truth, so the channel remains mif.exempt. The frontmatter holds the doc's own
+# urn:mif:doc: identity; the body prose must carry no internal-research identity.
+# ---------------------------------------------------------------------------
+gate_m16() {
+  info "Milestone 16 — Diátaxis channel MIF Level-1 frontmatter"
+
+  # 16a. The diataxis-doc L1 schema validates its sample (base concept + diataxis_type).
+  if ajv_mif schemas/diataxis-doc.schema.json schemas/samples/diataxis-doc.sample.json; then
+    ok "diataxis-doc schema validates its sample (MIF L1 concept + diataxis_type)"
+  else
+    bad "diataxis-doc schema does not validate its sample"
+  fi
+
+  # 16b. Render the whole findings corpus to a Diátaxis tree and assert EVERY emitted
+  #      doc (1) projects to a valid MIF L1 concept (diataxis-doc.schema.json — base
+  #      concept, NOT findings/L3), (2) carries exactly one diataxis_type marker + one
+  #      body H1, (3) keeps its body free of internal urn:mif: identity, and — when
+  #      markdownlint is available — (4) lints clean. AND that the set is COMPLETE, not
+  #      a stub: a reference page per surviving finding, a per-dimension explanation and
+  #      how-to, and the tutorials + top index. Rendered to a temp dir.
+  local SF T f close D l1=1 dx=1 body=1 lint=1 have_ml=0 total=0 nfind ndim nref nexp nhow ntut complete=1 ix
+  SF="reports/_meta/sample-session/findings"
+  command -v markdownlint-cli2 >/dev/null 2>&1 && have_ml=1
+  T="$(mktemp -d)"
+  if packs/channels/diataxis/scripts/render-diataxis.sh "$SF" "$T/docs" sample >/dev/null 2>&1; then
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      total=$((total+1)); D="$(mktemp -d)"
+      close=$(awk 'NR>1 && $0=="---"{print NR; exit}' "$f")
+      sed -n "2,$((close-1))p" "$f" > "$D/fm.yaml"
+      sed -n "$((close+1)),\$p" "$f" > "$D/body.md"
+      yq -p=yaml -o=json '.' "$D/fm.yaml" > "$D/fm.json" 2>/dev/null
+      jq --rawfile b "$D/body.md" '(if ((.content//"")=="") then .content=($b|sub("^\\s+";"")|sub("\\s+$";"")) else . end)' \
+        "$D/fm.json" > "$D/c.json" 2>/dev/null
+      ajv_mif schemas/diataxis-doc.schema.json "$D/c.json" || l1=0
+      # diataxis_type counted in the FRONTMATTER slice; the single body H1 counted
+      # fence-aware in the BODY (a '#' inside a finding's fenced code block must not count).
+      { [ "$(grep -cE '^diataxis_type:' "$D/fm.yaml")" = 1 ] \
+        && [ "$(awk '/^[ \t]*(```|~~~)/{fc=!fc} (!fc && /^# /){c++} END{print c+0}' "$D/body.md")" = 1 ]; } || dx=0
+      grep -q 'urn:mif:' "$D/body.md" && body=0
+      [ "$have_ml" = 1 ] && { markdownlint-cli2 --config .markdownlint-cli2.jsonc "$f" >/dev/null 2>&1 || lint=0; }
+      rm -rf "$D"
+    done < <(find "$T/docs" -name '*.md')
+    # Counts over SURVIVING findings only (the renderer excludes falsified), so a
+    # fully-falsified dimension does not make the expected per-dimension counts diverge.
+    nfind=$(jq -s '[.[]|select((.extensions.harness.verification.verdict//"")!="falsified")]|length' "$SF"/*.json)
+    ndim=$(jq -rs '[.[]|select((.extensions.harness.verification.verdict//"")!="falsified")|.extensions.harness.dimension//"general"]|unique|length' "$SF"/*.json)
+    nref=$(find "$T/docs/reference" -name '*.md' ! -name index.md 2>/dev/null | grep -c .)
+    nexp=$(find "$T/docs/explanation" -name '*.md' ! -name index.md 2>/dev/null | grep -c .)
+    nhow=$(find "$T/docs/how-to" -name '*.md' ! -name index.md 2>/dev/null | grep -c .)
+    ntut=$(find "$T/docs/tutorials" -name '*.md' ! -name index.md ! -name getting-started.md 2>/dev/null | grep -c .)
+    [ "$nref" = "$nfind" ] || complete=0
+    [ "$nexp" = "$ndim" ] || complete=0
+    [ "$nhow" = "$ndim" ] || complete=0
+    [ "$ntut" = "$ndim" ] || complete=0
+    for ix in index.md reference/index.md explanation/index.md how-to/index.md tutorials/index.md tutorials/getting-started.md; do
+      [ -f "$T/docs/$ix" ] || complete=0
+    done
+    if [ "$l1" = 1 ] && [ "$dx" = 1 ] && [ "$body" = 1 ] && [ "$lint" = 1 ] && [ "$complete" = 1 ] && [ "$total" -ge 1 ]; then
+      ok "diataxis: $total docs all MIF L1 + one diataxis_type/body-H1 + body urn-free$([ "$have_ml" = 1 ] && echo " + lint clean"); complete set ($nref ref = $nfind findings; $nexp exp + $nhow how-to + $ntut tutorials per $ndim dims; all 6 index/landing pages present)"
+    else
+      bad "diataxis render check failed (l1=$l1 diataxis/h1=$dx body=$body lint=$lint complete=$complete[ref=$nref/find=$nfind exp=$nexp how=$nhow tut=$ntut/dim=$ndim] docs=$total)"
+    fi
+  else
+    bad "diataxis render check: render failed"
+  fi
+  rm -rf "$T"
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16)
 
 for g in "${GATES[@]}"; do "$g"; done
 

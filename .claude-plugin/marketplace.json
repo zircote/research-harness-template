@@ -16,7 +16,7 @@
     {
       "name": "diataxis",
       "source": "./packs/channels/diataxis",
-      "description": "[channels/channel] Render a research topic's surviving findings into a Diátaxis-compliant documentation set — a tutorial, a how-to guide, a reference, and an explanation, each carrying a diataxis_type marker"
+      "description": "[channels/channel] Render a research topic's entire surviving findings corpus into a complete Diátaxis documentation set — a reference page per finding, a per-dimension explanation, how-to, and guided tutorial, plus index pages — every page carrying MIF Level-1 frontmatter and a diataxis_type marker"
     },
     {
       "name": "github-discuss",
