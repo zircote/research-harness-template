@@ -33,6 +33,36 @@
         }
       }
     },
+    "voice": {
+      "type": "object",
+      "description": "Voice enforcement for authored prose, applied by the check-voice.sh hook to the publication channels (canonical report, blog, book). Optional and generic: absent, the gate runs its baseline (AI-character punctuation + buzzword checks; contractions allowed). A consumer sets `profile` to their human-voice profile id and toggles `rules` to match it. Authoring/adding the actual prose profiles is the human-voice plugin's job (multiple profiles supported); this block only selects the active profile the gate names and the deterministic rules it enforces.",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "type": "string",
+          "description": "The human-voice profile id the gate names and authors apply via /human-voice:human-voice (e.g. \"default\", or a consumer profile id). Default \"default\"."
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Deterministic mechanical rules the gate enforces; each defaults to the generic published-prose baseline.",
+          "properties": {
+            "noAiPunctuation": {
+              "type": "boolean",
+              "description": "Reject em/en dash, ellipsis glyph, bullet glyph, smart quotes, and emoji in authored prose. Default true."
+            },
+            "noContractions": {
+              "type": "boolean",
+              "description": "Reject contractions. A profile-specific style, off by default since most voices permit them. Default false."
+            },
+            "warnBuzzwords": {
+              "type": "boolean",
+              "description": "Warn (non-blocking) on AI buzzwords and filler phrases. Default true."
+            }
+          }
+        }
+      }
+    },
     "topics": {
       "type": "array",
       "description": "The multi-topic registry. Each topic maps to one MIF namespace under reports/<topic>/.",

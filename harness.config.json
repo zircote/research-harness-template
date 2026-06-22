@@ -6,6 +6,14 @@
     "internalCitations": false,
     "sigintCorpusImport": false
   },
+  "voice": {
+    "profile": "default",
+    "rules": {
+      "noAiPunctuation": true,
+      "noContractions": false,
+      "warnBuzzwords": true
+    }
+  },
   "topics": [
     {
       "id": "example-topic",
