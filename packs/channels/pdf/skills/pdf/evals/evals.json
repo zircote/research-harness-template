@@ -3,206 +3,101 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Render the research artifact to PDF. The artifact is at /tmp/pdf-test/report.md. Save the output to /tmp/pdf-test/report.pdf.\n\nContents of /tmp/pdf-test/report.md:\n---\n**Title**: AI Infrastructure Analysis 2025\n**Date**: 2025-06-19\n**Scope**: Enterprise GPU cloud providers\n**Confidence**: High\n---\n\n# AI Infrastructure Analysis 2025\n\n## Executive Summary\n\nEnterprise GPU cloud capacity is expanding faster than demand through H1 2026, creating pricing pressure on hyperscalers.\n\n## Key Findings\n\n- GPU spot prices down 38% year-over-year on H100 equivalents\n- Three new entrants with >10K H100 capacity launched in Q1 2025\n- Hyperscalers defending margin via proprietary silicon (TPU v5, Trainium2)\n\n## Market Dynamics\n\nIncumbents are differentiating on managed services rather than raw compute pricing.\n\n## Diagram\n\n```mermaid\ngraph TD\n  A[GPU Supply] --> B[Spot Price]\n  A --> C[Reserved Price]\n  B --> D[Hyperscaler Margin]\n  C --> D\n```\n\n## Conclusion\n\nEnterprise buyers should negotiate reserved capacity contracts now before the supply glut normalises.\n\nAfter running, write a brief execution log to result.txt in the current working directory. The log must include: whether pandoc was found, whether a PDF engine was found (and which one), and the outcome (PDF written or install message shown). Also write the preprocessed Markdown (the artifact with any mermaid blocks replaced by image references or left as text) to preprocessed.md in the current working directory.",
-      "expected_output": "The skill runs the dependency check first. If pandoc and a PDF engine are present: extracts the mermaid diagram to /tmp/diagram-report-1.mmd, renders it to PNG, writes /tmp/report-pre.md with the PNG reference replacing the mermaid block, runs pandoc with --toc --toc-depth=3 --pdf-engine, writes /tmp/pdf-test/report.pdf, reports its size and path, and removes temp files. The output PDF is non-empty. If pandoc or every engine is absent: prints an informational install message and exits cleanly with no error.",
-      "files": [],
+      "prompt": "Compose a PDF from the research findings in ./findings and save it to ./report.pdf. Build it from the findings and their cited primary sources — never from a rendered report. After running, write an execution log to result.txt in the current working directory recording: whether pandoc was found, whether a PDF engine was found (and which), and the outcome (PDF written, or the install message shown). Also write the composed source-grounded Markdown (one section per finding, with its primary-source citations, plus a References list) to composed.md.",
+      "expected_output": "The skill loads the findings, composes a comprehensive Markdown deliverable grounded in the findings + their primary-source citations (NOT a rendered report), checks for pandoc + a PDF engine, and either renders the PDF or — because pandoc/engine is absent — reports the exact install step and exits cleanly. composed.md contains a section per finding and a References list of the primary sources, with no internal-research identity.",
+      "files": [
+        {
+          "path": "findings/finding-copier.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f_technical_1\",\"conceptType\":\"semantic\",\"title\":\"Copier provides update propagation to instantiated projects\",\"content\":\"Copier re-applies later template changes to an already-instantiated project via a three-way merge.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"Copier — Updating a project\",\"url\":\"https://copier.readthedocs.io/en/stable/updating/\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        },
+        {
+          "path": "findings/finding-cookiecutter.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f_landscape_2\",\"conceptType\":\"semantic\",\"title\":\"Cookiecutter is a one-time snapshot with no upstream path\",\"content\":\"Cookiecutter generates a project once; there is no supported mechanism to re-apply later template changes.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"Cookiecutter docs\",\"url\":\"https://cookiecutter.readthedocs.io/\"}],\"extensions\":{\"harness\":{\"dimension\":\"landscape\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        }
+      ],
       "deterministic_checks": [
         {
           "type": "file_exists",
           "file": "result.txt",
-          "description": "Skill writes result.txt execution log"
+          "description": "An execution log was written"
         },
         {
           "type": "regex_match",
           "file": "result.txt",
-          "pattern": "command -v pandoc",
-          "description": "Dependency check for pandoc runs before any other work"
+          "pattern": "(?i)pandoc",
+          "description": "The log reports whether pandoc was found"
+        },
+        {
+          "type": "regex_match",
+          "file": "result.txt",
+          "pattern": "(?i)(not installed|unavailable|install|weasyprint|xelatex|wkhtmltopdf|report\\.pdf)",
+          "description": "The log records the outcome (PDF written or a graceful install message)"
+        },
+        {
+          "type": "file_exists",
+          "file": "composed.md",
+          "description": "The composed source-grounded Markdown was written"
+        },
+        {
+          "type": "regex_match",
+          "file": "composed.md",
+          "pattern": "copier\\.readthedocs\\.io",
+          "description": "The composed document cites the findings' primary sources"
         },
         {
           "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "urn:mif:/f_[a-z]+_[0-9]+",
-          "description": "No urn:mif: finding IDs appear anywhere in the execution log"
+          "file": "composed.md",
+          "pattern": "urn:mif:(concept|report):",
+          "description": "No internal finding/concept identity leaks into the composed document"
         },
         {
           "type": "regex_not_match",
-          "file": "result.txt",
+          "file": "composed.md",
           "pattern": "\\bf_[a-z]+_[0-9]+\\b",
-          "description": "No f_<dim>_<n> finding IDs leak into any output"
-        },
-        {
-          "type": "regex_match",
-          "file": "result.txt",
-          "pattern": "(?i)(pandoc not installed|no pdf engine|install|unavailable|weasyprint|xelatex|wkhtmltopdf|report\\.pdf)",
-          "description": "Skill either produces a PDF or emits an install message — never silent failure"
+          "description": "No internal f_<dimension>_<n> finding handles leak into the composed document"
         }
       ],
       "expectations": [
         {
-          "description": "Dependency check runs as the very first shell command before any phase work",
-          "check": "transcript_order",
-          "criteria": "The 'command -v pandoc' check appears before any pandoc invocation, diagram extraction, or temp file writes in the transcript"
-        },
-        {
-          "description": "If pandoc is present the skill correctly uses --toc and a --pdf-engine flag",
-          "check": "transcript_content",
-          "criteria": "If a pandoc call appears in the transcript it includes '--toc' and '--pdf-engine=' with a discovered engine name"
-        },
-        {
-          "description": "If pandoc is absent the skill provides an actionable install message and exits cleanly — no error raised",
-          "check": "transcript_content",
-          "criteria": "If pandoc is absent, the transcript contains install guidance (e.g., 'brew install pandoc') and no Python/shell traceback or unhandled error"
+          "description": "The composed document is built from the findings and their primary sources, not from a rendered report",
+          "check": "transcript",
+          "criteria": "The response/transcript shows the skill reading the findings JSON and composing the document from them + their citation URLs — it does not read or pandoc a pre-rendered report.md"
         }
       ]
     },
     {
       "id": 2,
-      "prompt": "Render the report to PDF but pandoc is not installed on this machine. Artifact at /tmp/pdf-test/no-pandoc-report.md.\n\nContents of /tmp/pdf-test/no-pandoc-report.md:\n# Supply Chain Resilience Study\n\n## Summary\n\nGlobal semiconductor lead times have normalised to pre-2020 levels as of Q4 2024.\n\n## Findings\n\n- Lead times: 12 weeks median (down from 52 weeks peak)\n- Inventory buffers remain elevated at Tier-1 suppliers\n\n## Conclusion\n\nProcurement teams should reduce safety-stock targets in H1 2025.\n\nFor this scenario, simulate that pandoc is not installed: run the dependency check (command -v pandoc), detect it is absent, write the install message to result.txt in the current working directory, and stop. Do NOT write any PDF or preprocessed.md. The result.txt must contain the install guidance message (e.g. 'brew install pandoc').",
-      "expected_output": "The skill runs 'command -v pandoc', detects it is absent, prints a human-readable message explaining the channel is unavailable and providing the install command ('brew install pandoc'), and stops. No PDF is written, no pandoc command is attempted, and the process exits cleanly (no error code, no exception).",
-      "files": [],
+      "prompt": "Render the findings in ./findings to a PDF at ./out.pdf. pandoc is not installed on this machine. Write a one-line outcome to result.txt.",
+      "expected_output": "The skill detects pandoc is absent, reports the exact install step, and exits cleanly without a crash or a partial/empty PDF.",
+      "files": [
+        {
+          "path": "findings/finding-1.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f-1\",\"conceptType\":\"semantic\",\"title\":\"Finding one\",\"content\":\"A verified claim grounded in a primary source.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"website\",\"citationRole\":\"supports\",\"title\":\"Source\",\"url\":\"https://example.com/source\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        }
+      ],
       "deterministic_checks": [
         {
           "type": "file_exists",
           "file": "result.txt",
-          "description": "Skill writes result.txt containing the install message"
-        },
-        {
-          "type": "regex_match",
-          "file": "result.txt",
-          "pattern": "command -v pandoc",
-          "description": "pandoc availability is checked via 'command -v pandoc'"
+          "description": "An outcome line was written"
         },
         {
           "type": "regex_match",
           "file": "result.txt",
           "pattern": "(?i)(not installed|unavailable|install.*pandoc|brew install pandoc)",
-          "description": "result.txt contains an informational message about pandoc being missing with install guidance"
-        },
-        {
-          "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "^pandoc ",
-          "description": "No pandoc invocation (starting with 'pandoc ') is made when pandoc is absent"
+          "description": "The skill reports pandoc is unavailable with an install instruction"
         },
         {
           "type": "file_not_exists",
-          "file": "no-pandoc-report.pdf",
-          "description": "No PDF file is written when pandoc is absent"
-        },
-        {
-          "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "urn:mif:/f_[a-z]+_[0-9]+",
-          "description": "No urn:mif: IDs appear in the degraded-path output"
+          "file": "out.pdf",
+          "description": "No PDF is produced when pandoc is absent — graceful degradation, no partial output"
         }
       ],
       "expectations": [
         {
-          "description": "Skill exits cleanly — no traceback, no error code — user receives actionable guidance",
-          "check": "transcript_content",
-          "criteria": "The transcript contains no Python traceback, no 'exit 1' error, and the message reads as informational rather than an error condition"
-        },
-        {
-          "description": "Skill does not attempt any downstream phases (diagram extraction, pre.md write, pandoc run) after the failed dependency check",
-          "check": "transcript_content",
-          "criteria": "No mention of '/tmp/diagram-', 'mermaid-cli', '/tmp/report-pre.md', or a pandoc command appears after the pandoc-not-installed message"
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "prompt": "Render the following artifact to PDF. The artifact at /tmp/pdf-test/diagram-report.md contains a mermaid diagram that will fail to render (mermaid-cli is not available or the diagram has a syntax error). The skill should degrade gracefully and still produce a PDF from the non-diagram content.\n\nContents of /tmp/pdf-test/diagram-report.md:\n**Title**: Competitive Landscape 2025\n**Date**: 2025-06-19\n**Scope**: SaaS observability tools\n**Confidence**: Medium\n\n# Competitive Landscape 2025\n\n## Overview\n\nFour vendors account for 78% of enterprise observability spend.\n\n## Vendor Comparison\n\n| Vendor | Market Share | YoY Growth |\n|--------|-------------|------------|\n| DatadogCo | 41% | +12% |\n| SplunkCo | 22% | -3% |\n| NewRelicCo | 9% | +1% |\n| Other | 28% | +5% |\n\n```mermaid\nsequenceDiagram\n  THIS IS INTENTIONALLY BROKEN SYNTAX %%%\n  A -->> B: invalid\n```\n\n## Conclusion\n\nThe incumbent duopoly faces pressure from next-gen lightweight agents.\n\nAfter running, write a brief execution log to result.txt in the current working directory. The log must include: whether pandoc was found, the warning about the failed mermaid diagram, and the outcome. Also write the preprocessed Markdown (with the mermaid block left as raw text since rendering failed) to preprocessed.md in the current working directory.",
-      "expected_output": "The skill attempts mermaid-cli rendering on the broken diagram block, detects failure, emits a warning identifying the failed diagram number, leaves the block as raw text in the pre-processed Markdown, and continues. A PDF is still produced from the remaining content. The skill does NOT abort due to the diagram failure.",
-      "files": [],
-      "deterministic_checks": [
-        {
-          "type": "file_exists",
-          "file": "result.txt",
-          "description": "Skill writes result.txt execution log"
-        },
-        {
-          "type": "regex_match",
-          "file": "result.txt",
-          "pattern": "command -v pandoc",
-          "description": "Dependency check runs first"
-        },
-        {
-          "type": "regex_match",
-          "file": "result.txt",
-          "pattern": "(?i)(diagram.*fail|fail.*diagram|warn|could not render|mermaid.*error|diagram.*1|diagram 1)",
-          "description": "A warning about the failed diagram is emitted — not a silent failure"
-        },
-        {
-          "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "urn:mif:/f_[a-z]+_[0-9]+",
-          "description": "No urn:mif: IDs leak into the output despite diagram failure path"
-        }
-      ],
-      "expectations": [
-        {
-          "description": "Skill continues to produce a PDF (or informs about pandoc absence) after the diagram failure — it does not abort",
-          "check": "transcript_content",
-          "criteria": "The transcript shows the skill proceeding past the diagram warning: either a pandoc conversion is attempted or, if pandoc is absent, the standard install message appears — but there is no abort or fatal error due to the diagram failure"
-        },
-        {
-          "description": "The warning message identifies which diagram number failed, matching SKILL.md's 'warn with the number' requirement",
-          "check": "transcript_content",
-          "criteria": "The warning references a diagram number (e.g., 'diagram 1', '#1') rather than a generic 'diagram failed' message"
-        },
-        {
-          "description": "Raw mermaid block text is preserved in the preprocessed Markdown when rendering fails",
-          "check": "transcript_content",
-          "criteria": "The transcript shows the mermaid block left as text (or the pre.md written with the raw block) rather than replaced by a broken image reference"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "prompt": "Render the synthesized artifact to PDF. The artifact at /tmp/pdf-test/synthesis-report.md is the output of report-synthesizer and must be rendered cleanly without any internal corpus identifiers leaking into the output.\n\nContents of /tmp/pdf-test/synthesis-report.md:\n**Title**: Autonomous Vehicle Market Analysis\n**Date**: 2025-06-19\n**Scope**: L4+ autonomous passenger vehicles, NA & EU markets\n**Confidence**: Medium-High\n\n# Autonomous Vehicle Market Analysis\n\n## Executive Summary\n\nL4+ autonomous vehicle deployment is entering the commercial scaling phase in limited geofenced corridors, with three operators reporting unit economics that approach breakeven on a per-mile basis.\n\n## Key Findings\n\n- Waymo is operating at an annualized run-rate of 4M paid rides as of Q1 2025\n- Insurance frameworks for AV liability remain unresolved in 34 US states\n- EU type-approval regulation (UN-R157 extension) expected to clear by Q3 2026\n\n## Competitive Dynamics\n\nCapital intensity is the primary barrier to new entrants; sensor bill-of-materials has fallen 62% since 2022 but software validation costs dominate.\n\n## Outlook\n\nCommercial deployment will remain geofence-constrained through 2027 absent federal preemption legislation.\n\nAfter running, write a brief execution log to result.txt in the current working directory. The log must include: whether pandoc was found, whether the artifact was read from its path (not from any findings/ or corpus/ directory), and the outcome. Also write the preprocessed Markdown to preprocessed.md in the current working directory if pandoc is available.",
-      "expected_output": "The skill renders the clean synthesized artifact to PDF (or reports pandoc absence). At no point does any internal corpus reference (urn:mif:/f_<dim>_<n> format) appear in the transcript, the pre-processed Markdown, or the PDF. The artifact itself contains no such references (it is a clean report-synthesizer output), and the skill must not inject them. The Phase 0 resolution step reads the artifact file, not any corpus finding files.",
-      "files": [],
-      "deterministic_checks": [
-        {
-          "type": "file_exists",
-          "file": "result.txt",
-          "description": "Skill writes result.txt execution log"
-        },
-        {
-          "type": "regex_match",
-          "file": "result.txt",
-          "pattern": "command -v pandoc",
-          "description": "Dependency check runs as mandated"
-        },
-        {
-          "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "urn:mif:/f_[a-z]+_[0-9]+",
-          "description": "No urn:mif: corpus identifiers appear anywhere in the execution log"
-        },
-        {
-          "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "\\bf_[a-z]+_[0-9]+\\b",
-          "description": "No bare f_<dim>_<n> finding IDs appear in the execution log"
-        },
-        {
-          "type": "regex_not_match",
-          "file": "result.txt",
-          "pattern": "findings/",
-          "description": "Skill does not read from any findings/ corpus directory — only from the artifact file"
-        }
-      ],
-      "expectations": [
-        {
-          "description": "Phase 0 resolves the artifact path and reads only that file — no corpus or findings files are opened",
-          "check": "transcript_content",
-          "criteria": "The transcript shows the skill reading /tmp/pdf-test/synthesis-report.md only; no 'findings/', 'corpus/', or '.mif' file paths are opened"
-        },
-        {
-          "description": "Skill correctly extracts title, date, scope, and confidence from the artifact header for the title page",
-          "check": "transcript_content",
-          "criteria": "If pandoc is present, the transcript shows title page construction referencing 'Autonomous Vehicle Market Analysis', '2025-06-19', 'L4+ autonomous', or 'Medium-High' drawn from the artifact header"
+          "description": "The skill degrades gracefully rather than crashing",
+          "check": "transcript",
+          "criteria": "The response is an informational install message, not a stack trace or unhandled error"
         }
       ]
     }

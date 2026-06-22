@@ -3,12 +3,16 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I have a synthesized research report at ./report.md — can you publish it to NotebookLM? I want the audio overview and slide deck.",
-      "expected_output": "The skill checks for the nlm CLI first. Because nlm is not installed, it reports the exact install/auth step needed and exits cleanly — no crash, no stack trace, no files created in _assets/ or slides/.",
+      "prompt": "Publish the research findings in ./findings to NotebookLM — I want the audio overview and slide deck. Ground the notebook in the findings' cited primary sources.",
+      "expected_output": "The skill loads the findings, collects their primary-source citation URLs (the actual sources), then checks for the nlm CLI. Because nlm is not installed, it reports the exact install/auth step and exits cleanly — no crash, no files created in _assets/ or slides/. It must NEVER consume a rendered report; it grounds in the findings + their primary sources.",
       "files": [
         {
-          "path": "report.md",
-          "content": "# AI Code Review Tools: Market Landscape\n\n## Executive Summary\n\nThe market for AI-assisted code review tools has grown significantly in 2024-2025, driven by enterprise adoption of GitHub Copilot, CodeRabbit, and Sourcegraph Cody. Key differentiators are latency, false-positive rates, and IDE integration depth.\n\n## Competitive Landscape\n\nThree tiers have emerged:\n1. **Embedded assistants** (Copilot, Cody) bundled with existing developer toolchains.\n2. **Standalone reviewers** (CodeRabbit, Qodo Merge) that integrate via PR webhooks.\n3. **Enterprise platforms** (Veracode, Checkmarx) adding AI layers to existing SAST pipelines.\n\n## Key Findings\n\n- Median review latency for embedded assistants: 4.2 seconds per file.\n- False-positive rate benchmarks range from 8% (CodeRabbit) to 34% (legacy SAST + AI).\n- 78% of surveyed engineering leaders cite IDE integration as the top purchasing criterion.\n\n## Conclusions\n\nStandalone AI reviewers offer the best precision/latency tradeoff for teams not yet committed to a single IDE ecosystem. Enterprise buyers will consolidate toward embedded assistants as vendor lock-in deepens.\n"
+          "path": "findings/finding-copier.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f-copier\",\"conceptType\":\"semantic\",\"title\":\"Copier provides update propagation to instantiated projects\",\"content\":\"Copier re-applies later template changes to an already-instantiated project via a three-way merge.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"Copier — Updating a project\",\"url\":\"https://copier.readthedocs.io/en/stable/updating/\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        },
+        {
+          "path": "findings/finding-cookiecutter.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f-cc\",\"conceptType\":\"semantic\",\"title\":\"Cookiecutter is a one-time snapshot with no upstream path\",\"content\":\"Cookiecutter generates a project once; there is no supported mechanism to re-apply later template changes.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"Cookiecutter docs\",\"url\":\"https://cookiecutter.readthedocs.io/\"}],\"extensions\":{\"harness\":{\"dimension\":\"landscape\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
         }
       ],
       "deterministic_checks": [
@@ -25,139 +29,49 @@
       ],
       "expectations": [
         {
-          "description": "The skill surfaces the install/auth instruction ('Install nlm' or 'nlm login') rather than throwing an error or crashing",
+          "description": "The skill identifies the findings' primary-source citation URLs as the sources to add to NotebookLM (copier.readthedocs.io, cookiecutter.readthedocs.io)",
           "check": "transcript",
-          "criteria": "The response or transcript contains guidance for installing nlm or running 'nlm login' — not a Python traceback, unhandled exception, or generic error"
+          "criteria": "The response/transcript references adding the findings' cited primary sources (the citation URLs) to the notebook — not feeding a single rendered report"
         },
         {
-          "description": "The skill exits cleanly (no unhandled exception or confusing error) after detecting nlm is absent",
+          "description": "The skill surfaces the nlm install/auth instruction rather than crashing",
           "check": "transcript",
-          "criteria": "The response reads as a graceful informational message, not an error dump; it is complete and invites the user to retry after installing nlm"
+          "criteria": "The response contains guidance for installing nlm or running 'nlm login' — not a Python traceback or unhandled exception"
         }
       ]
     },
     {
       "id": 2,
-      "prompt": "There's already a manifest at _assets/manifest.json from a previous run with notebook id nb_abc123. The source report has been updated — please refresh the NotebookLM assets using ./report-v2.md.",
-      "expected_output": "The skill detects the prior manifest, reads the existing notebook id (nb_abc123), then checks for nlm. Because nlm is absent, it degrades gracefully. Critically, it must NOT overwrite or delete the existing manifest — the prior run's record must be preserved.",
+      "prompt": "Generate notebooklm assets from the findings in ./findings, audio only (--only audio).",
+      "expected_output": "The skill loads the findings, restricts its plan to a single audio asset, and degrades gracefully when nlm is absent. No internal-research identity (the findings' urn:mif:concept: @ids, f_<dim>_<n> handles) appears in any output, focus string, findings digest, or transcript — only the claims and public citation URLs are used.",
       "files": [
         {
-          "path": "report-v2.md",
-          "content": "# AI Code Review Tools: Market Landscape (Updated)\n\n## Executive Summary\n\nUpdated findings for Q2 2025 reflect continued consolidation. CodeRabbit closed a $24M Series A. GitHub Copilot added support for enterprise security policies.\n\n## Key Changes Since Last Report\n\n- CodeRabbit latency improved from 6.1s to 3.8s per file after infrastructure overhaul.\n- Sourcegraph Cody added support for 14 new language servers.\n- Legacy SAST vendors saw 12% churn as teams shifted to embedded reviewers.\n\n## Conclusions\n\nThe embedded-assistant tier is consolidating faster than projected. Standalone reviewers must differentiate on precision metrics to retain enterprise buyers.\n"
-        },
-        {
-          "path": "_assets/manifest.json",
-          "content": "{\n  \"notebook_id\": \"nb_abc123\",\n  \"generated_at\": \"2025-06-01T14:22:00Z\",\n  \"assets\": [\n    {\n      \"type\": \"audio\",\n      \"filename\": \"audio-deep-dive.mp3\",\n      \"output_dir\": \"_assets\",\n      \"focus_used\": \"Executive Summary and Competitive Landscape\",\n      \"asset_id\": \"ast_001\",\n      \"generated_at\": \"2025-06-01T14:22:00Z\",\n      \"supersedes\": null\n    }\n  ]\n}\n"
-        }
-      ],
-      "deterministic_checks": [
-        {
-          "type": "file_exists",
-          "file": "_assets/manifest.json",
-          "description": "Prior manifest is not deleted or wiped when nlm is absent during an update run"
-        },
-        {
-          "type": "json_valid",
-          "file": "_assets/manifest.json",
-          "description": "manifest.json remains valid JSON after the update attempt"
-        },
-        {
-          "type": "json_field_equals",
-          "file": "_assets/manifest.json",
-          "path": ".notebook_id",
-          "expected": "nb_abc123",
-          "description": "The seeded notebook id is preserved — skill did not corrupt or overwrite prior manifest data"
-        }
-      ],
-      "expectations": [
-        {
-          "description": "The skill detects this is an update run (manifest already exists) rather than treating it as an initial run",
-          "check": "transcript",
-          "criteria": "The transcript or response references detecting an existing manifest or prior run, indicating update-mode detection worked"
-        },
-        {
-          "description": "The skill gracefully handles nlm absence in update mode and explains the user must install/authenticate nlm before the refresh can proceed",
-          "check": "transcript",
-          "criteria": "Response contains install or auth guidance, not an unhandled exception or silent failure; the user understands what to do next"
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "prompt": "Render notebooklm assets from ./clean-report.md please",
-      "expected_output": "The skill reads ONLY clean-report.md (the synthesized artifact). It must not read or incorporate any content from the sibling corpus file corpus-findings.md, which contains internal harness references (urn:mif:, f_technical_3). No internal identifiers should appear in any output, transcript response, or manifest.",
-      "files": [
-        {
-          "path": "clean-report.md",
-          "content": "# Quantum Computing Readiness for Financial Services\n\n## Executive Summary\n\nFinancial institutions face a 5-7 year window to prepare cryptographic infrastructure for post-quantum threats. NIST finalized its first post-quantum standards in August 2024.\n\n## Risk Assessment\n\nRSA-2048 and ECDSA are vulnerable to Shor's algorithm running on a cryptographically relevant quantum computer (CRQC). Harvest-now/decrypt-later attacks are already underway.\n\n## Recommendations\n\n1. Inventory all cryptographic assets by Q3 2025.\n2. Pilot CRYSTALS-Kyber for key exchange in internal systems.\n3. Engage NIST SP 800-208 compliant vendors by 2026.\n"
-        },
-        {
-          "path": "corpus-findings.md",
-          "content": "<!-- Internal harness corpus — NOT a synthesized artifact -->\n\nf_technical_1: Quantum threat timeline analysis. urn:mif:technical:qt-001\nf_landscape_3: Vendor capability matrix. urn:mif:landscape:vm-003\nf_technical_3: CRYSTALS-Kyber benchmark results. urn:mif:technical:ck-003\n\n<!-- This file must never be loaded by the channel adapter -->"
+          "path": "findings/finding-1.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f_technical_3\",\"conceptType\":\"semantic\",\"title\":\"Post-quantum migration has a 5-7 year window\",\"content\":\"NIST finalized its first post-quantum standards in 2024; harvest-now decrypt-later attacks are underway.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"NIST PQC\",\"url\":\"https://csrc.nist.gov/projects/post-quantum-cryptography\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
         }
       ],
       "deterministic_checks": [
         {
           "type": "file_not_exists",
           "file": "_assets/manifest.json",
-          "description": "No manifest created (nlm absent) — confirms the skill ran against clean-report.md and degraded gracefully rather than erroring on the corpus decoy"
+          "description": "No manifest created because nlm is absent — confirms the --only flag was parsed and the skill reached the dependency check"
         },
         {
           "type": "file_exists",
-          "file": "corpus-findings.md",
-          "description": "Corpus decoy file is untouched — the skill did not delete or consume it, confirming it was treated as a non-artifact sibling"
+          "file": "findings/finding-1.json",
+          "description": "The source findings are preserved — the skill did not delete its input"
         }
       ],
       "expectations": [
         {
-          "description": "The skill does not reference or quote any content from corpus-findings.md — no urn:mif: identifiers appear in the response",
+          "description": "The plan restricts to a single audio asset — no slides/infographic/video/mindmap",
           "check": "transcript",
-          "criteria": "The transcript/response contains no strings matching 'urn:mif:' or the pattern 'f_<word>_<digit>' (e.g., f_technical_3, f_landscape_3) — these are internal harness identifiers that must never enter published output"
+          "criteria": "Any plan described mentions only 'audio' (deep-dive/overview); it does not list slides, infographic, video, or mindmap"
         },
         {
-          "description": "The skill correctly identifies clean-report.md as the artifact and does not confuse the corpus decoy for the input",
+          "description": "No internal-research identity leaks into the response",
           "check": "transcript",
-          "criteria": "Any references to the artifact content in the response draw from clean-report.md topics (quantum computing, NIST, CRYSTALS-Kyber) — not from the corpus file's internal metadata"
-        },
-        {
-          "description": "nlm absence is detected and graceful fallback message is provided, confirming the skill reached the dependency check rather than aborting early due to an error parsing the wrong file",
-          "check": "transcript",
-          "criteria": "Response contains install or auth instruction for nlm — not an exception or confusing error about the corpus file"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "prompt": "Generate notebooklm assets for ./report.md but only the audio overview please — use --only audio",
-      "expected_output": "The skill parses the --only audio flag, restricts its plan to a single audio asset, checks for nlm, and degrades gracefully. The plan output (if any) mentions only 'audio' — no slides, infographic, video, or mindmap are planned or attempted.",
-      "files": [
-        {
-          "path": "report.md",
-          "content": "# Enterprise Cloud Cost Optimization Report\n\n## Executive Summary\n\nCloud spend exceeded $700B globally in 2024. FinOps practices reduced waste by 22% in adopting organizations.\n\n## Key Findings\n\n- Reserved instance coverage above 70% correlates with 31% cost reduction.\n- Spot instance workloads require checkpoint-restart; 68% of eligible batch jobs are not yet migrated.\n- Multi-cloud arbitrage generates median 8% savings but adds operational complexity.\n\n## Recommendations\n\nPrioritize RI coverage expansion and spot migration for stateless batch workloads before pursuing multi-cloud arbitrage.\n"
-        }
-      ],
-      "deterministic_checks": [
-        {
-          "type": "file_not_exists",
-          "file": "_assets/manifest.json",
-          "description": "No manifest created because nlm is absent — confirms the flag was parsed and the skill reached the dependency check"
-        },
-        {
-          "type": "file_exists",
-          "file": "report.md",
-          "description": "Artifact source file is preserved — the skill did not delete its input"
-        }
-      ],
-      "expectations": [
-        {
-          "description": "The skill's planning output (before the nlm check or in the degradation message) restricts to a single audio asset — it does not plan slides, infographic, video, or mindmap",
-          "check": "transcript",
-          "criteria": "If the skill describes a plan before detecting nlm, that plan mentions only 'audio' (deep-dive or overview). It explicitly does not list slides, infographic, video, or mindmap as planned assets."
-        },
-        {
-          "description": "The graceful fallback message is produced and the skill exits cleanly with install/auth instructions",
-          "check": "transcript",
-          "criteria": "Response contains nlm install or login instruction and no unhandled exception; tone is informational not error-like"
+          "criteria": "The response contains no 'urn:mif:concept:' / 'urn:mif:report:' strings and no 'f_<word>_<digit>' finding handles — only the claims and public citation URLs are used"
         }
       ]
     }

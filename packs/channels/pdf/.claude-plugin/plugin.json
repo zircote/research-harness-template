@@ -4,9 +4,9 @@
   "kind": "channel",
   "mif": {
     "exempt": true,
-    "reason": "PDF is a binary render format orthogonal to MIF markdown structure; the MIF Level-3 source of truth lives in the generic report channel."
+    "reason": "PDF is a binary render format orthogonal to MIF markdown structure. It is composed directly from the SOURCES \u2014 the findings corpus and its primary-source citations \u2014 never from a rendered report, and carries the topic's MIF Level-1 identity in its document metadata. The MIF Level-3 source of truth lives in the generic report channel."
   },
-  "description": "Render a synthesized deliverable to a styled PDF \u2014 GitHub-flavored Markdown, a generated title page, a table of contents, and rasterized Mermaid diagrams",
+  "description": "Produce a styled, print-ready PDF directly from the SOURCES \u2014 a topic's surviving findings and the primary materials its citations point to. Composes a comprehensive document (one section per finding + a complete References list) and renders it with pandoc, a title page, and rasterized Mermaid diagrams. Never built from a rendered report.",
   "license": "MIT",
   "author": {
     "name": "zircote"
