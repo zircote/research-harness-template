@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 
+# Codegen virtualenv (dev/build-time only; generated models under lib/ are committed)
+.venv-codegen/
+
 # Hook runtime state
 .claude/hooks/markdown/state/
 
