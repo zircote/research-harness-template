@@ -464,14 +464,50 @@ gate_m6() {
     bad "render failed (blog=$blog_ok book=$book_ok)"
   fi
 
-  # 6c. Both published outputs are citation-leak clean (no internal references).
-  local leak
-  leak=$(grep -nE 'f_[a-z]+_[0-9]+|urn:mif:|extensions\.harness|reports/[a-z0-9-]+/(findings|_meta)' \
-           "$T/post.md" "$T/chapter.md" 2>/dev/null || true)
+  # 6c. Both published outputs are citation-leak clean in the BODY. The doc's own
+  #     urn:mif:blog:/urn:mif:book: frontmatter @id is its legitimate MIF L1 identity
+  #     (not a leak); the body must carry no finding/concept/report identity, corpus
+  #     paths, or harness extension tokens.
+  local leak="" pf bclose
+  for pf in "$T/post.md" "$T/chapter.md"; do
+    bclose=$(awk 'NR>1 && $0=="---"{print NR; exit}' "$pf")
+    leak="${leak}$(sed -n "$((bclose+1)),\$p" "$pf" | grep -nE 'f_[a-z]+_[0-9]+|urn:mif:(concept|report):|extensions\.harness|reports/[a-z0-9-]+/(findings|_meta)' || true)"
+  done
   if [ -z "$leak" ]; then
-    ok "both outputs are citation-leak clean (no internal-research references)"
+    ok "both published output bodies are citation-leak clean (no finding/concept/report identity)"
   else
-    bad "published output leaks internal references:"; printf '%s\n' "$leak" >&2
+    bad "published output body leaks internal references:"; printf '%s\n' "$leak" >&2
+  fi
+
+  # 6d. Every report output is at LEAST MIF Level 1: blog and book frontmatter project
+  #     to a valid base MIF concept (schemas/mif/mif.schema.json). The report channel is
+  #     full L3 (gate_m10); none of the published channels is bare frontmatter-less prose.
+  local l1ok=1 Dl
+  for pf in "$T/post.md" "$T/chapter.md"; do
+    Dl="$(mktemp -d)"; bclose=$(awk 'NR>1 && $0=="---"{print NR; exit}' "$pf")
+    sed -n "2,$((bclose-1))p" "$pf" > "$Dl/fm.yaml"; sed -n "$((bclose+1)),\$p" "$pf" > "$Dl/body.md"
+    yq -p=yaml -o=json '.' "$Dl/fm.yaml" 2>/dev/null | jq --rawfile b "$Dl/body.md" '. + {content:$b}' > "$Dl/c.json" 2>/dev/null
+    ajv validate --spec=draft2020 --strict=false -c ajv-formats \
+      -s schemas/mif/mif.schema.json -r schemas/mif/definitions/entity-reference.schema.json -d "$Dl/c.json" >/dev/null 2>&1 || l1ok=0
+    rm -rf "$Dl"
+  done
+  if [ "$l1ok" = 1 ]; then
+    ok "every report output is >= MIF L1 (blog + book frontmatter project to a valid base concept)"
+  else
+    bad "a published output is not MIF L1 (frontmatter does not project to a base concept)"
+  fi
+
+  # 6e. EXHAUSTIVE coverage: the artifact carries one evidence-carrying section per
+  #     surviving finding (no condensation), so every channel renders every finding
+  #     with its own evidence — the diataxis-level rigor applied to all report generation.
+  local nsec nsurv nsrc
+  nsec=$(jq '.sections | length' "$T/artifact.json" 2>/dev/null)
+  nsurv=$(jq -s '[.[]|select((.extensions.harness.verification.verdict//"")!="falsified")]|length' "$SF"/*.json 2>/dev/null)
+  nsrc=$(jq '[.sections[]|select(has("sources"))]|length' "$T/artifact.json" 2>/dev/null)
+  if [ "$nsec" = "$nsurv" ] && [ "${nsec:-0}" -ge 1 ] && [ "$nsrc" = "$nsec" ]; then
+    ok "exhaustive: one evidence-carrying section per surviving finding ($nsec sections = $nsurv findings)"
+  else
+    bad "artifact coverage not exhaustive (sections=$nsec surviving=$nsurv evidence-carrying=$nsrc)"
   fi
   rm -rf "$T"
 }
