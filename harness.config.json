@@ -72,6 +72,11 @@
       "source": "bundled"
     },
     {
+      "name": "diataxis",
+      "enabled": false,
+      "source": "bundled"
+    },
+    {
       "name": "github-discuss",
       "enabled": false,
       "source": "bundled"

@@ -1,0 +1,22 @@
+{
+  "name": "diataxis",
+  "version": "1.0.0",
+  "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "Diátaxis documentation is authored, mode-pure prose (tutorials, how-to guides, reference, explanation) orthogonal to MIF markdown. The renderer projects only public fields — the title, section headings and bodies, and public source citations — never finding ids or urn:mif: ids, so the set carries no internal MIF identity (the pack's eval asserts this). The MIF Level-3 source of truth therefore lives in the generic report channel, not the documentation set."
+  },
+  "description": "Render a research topic's surviving findings into a Diátaxis-compliant documentation set — one tutorial, one how-to guide, one reference, and one explanation, each carrying a diataxis_type marker. A per-topic channel behind the findings→artifact contract.",
+  "license": "MIT",
+  "author": {
+    "name": "zircote"
+  },
+  "provides": {
+    "skills": [
+      "diataxis-docs"
+    ],
+    "channels": [
+      "diataxis"
+    ]
+  }
+}
