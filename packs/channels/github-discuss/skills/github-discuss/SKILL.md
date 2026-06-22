@@ -8,11 +8,14 @@ allowed-tools: Read, Bash, Grep, Glob
 
 # GitHub Discussions Channel Adapter
 
-Publish a synthesized deliverable to GitHub Discussions. Input is the **rendered
-artifact** from `report-synthesizer` (a clean, already-cited document), not the
-findings corpus. The discussion body is composed from the artifact and from
-public links to the published report — it must read as if written from public
-primary sources alone. No internal references belong in the body.
+Publish the research to GitHub Discussions, grounded in the SOURCES. Input is the
+**typed findings→artifact contract** (`schemas/artifact.schema.json`) — the
+surviving findings projected one section per finding with their primary-source
+citations: the sources in typed form, **never a rendered report** (that would be a
+copy-of-a-copy). The discussion body is composed from those findings and their
+primary sources; it may link to the public report URL for readers, but its content
+derives from the sources alone. It must read as if written from public primary
+sources. No internal references belong in the body.
 
 This is an **optional** channel. It depends on the external `gh` CLI being installed and authenticated. If `gh` is unavailable, degrade gracefully (see below).
 

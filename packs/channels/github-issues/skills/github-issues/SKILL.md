@@ -8,10 +8,12 @@ allowed-tools: Read, Write, Bash, Grep, Glob
 
 # GitHub Issues Channel Adapter
 
-Convert a synthesized deliverable into actionable GitHub issues. Input is the
-**rendered artifact** from `report-synthesizer` (a clean, already-cited
-document), not the findings corpus. Each issue is composed from the artifact's
-own recommendations and conclusions — it must read as standalone work, with no
+Convert the research into actionable GitHub issues, grounded in the SOURCES. Input
+is the **typed findings→artifact contract** (`schemas/artifact.schema.json`) — the
+surviving findings projected one section per finding with their primary-source
+citations: the sources in typed form, **never a rendered report** (a deliverable
+built from a report would be a copy-of-a-copy). Each issue traces to a finding and
+the primary source(s) it rests on — it must read as standalone work, with no
 internal references in the body. This is a generic, domain-neutral
 findings→issues adapter; it carries no domain-specific framing.
 

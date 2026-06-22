@@ -4,9 +4,9 @@
   "kind": "channel",
   "mif": {
     "exempt": true,
-    "reason": "NotebookLM audio/video/slide/infographic outputs are non-text formats orthogonal to MIF markdown; the MIF Level-3 source of truth lives in the generic report channel."
+    "reason": "NotebookLM audio/video/slide/infographic outputs are non-text formats orthogonal to MIF markdown. The notebook is grounded in the SOURCES \u2014 the findings' actual cited primary materials are added as NotebookLM sources (plus a findings digest), never a rendered report \u2014 with provenance recorded in the manifest. The MIF Level-3 source of truth lives in the generic report channel."
   },
-  "description": "Render a synthesized deliverable to NotebookLM assets \u2014 audio deep-dive, slide deck, infographics, video, mind map",
+  "description": "Produce NotebookLM assets (audio deep-dive, slide deck, infographics, video, mind map) grounded in the SOURCES \u2014 the findings' actual cited primary materials are added to the notebook plus a findings digest, so NotebookLM synthesizes from source documents, never a pre-digested report.",
   "license": "MIT",
   "author": {
     "name": "zircote"
