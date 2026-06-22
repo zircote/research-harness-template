@@ -80,6 +80,11 @@ npx --yes @mermaid-js/mermaid-cli -i /tmp/diagram-<name>-<N>.mmd -o /tmp/diagram
 Detect fonts (`fc-list | grep -i Inter`, `... 'JetBrains Mono'`; fall back to `Helvetica Neue`/`Menlo`). Ensure the output directory exists, then render the FULL document (`--toc-depth` limits only the table of contents, never the body), stamping the topic's MIF identity into the PDF metadata:
 
 ```bash
+# Include the LaTeX title page only when Phase 1 generated it (the xelatex path).
+# For the non-xelatex path the title <div> was already prepended to <name>-pre.md,
+# so no --include-before-body is used — passing a missing file would fail pandoc.
+TITLE_OPT=""; [ -f /tmp/<name>-title.tex ] && TITLE_OPT="--include-before-body=/tmp/<name>-title.tex"
+
 pandoc /tmp/<name>-pre.md -o <output.pdf> \
   --pdf-engine="$ENGINE" \
   --metadata title="<topic title>" --metadata author="<namespace>" \
@@ -89,10 +94,10 @@ pandoc /tmp/<name>-pre.md -o <output.pdf> \
   --variable colorlinks=true --variable linkcolor=blue --variable urlcolor=blue \
   --highlight-style=github --toc --toc-depth=3 \
   -f gfm+pipe_tables+strikethrough+task_lists+autolink_bare_uris \
-  --standalone --include-before-body=/tmp/<name>-title.tex --resource-path=.
+  --standalone $TITLE_OPT --resource-path=.
 ```
 
-(Omit `--include-before-body` when the title page was prepended as HTML.) The
+The
 `subject` metadata gives the PDF a traceable MIF Level-1 identity; the binary PDF
 format itself is exempt from the L3 I/O conformance gate.
 

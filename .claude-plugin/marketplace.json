@@ -21,12 +21,12 @@
     {
       "name": "github-discuss",
       "source": "./packs/channels/github-discuss",
-      "description": "[channels/channel] Publish a synthesized deliverable to GitHub Discussions \u2014 an announcement of completed research, a Q&A thread about methodology, or a non-canonical observation"
+      "description": "[channels/channel] Publish a research topic to GitHub Discussions, grounded in the SOURCES (findings + primary citations) \u2014 an announcement of completed research, a Q&A thread about methodology, or a non-canonical observation; never from a rendered report"
     },
     {
       "name": "github-issues",
       "source": "./packs/channels/github-issues",
-      "description": "[channels/channel] Convert a synthesized deliverable into actionable GitHub issues \u2014 atomize its recommendations into sprint-sized, well-structured issues with acceptance criteria and evidence-justified priority"
+      "description": "[channels/channel] Convert a research topic's surviving findings into actionable GitHub issues, grounded in the SOURCES (findings + primary citations) \u2014 atomize each finding's implications into sprint-sized, well-structured issues with acceptance criteria and evidence-justified priority; never from a rendered report"
     },
     {
       "name": "notebooklm",
