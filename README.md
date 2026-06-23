@@ -6,6 +6,17 @@ engine, the methodology skills, the workflows, the contracts, the knowledge
 graph, multi-topic support, and the research→blog and research→book output
 pipelines — all in one package.
 
+## Status
+
+This template is evolving and should not be considered stable. Interfaces,
+schemas and pack contracts may change between releases.
+
+It is also a primary tool in the author's daily workflow, and it is maintained
+with corresponding care. Changes will favor backward compatibility, and every
+reasonable effort will go toward minimizing disruption for existing clones.
+Breaking changes will be recorded in [CHANGELOG.md](CHANGELOG.md) and reflected
+in the version.
+
 ## Layout
 
 The repository has four layers, all present on clone (design spec §5):
