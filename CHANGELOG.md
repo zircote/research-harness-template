@@ -31,8 +31,9 @@ First release of the domain-general research harness template.
   remediation.
 - **Packs and plugins**: one plugin per skill, toggled via the
   `harness.config.json` `packs[]` control plane and the
-  `.claude-plugin/marketplace.json` marketplace. Channels (blog, book, Diátaxis,
-  PDF, NotebookLM, GitHub), report genres, methodologies, and ontologies.
+  `.claude-plugin/marketplace.json` marketplace. Channel packs (book, Diátaxis,
+  PDF, NotebookLM, GitHub Discussions, GitHub Issues), report genres,
+  methodologies, and ontologies.
 - **Output channels**: blog (first-class, always on) and the canonical MIF
   Level-3 report channel as the source of truth.
 - **Diátaxis documentation set** under `docs/` (tutorials, how-to, reference,

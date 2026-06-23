@@ -88,7 +88,7 @@ Summarize what the decision achieves and how the negatives are mitigated.
 
 ## Related Decisions
 
-- [ADR-NNNN: Related decision](NNNN-related-decision.md)
+- Link each related ADR by its `NNNN-kebab.md` filename (one bullet per related decision).
 
 ## More Information
 

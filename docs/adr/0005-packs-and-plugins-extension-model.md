@@ -25,7 +25,7 @@ Accepted
 ### Background and Problem Statement
 
 The core researches anything, but real use needs optional capabilities: render
-channels (blog, book, diataxis, pdf, notebooklm), deliverable genres
+channels (book, diataxis, pdf, notebooklm, github-discuss, github-issues), deliverable genres
 (engineering, exec-summary, academic, briefing, trend-analysis), domain
 methodologies (competitive-analysis, market-sizing), and domain ontologies. The
 question is how optional capabilities are packaged, toggled, and distributed

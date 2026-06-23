@@ -44,8 +44,10 @@ jobs:
             VERSION="dryrun-${GITHUB_SHA::7}"
           fi
           ARTIFACT="${NAME}-${VERSION}.tar.gz"
-          # git archive is deterministic from the commit tree; gzip -n drops the
-          # timestamp so the bytes are reproducible from the same commit.
+          # git archive is deterministic from the commit tree and gzip -n drops
+          # the timestamp; the tarball is reproducible for a given git version and
+          # OS (the gzip OS byte and tar header format can differ across
+          # platforms). The attestation binds whatever bytes this run produced.
           git archive --format=tar --prefix="${NAME}-${VERSION}/" HEAD \
             | gzip -n > "${ARTIFACT}"
           echo "artifact=${ARTIFACT}" >> "${GITHUB_OUTPUT}"
