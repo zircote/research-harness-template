@@ -9,17 +9,21 @@ The attestation is signed through Sigstore; its signer identity is this
 repository's own release workflow. The release pipeline re-verifies the
 attestation before publishing, so a tag never publishes an unverified artifact.
 
-To verify a downloaded release artifact yourself:
+To verify a downloaded release artifact yourself, pin verification to the
+signing workflow:
 
 ```sh
 gh attestation verify research-harness-template-<version>.tar.gz \
-  --repo zircote/research-harness-template
+  --repo zircote/research-harness-template \
+  --signer-workflow zircote/research-harness-template/.github/workflows/release.yml
 ```
 
-`--repo` alone is the correct policy here: the certificate identity is this
-repository's release workflow, not a central signer, so no `--signer-workflow`
-is required. A non-zero exit status means verification failed — do not trust the
-artifact.
+`--repo` scopes trust to this repository; `--signer-workflow` additionally pins
+trust to the specific workflow that produced the attestation — the certificate
+identity is `.../.github/workflows/release.yml`. Verifying with both is the
+strict check; `--repo` alone would accept an attestation from any workflow in
+the repository. A non-zero exit status means verification failed — do not trust
+the artifact.
 
 ## Reporting a Vulnerability
 

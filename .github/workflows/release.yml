@@ -63,12 +63,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # Re-verify the just-created provenance against this repository. The
-          # SAN is this repo's own release workflow (native attest-build-
-          # provenance), so --repo alone is the correct policy. A failure here
-          # fails the job, so the publish step below never runs unverified.
+          # Re-verify the just-created provenance. --repo scopes trust to this
+          # repository; --signer-workflow additionally pins it to THIS release
+          # workflow (the certificate identity), so an attestation from any other
+          # workflow in the repo would not pass. A failure here fails the job, so
+          # the publish step below never runs unverified.
           gh attestation verify "${{ steps.build.outputs.artifact }}" \
-            --repo "${GITHUB_REPOSITORY}"
+            --repo "${GITHUB_REPOSITORY}" \
+            --signer-workflow "${GITHUB_REPOSITORY}/.github/workflows/release.yml"
 
       - name: Upload attested artifact to the release
         if: github.event_name == 'release'
