@@ -20,10 +20,11 @@ gh attestation verify research-harness-template-<version>.tar.gz \
 
 `--repo` scopes trust to this repository; `--signer-workflow` additionally pins
 trust to the specific workflow that produced the attestation — the certificate
-identity is `.../.github/workflows/release.yml`. Verifying with both is the
-strict check; `--repo` alone would accept an attestation from any workflow in
-the repository. A non-zero exit status means verification failed — do not trust
-the artifact.
+identity is `.../.github/workflows/release.yml@refs/tags/<tag>` (the
+`gh attestation verify` output shows this full ref-suffixed identity).
+Verifying with both is the strict check; `--repo` alone would accept an
+attestation from any workflow in the repository. A non-zero exit status means
+verification failed — do not trust the artifact.
 
 ## Reporting a Vulnerability
 
