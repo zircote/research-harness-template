@@ -136,4 +136,3 @@ buys portability of both capability and enforcement.
 **Summary:** All four layers and the bundled hooks are present in the repository on clone.
 
 **Action Required:** None
-</content>

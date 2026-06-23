@@ -134,4 +134,3 @@ is the same assumption that applies to any agent-driven research step.
 **Summary:** `scripts/falsify.sh` implements the ordinal verdict model, writes to `extensions.harness.verification`, and enforces the one-round rule via the `attempted_at` guard.
 
 **Action Required:** None
-</content>

@@ -108,4 +108,3 @@ Summarize what the decision achieves and how the negatives are mitigated.
 **Summary:** One-line summary of the audit result.
 
 **Action Required:** None
-</content>

@@ -136,4 +136,3 @@ vendor lock file.
 **Summary:** The L3 conformance level is declared, the findings schema references the vendored MIF closure, and the closure is vendored under `schemas/mif/`.
 
 **Action Required:** None
-</content>

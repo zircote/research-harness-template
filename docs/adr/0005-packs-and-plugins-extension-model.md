@@ -135,4 +135,3 @@ manifest edit. The cost is more registry entries, contained by schema-validated
 **Summary:** The `packs[]` control plane, the marketplace manifest, the pack contract schema, and the `packs/` tree all exist and reflect the one-plugin-per-skill model.
 
 **Action Required:** None
-</content>

@@ -130,4 +130,3 @@ schema validation of the manifest.
 **Summary:** Dimensions are declared in `harness.config.json` and referenced by the goal schema; the manifest is schema-validated.
 
 **Action Required:** None
-</content>

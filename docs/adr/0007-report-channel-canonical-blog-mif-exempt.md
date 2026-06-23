@@ -139,4 +139,3 @@ exempt surface.
 **Summary:** `outputs[]` declares the report channel canonical and the blog channel `mifExempt` with a stated reason; the conformance model is documented.
 
 **Action Required:** None
-</content>

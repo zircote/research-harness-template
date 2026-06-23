@@ -139,4 +139,3 @@ lineage, scope-resolution pass, and freshness fields are implemented.
 **Summary:** The goal contract and the design model exist, but the lineage, scope-resolution pass, and freshness fields described here are not yet implemented — the source document states the model is a design proposal not yet built.
 
 **Action Required:** None
-</content>

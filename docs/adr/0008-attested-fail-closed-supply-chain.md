@@ -138,4 +138,3 @@ supply chain.
 **Summary:** `ci.yml` implements the attestation-to-checksum waterfall with a fail-closed `exit 1` on a verification miss, pins the `yq` version and digest, and the policy is documented in `README.md`.
 
 **Action Required:** None
-</content>
