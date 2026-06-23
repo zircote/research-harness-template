@@ -1,3 +1,7 @@
+---
+diataxis_type: explanation
+---
+
 # Explanation: the living corpus — goal evolution and finding reuse
 
 > **Status: design proposal, not yet implemented.** This document records the

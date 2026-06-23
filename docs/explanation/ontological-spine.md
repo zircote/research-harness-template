@@ -1,3 +1,7 @@
+---
+diataxis_type: explanation
+---
+
 # The ontological spine — a cross-topic concordance
 
 The per-topic knowledge graph (`build-graph.sh`) answers "what connects within this

@@ -1,3 +1,7 @@
+---
+diataxis_type: explanation
+---
+
 # MIF I/O conformance
 
 Every piece of information the harness produces **into** and **out of** the

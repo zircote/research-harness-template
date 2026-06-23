@@ -1,3 +1,7 @@
+---
+diataxis_type: how-to
+---
+
 # How to author finding JSON with the model layer
 
 Agents that produce schema-bound JSON — findings (`dimension-analyst`,

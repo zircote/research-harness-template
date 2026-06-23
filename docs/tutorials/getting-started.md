@@ -1,3 +1,7 @@
+---
+diataxis_type: tutorial
+---
+
 # Getting started
 
 This tutorial walks you from a fresh clone to a validated harness. You will edit

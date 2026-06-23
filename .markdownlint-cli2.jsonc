@@ -5,7 +5,11 @@
     "default": true,
     "MD013": false, // line length — prose and tables run long by design
     "MD033": false, // inline HTML — graph visualizations and details/summary
-    "MD041": false  // first-line-heading — files with frontmatter or intros
+    "MD041": false, // first-line-heading — files with frontmatter or intros
+    // Structured-MADR ADRs carry a frontmatter `title:` AND a body `# ADR-NNNN:`
+    // H1. Disable front-matter-title detection so the body H1 is the single
+    // canonical title and the two do not collide as duplicate top-level headings.
+    "MD025": { "front_matter_title": "" }
   },
   "ignores": [
     "node_modules/**",

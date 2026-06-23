@@ -1,3 +1,7 @@
+---
+diataxis_type: explanation
+---
+
 # Explanation: architecture
 
 ## One repository, four layers

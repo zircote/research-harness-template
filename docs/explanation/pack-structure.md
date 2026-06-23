@@ -1,3 +1,7 @@
+---
+diataxis_type: explanation
+---
+
 # Explanation: pack structure — one plugin per skill
 
 ## The convention

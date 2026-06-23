@@ -1,3 +1,7 @@
+---
+diataxis_type: reference
+---
+
 # Reference: contracts
 
 The typed substrate every layer exchanges. All contracts live under `schemas/`.
