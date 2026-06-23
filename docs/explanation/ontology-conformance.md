@@ -1,3 +1,7 @@
+---
+diataxis_type: explanation
+---
+
 # Ontology conformance
 
 Ontology is a **deterministic, per-topic member** of the harness — held to the same

@@ -1,3 +1,7 @@
+---
+diataxis_type: how-to
+---
+
 # How to instantiate the harness
 
 The harness is distributed as a **living, update-propagating template** (design

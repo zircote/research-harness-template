@@ -1,3 +1,7 @@
+---
+diataxis_type: how-to
+---
+
 # How to maintain topic READMEs
 
 Every report topic carries a navigation `README.md` at `reports/<topic>/README.md`

@@ -1,0 +1,68 @@
+name: release
+
+# Attested delivery for the research-harness template.
+#
+# The release artifact is a REPRODUCIBLE source tarball built with `git archive`
+# from the tagged commit tree (no build toolchain, deterministic bytes). It is
+# attested with SLSA build provenance via actions/attest-build-provenance — the
+# attestation's signer identity is THIS workflow (sigstore/cosign under the
+# hood), so a consumer re-verifies with:
+#
+#   gh attestation verify <artifact>.tar.gz --repo <owner>/<repo>
+#
+# `workflow_dispatch` exercises build -> attest as a dry-run without cutting a
+# version; the upload-to-release step runs ONLY on a published release. The
+# workflow never creates or publishes a release itself.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  attest-release:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write       # OIDC token for keyless signing
+      attestations: write   # write the provenance attestation
+      contents: write       # upload the artifact to the release (tag runs only)
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Build reproducible source tarball
+        id: build
+        run: |
+          set -euo pipefail
+          NAME="${GITHUB_REPOSITORY##*/}"
+          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="dryrun-${GITHUB_SHA::7}"
+          fi
+          ARTIFACT="${NAME}-${VERSION}.tar.gz"
+          # git archive is deterministic from the commit tree and gzip -n drops
+          # the timestamp; the tarball is reproducible for a given git version and
+          # OS (the gzip OS byte and tar header format can differ across
+          # platforms). The attestation binds whatever bytes this run produced.
+          git archive --format=tar --prefix="${NAME}-${VERSION}/" HEAD \
+            | gzip -n > "${ARTIFACT}"
+          echo "artifact=${ARTIFACT}" >> "${GITHUB_OUTPUT}"
+          echo "Built ${ARTIFACT}"
+          sha256sum "${ARTIFACT}"
+
+      - name: Attest build provenance (SLSA)
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: ${{ steps.build.outputs.artifact }}
+
+      - name: Upload attested artifact to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload "${GITHUB_REF_NAME}" \
+            "${{ steps.build.outputs.artifact }}" --clobber

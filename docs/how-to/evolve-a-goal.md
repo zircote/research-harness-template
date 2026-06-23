@@ -1,3 +1,7 @@
+---
+diataxis_type: how-to
+---
+
 # How to evolve a research goal
 
 Research goals drift — you add a dimension, revise the decision, narrow the scope,

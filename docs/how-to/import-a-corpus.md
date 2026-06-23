@@ -1,3 +1,7 @@
+---
+diataxis_type: how-to
+---
+
 # How to import an existing corpus
 
 The harness can import an existing research corpus — and, above all, its

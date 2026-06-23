@@ -1,3 +1,7 @@
+---
+diataxis_type: how-to
+---
+
 # How to run a research session
 
 A research session is goal-driven: the orchestrator runs toward a measurable
