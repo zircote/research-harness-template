@@ -8,8 +8,7 @@ name: release
 # attestation's signer identity is THIS workflow (sigstore/cosign under the
 # hood), so a consumer re-verifies with:
 #
-#   gh attestation verify research-harness-template-<version>.tar.gz \
-#     --repo zircote/research-harness-template
+#   gh attestation verify <artifact>.tar.gz --repo <owner>/<repo>
 #
 # `workflow_dispatch` exercises build -> attest as a dry-run without cutting a
 # version; the upload-to-release step runs ONLY on a published release. The
@@ -37,7 +36,7 @@ jobs:
         id: build
         run: |
           set -euo pipefail
-          NAME=research-harness-template
+          NAME="${GITHUB_REPOSITORY##*/}"
           if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
             VERSION="${GITHUB_REF_NAME}"
           else

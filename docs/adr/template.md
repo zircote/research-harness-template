@@ -5,10 +5,10 @@ type: adr
 category: architecture
 tags: [tag-one, tag-two, tag-three]
 status: proposed
-created: 2026-06-23
-updated: 2026-06-23
-author: zircote
-project: research-harness-template
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+author: <author>
+project: <project>
 technologies: [Technology A, Technology B]
 audience: [developers, architects]
 related: []

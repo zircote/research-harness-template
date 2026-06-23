@@ -97,7 +97,7 @@ git/marketplace plugin).
 
 | Operation | Command |
 | --- | --- |
-| Flip one plugin | `scripts/pack-toggle.sh <plugin> on\|off [config]` |
+| Flip one plugin | `scripts/pack-toggle.sh <plugin> on` (or `off`) |
 | Materialize the enabled set | `scripts/sync-packs.sh` |
 
 `sync-packs.sh` resolves each enabled plugin's directory from the marketplace
