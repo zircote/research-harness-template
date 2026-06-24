@@ -8,9 +8,7 @@ Market-research packs are methodology dimensions. Each one adds a research skill
 the core engine invokes to analyze a specific aspect of a market. Methodology packs
 contribute structured analytical frameworks; they do not produce standalone deliverables —
 their outputs feed the findings corpus that report and channel packs consume.
-
-All market-research packs have no external dependencies beyond the core engine.
-
+Market-research packs have no *required* external dependencies beyond the core engine. Some packs emit Mermaid diagrams, which you can optionally render with `@mermaid-js/mermaid-cli` (for example in PDF/HTML output).
 For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ---
