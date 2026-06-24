@@ -421,8 +421,10 @@ PY
   #     belongs in the gitignored, instance-local settings.local.json (sync-packs'
   #     default target; the runtime deep-merges the two). Guards against pack
   #     materialization leaking back into the shared settings.json.
+  # Match the assignment by default VALUE, tolerant of quoting/whitespace, rather
+  # than an exact line (harmless reformatting must not fail the gate).
   if [ "$(jq -r 'has("enabledPlugins")' .claude/settings.json)" = "false" ] \
-     && grep -q 'SETTINGS="${3:-.claude/settings.local.json}"' scripts/sync-packs.sh; then
+     && grep -Eq 'SETTINGS=[^[:space:]]*\.claude/settings\.local\.json' scripts/sync-packs.sh; then
     ok "settings.json carries no enabledPlugins; sync-packs materializes it into settings.local.json"
   else
     bad "enabledPlugins must live in settings.local.json (instance-local), not the template-managed settings.json"
