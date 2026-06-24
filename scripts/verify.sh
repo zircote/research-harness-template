@@ -1734,25 +1734,32 @@ gate_m19() {
   #      it fails deterministically there otherwise (D1), aborting CI before the
   #      lint gate runs. Assert the guard is present and its predicate (a tracked
   #      copier.yml) agrees with THIS context.
+  # Lock the EXACT guard condition, not merely "a git ls-files call exists": the
+  # work-tree probe AND the negated tracked-copier.yml test. A regressed guard that
+  # dropped the `!` or the `&&` would no longer match.
   if grep -qE 'git rev-parse --is-inside-work-tree' evals/copier-update.sh \
-     && grep -qE 'git ls-files --error-unmatch copier\.yml' evals/copier-update.sh; then
-    ok "copier-update.sh skips only in an instance (git work tree + copier.yml untracked), not on missing git"
+     && grep -qE '&& ! git ls-files --error-unmatch copier\.yml' evals/copier-update.sh; then
+    ok "copier-update.sh guard matches the exact instance condition (work-tree AND copier.yml untracked)"
   else
-    bad "copier-update.sh lacks the instance guard or skips on any git failure — fails in instances or silently passes outside a repo (issue #85 D1)"
+    bad "copier-update.sh guard does not match '&& ! git ls-files ... copier.yml' — a regressed guard could pass (issue #85 D1)"
   fi
-  if [ "$IS_TEMPLATE" = 1 ]; then
-    if git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
-      ok "template context: copier.yml tracked -> propagation gate runs here"
-    else
-      bad "template context but copier.yml untracked -> propagation gate would wrongly skip"
-    fi
+  # Behaviorally exercise the guard: copy the real script into a throwaway git repo
+  # with NO tracked copier.yml (an instance) and confirm it actually SKIPs. This
+  # catches a logic regression (lost `!`/`&&`) even when the strings are present —
+  # copier-update.sh `cd`s to its own dir, so it operates on this temp repo. The
+  # template path (copier.yml tracked -> runs, not skip) is covered by the separate
+  # `copier update propagation` CI step, which PASSes only by running fully.
+  local t; t="$(mktemp -d)"
+  mkdir -p "$t/evals"
+  cp evals/copier-update.sh "$t/evals/copier-update.sh"
+  ( cd "$t" && git init -q && echo x > f && git add -A \
+      && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1
+  if ( cd "$t" && bash evals/copier-update.sh 2>/dev/null | grep -q '^copier-update: SKIP' ); then
+    ok "copier-update.sh behaviorally SKIPs in an instance (git repo, copier.yml untracked)"
   else
-    if git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
-      bad "instance context but copier.yml tracked -> propagation gate would wrongly run"
-    else
-      ok "instance context: copier.yml untracked -> propagation gate skips (exit 0), unmasking later gates"
-    fi
+    bad "copier-update.sh did NOT skip in an instance — instance CI would fail (issue #85 D1)"
   fi
+  rm -rf "$t"
 
   # 19b. orchestrator.md emits the progress-log title H1 in exactly ONE place (file
   #      creation), so a multi-session research-progress.md never gains a second H1
