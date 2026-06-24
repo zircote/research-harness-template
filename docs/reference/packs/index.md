@@ -5,7 +5,7 @@ diataxis_type: reference
 # Packs Reference
 
 Packs extend the research harness with domain knowledge, output channels, and data vocabularies.
-Each pack is a self-contained unit: one plugin per skill, with its own `plugin.json` and `SKILL.md`.
+Each pack is a self-contained unit: one plugin per skill, with its own `.claude-plugin/plugin.json` and `SKILL.md`.
 Ontology packs use `*.ontology.yaml` and `ontology.pack.json` instead of a skill.
 
 For control-plane mechanics — enabling, disabling, and listing packs — see

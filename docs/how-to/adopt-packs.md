@@ -12,7 +12,8 @@ see [packs and plugins](../reference/packs-and-plugins.md).
 ## Before you begin
 
 - Have the [core runtime](../reference/dependencies.md) installed (`git`, `jq`,
-  `node`, `python3`). Every pack relies on the core engine.
+  `yq`, `python3`; plus `node` for the validation toolchain). Every pack relies
+  on the core engine.
 - Check whether your target pack needs an extra tool — the catalog and the
   [dependencies reference](../reference/dependencies.md) list these per pack
   (for example `pandoc` for `pdf`, `gh` for the GitHub channels, `nlm` for

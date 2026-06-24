@@ -36,8 +36,8 @@ you enable.
 | `git` | any supported | Clone, `run-lock.sh`, goal versioning, release tarball | `git --version` |
 | `jq` | 1.7+ (1.8.2 verified) | The engine — index, graph, findings, render, falsify (most scripts) | `jq --version` |
 | `yq` (mikefarah) | `v4.53.3` — *repo-pinned in CI* (4.53.3 verified) | YAML frontmatter and ontology YAML in `verify.sh`, `mif-project.sh`, `resolve-ontology.sh`, `validate-concordance.sh` | `yq --version` |
-| `node` | Active LTS — *repo-declared* `lts/*` (26.x verified) | `npm` for the validation toolchain; `codegen/gen-models.sh`; `npx` for Mermaid | `node --version` |
-| `python3` | 3.12 — *repo-declared* (3.14 verified) | `scripts/codegen/bundle_schema.py` (codegen self-provisions a pinned venv), `.claude/hooks/markdown/md_remediate.py` | `python3 --version` |
+| `node` | Active LTS — *repo-declared* `lts/*` (26.x verified) | `npm` to install the validation toolchain (`ajv-cli`, `ajv-formats`, `markdownlint-cli2`); `npx` for Mermaid | `node --version` |
+| `python3` | 3.12 — *repo-declared* (3.14 verified) | `codegen/gen-models.sh` + `bundle_schema.py` (self-provisioned pinned venv), `sync-packs.sh` (embedded materialization), `.claude/hooks/markdown/md_remediate.py` | `python3 --version` |
 
 `jq` and `yq` carry the heaviest load: `jq` drives the index, graph, session,
 and render scripts; `yq` reads every YAML input. If the engine's schema gates
