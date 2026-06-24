@@ -1828,12 +1828,14 @@ gate_m20() {
   # — comm needs both inputs in its own byte collation, which a locale-aware `sort`
   # does not guarantee for type names mixing `-` and `_`.)
   local types rels orphans n r
+  # LC_ALL=C: byte collation so `sort -u` cannot treat distinct names that differ
+  # only in punctuation (e.g. `a-b` vs `a_b`) as equal and drop one as a "duplicate".
   types=$(for y in schemas/ontologies/*/*.yaml packs/ontologies/*/*.ontology.yaml; do
     [ -f "$y" ] && yq -o=json '.' "$y" 2>/dev/null | jq -r '.entity_types[]?.name // empty'
-  done | sort -u)
+  done | LC_ALL=C sort -u)
   rels=$(for y in packs/ontologies/*/*.ontology.yaml; do
     [ -f "$y" ] && yq -o=json '.' "$y" 2>/dev/null | jq -r '(.relationships // {}) | to_entries[] | (.value.from[]?, .value.to[]?)'
-  done | sort -u)
+  done | LC_ALL=C sort -u)
   orphans=""
   while IFS= read -r r; do
     [ -n "$r" ] || continue
