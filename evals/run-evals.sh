@@ -121,6 +121,74 @@ run     "concordance-idempotent"         bash -c "scripts/build-concordance.sh e
 #    hand-composed shell JSON (`jq -n`) that broke under the Bash `eval` wrapper.
 run "models-authoring" python3 evals/test_models.py
 
+# 7. Progress-log markdownlint conformance (issue #85 Defect 2): a multi-session
+#    research-progress.md built per orchestrator.md's template — one H1 (file
+#    creation only) + date-qualified per-session H2s — lints clean, while each old
+#    buggy form fails on its SPECIFIC rule: a re-emitted top-level H1 trips MD025,
+#    and a repeated fixed `## Findings Summary` sub-heading (single H1) trips MD024
+#    and not MD025. Proves the lint config has teeth for both defect forms.
+#    markdownlint-cli2 is always present in CI (installed in this job); a local run
+#    without it shows a visible SKIP rather than a silent pass.
+if command -v markdownlint-cli2 >/dev/null 2>&1; then
+  run "progress-log-multisession-lint" bash -c '
+    d=$(mktemp -d); trap "rm -rf $d" EXIT
+    cat > "$d/good.md" <<EOF
+# Research Progress: demo
+
+## 2026-06-01 — Session Initialized
+
+- Goal: x
+
+## 2026-06-01 — Session Summary
+
+- **Status:** complete
+
+## 2026-06-02 — Session Initialized
+
+- Goal: x
+
+## 2026-06-02 — Session Summary
+
+- **Status:** complete
+EOF
+    # D2 form (a): the H1 re-emitted each session -> MD025 (multiple top-level headings).
+    cat > "$d/bad_h1.md" <<EOF
+# Research Progress: demo
+
+## 2026-06-01 — Session Initialized
+
+- Goal: x
+
+# Research Progress: demo
+
+## 2026-06-02 — Session Initialized
+
+- Goal: y
+EOF
+    # D2 form (b): a fixed sub-heading repeated across sessions under a single H1 ->
+    #             MD024 (duplicate sibling heading), and specifically NOT MD025.
+    cat > "$d/bad_sub.md" <<EOF
+# Research Progress: demo
+
+## Findings Summary
+
+- a
+
+## Findings Summary
+
+- b
+EOF
+    markdownlint-cli2 --config .markdownlint-cli2.jsonc "$d/good.md" >/dev/null 2>&1 || { echo "conformant log not clean"; exit 1; }
+    h1=$(markdownlint-cli2 --config .markdownlint-cli2.jsonc "$d/bad_h1.md" 2>&1); [ $? -ne 0 ] || { echo "bad_h1 unexpectedly clean"; exit 1; }
+    echo "$h1" | grep -q MD025 || { echo "re-emitted H1 did not trip MD025"; exit 1; }
+    sub=$(markdownlint-cli2 --config .markdownlint-cli2.jsonc "$d/bad_sub.md" 2>&1); [ $? -ne 0 ] || { echo "bad_sub unexpectedly clean"; exit 1; }
+    echo "$sub" | grep -q MD024 || { echo "repeated sub-heading did not trip MD024"; exit 1; }
+    echo "$sub" | grep -q MD025 && { echo "bad_sub tripped MD025 (must isolate MD024)"; exit 1; }
+    exit 0'
+else
+  printf '  SKIP  progress-log-multisession-lint (markdownlint-cli2 not installed)\n'
+fi
+
 echo
 if [ "$FAIL" -gt 0 ]; then
   printf '%srun-evals: %d passed, %d FAILED%s\n' "$RED" "$PASS" "$FAIL" "$RST"

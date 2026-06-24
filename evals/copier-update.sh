@@ -12,6 +12,17 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 ROOT="$(pwd)"
 
+# Template-only gate. Propagation is a capability of the TEMPLATE; an instance is
+# the OUTPUT of propagation, not a propagator. In an instantiated harness copier.yml
+# and the .jinja sources have been rendered away at generation, so there is no
+# template machinery to exercise — skip cleanly. In the template copier.yml is
+# tracked, so this guard is a no-op and the full gate runs. (Kept byte-identical
+# template-and-instance so `copier update` never conflicts on this file.)
+if ! git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
+  echo "copier-update: SKIP — no template machinery tracked (running in an instance, not the template)"
+  exit 0
+fi
+
 if ! command -v copier >/dev/null 2>&1; then
   echo "copier-update: copier is not installed. Install it with: pipx install copier" >&2
   exit 1

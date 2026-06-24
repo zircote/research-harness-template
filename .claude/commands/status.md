@@ -38,11 +38,13 @@ Set `REPORTS_DIR="reports/<topic>"`.
 
 ## Phase 1: Read the continuity file
 
-Read `reports/<topic>/research-progress.md`. The orchestrator writes a header
-status block (Status, Goal met, Dimensions, Findings Summary, Next Steps) and an
-append-only phase log (Session Initialized, Dimensions Complete, Falsification
-Gate, Completion Check, Session Complete). Surface the latest header block and
-the most recent few phase entries.
+Read `reports/<topic>/research-progress.md`. It is an append-only log: a single
+`# Research Progress: {topic}` title (written once, at file creation) followed by
+dated `## {ISO_DATE} — {phase}` entries (Session Initialized, Phase 1 — fan-out
+started, Dimensions Complete, Falsification Gate, Completion Check, Session
+Summary, Session Complete). The per-session `Session Summary` entry carries the
+status snapshot (Status, Goal met, Dimensions, Findings, Next steps). Surface the
+most recent `Session Summary` and the latest few phase entries.
 
 ## Phase 2: Count the live state
 

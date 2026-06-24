@@ -16,6 +16,14 @@ Behavior:
         forcefully, when an edit disables a rule in a markdownlint config file.
   stop  Final `--fix` sweep over the Markdown files touched this session plus a
         summary warning. Warn-only -- never blocks the stop.
+
+Known blind spot (issue #85 Defect 3): pre/post/stop only see Markdown written
+through the Write|Edit|MultiEdit tools, so Markdown appended via Bash redirection
+(e.g. an orchestrator subagent appending research-progress.md) is never swept; and
+MD025/MD024 are not `--fix`-able anyway. The backstop is the independent CI
+`markdownlint` job (a separate workflow job, so an earlier failing gate cannot mask
+it) plus emitting conformant Markdown at the source (orchestrator.md progress-log
+template). This hook is intentionally not re-architected to sweep Bash-written files.
 """
 
 import json

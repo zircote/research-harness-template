@@ -1727,10 +1727,54 @@ gate_m18() {
   fi
 }
 
+gate_m19() {
+  info "Milestone 19 — instance-safe CI: template-only propagation gate + idempotent progress-log headings (issue #85)"
+
+  # 19a. The propagation gate (evals/copier-update.sh) must skip in an instance —
+  #      it fails deterministically there otherwise (D1), aborting CI before the
+  #      lint gate runs. Assert the guard is present and its predicate (a tracked
+  #      copier.yml) agrees with THIS context.
+  if grep -qE 'git ls-files --error-unmatch copier\.yml' evals/copier-update.sh; then
+    ok "copier-update.sh guards against running inside an instance (skips when copier.yml is untracked)"
+  else
+    bad "copier-update.sh has no instance guard — fails deterministically in every instance (issue #85 D1)"
+  fi
+  if [ "$IS_TEMPLATE" = 1 ]; then
+    if git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
+      ok "template context: copier.yml tracked -> propagation gate runs here"
+    else
+      bad "template context but copier.yml untracked -> propagation gate would wrongly skip"
+    fi
+  else
+    if git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
+      bad "instance context but copier.yml tracked -> propagation gate would wrongly run"
+    else
+      ok "instance context: copier.yml untracked -> propagation gate skips (exit 0), unmasking later gates"
+    fi
+  fi
+
+  # 19b. orchestrator.md emits the progress-log title H1 in exactly ONE place (file
+  #      creation), so a multi-session research-progress.md never gains a second H1
+  #      (MD025) or a duplicate heading (MD024); and uses no fixed cross-session
+  #      snapshot heading that would collide across sessions (D2).
+  local h1
+  h1=$(grep -cE '^[[:space:]]*# Research Progress: \{topic\}' .claude/agents/orchestrator.md)
+  if [ "$h1" -eq 1 ]; then
+    ok "orchestrator.md emits the progress-log H1 in exactly one place (no per-session H1 duplication)"
+  else
+    bad "orchestrator.md emits the progress-log H1 in $h1 places (must be 1 — duplicate H1 -> MD025 on multi-session topics; issue #85 D2)"
+  fi
+  if grep -qE '^[[:space:]]*## (Findings Summary|Next Steps)[[:space:]]*$' .claude/agents/orchestrator.md; then
+    bad "orchestrator.md still uses a fixed '## Findings Summary'/'## Next Steps' heading (collides across sessions -> MD024)"
+  else
+    ok "orchestrator.md uses no fixed cross-session snapshot heading (date-qualified summary instead)"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19)
 
 for g in "${GATES[@]}"; do "$g"; done
 
