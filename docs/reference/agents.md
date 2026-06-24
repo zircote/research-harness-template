@@ -13,7 +13,7 @@ The pipeline is: orchestrator → dimension-analyst (fan-out) →
 falsification-analyst → report-synthesizer. The source-chunker is spawned
 on-demand by dimension-analysts that encounter oversized documents.
 
-See [dependencies](../dependencies.md) for tool installation requirements.
+See [dependencies](dependencies.md) for tool installation requirements.
 
 ---
 

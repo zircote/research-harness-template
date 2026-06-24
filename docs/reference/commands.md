@@ -7,7 +7,7 @@ diataxis_type: reference
 Commands are slash-command entry points invoked directly in a Claude session.
 All seven listed here are core (non-pack); they ship with the template.
 
-See [dependencies](../dependencies.md) for tool installation requirements.
+See [dependencies](dependencies.md) for tool installation requirements.
 
 ---
 

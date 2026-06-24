@@ -8,7 +8,7 @@ Skills are Claude sub-agents that extend the harness with read-only or
 structured-write capabilities invoked via `/skill-name` in a session.
 All ten listed here are core (non-pack); they ship with the template.
 
-See [dependencies](../dependencies.md) for tool installation requirements.
+See [dependencies](dependencies.md) for tool installation requirements.
 
 ---
 

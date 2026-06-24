@@ -4,10 +4,11 @@ diataxis_type: reference
 
 # Reference: scripts
 
-All shell scripts shipped with the template core. Scripts are invoked by
-agents, commands, and skills — not directly by users except during development
-and debugging. `jq` is a near-universal dependency; see
-[dependencies](../dependencies.md) for installation.
+All scripts shipped with the template core (shell, plus one Python codegen
+helper and one `jq` filter). Most are invoked by agents, commands, and skills,
+but several are run directly by adopters — for example `pack-toggle.sh` to
+enable a pack and `verify.sh` as the conformance gate. `jq` is a near-universal
+dependency; see [dependencies](dependencies.md) for installation.
 
 ---
 
@@ -38,7 +39,7 @@ manage the session run lock.
 | `scripts/wrap-source.sh` | Normalises a raw source to a MIF source-envelope at the ingestion boundary, validates at L3 before an analyst consumes it. | `jq`, `ajv` |
 | `scripts/falsify.sh` | Deterministic falsification substrate: writes an ordinal verdict into `extensions.harness.verification`, logs one `falsification-gate: run` line per invocation, enforces the one-round rule. | `jq` |
 | `scripts/reconcile-session.sh` | Derives a durable session checkpoint (`state.json`) from disk. A finding is DONE iff it validates against the full schema and carries a `verification` block. Idempotent and byte-deterministic. | `jq`, `ajv` |
-| `scripts/run-lock.sh` | Topic-level mutual-exclusion lock (directory-based atomic test-and-set). Prevents concurrent writers on the same topic. Staleness window: `RUN_LOCK_STALE_MIN` (default 240 min). Operations: `acquire`, `release`, `refresh`, `steal`. | bash built-ins only |
+| `scripts/run-lock.sh` | Topic-level mutual-exclusion lock (directory-based atomic test-and-set). Prevents concurrent writers on the same topic. Staleness window: `RUN_LOCK_STALE_MIN` (default 240 min). Operations: `acquire`, `release`, `refresh`, `steal`. | coreutils (`find`, `touch`, `mkdir`, `rm`, `cat`) |
 | `scripts/goal-version.sh` | Computes a content-hash goal version ID (`gv-<sha256[:12]>`) by normalising the goal JSON (removing lineage fields, sorting keys). | `jq`, `sha256sum` / `shasum` / `openssl` |
 | `scripts/resolve-membership.sh` | Deterministic scope-resolution for a goal version: emits `reports/<topic>/goals/goal-<version>.members.json` with `members[]`, `stale[]`, and `gap_dimensions[]`. | `jq` |
 | `scripts/check-citation-integrity.sh` | Citation-integrity gate: asserts at least one citation per finding, traceable source URLs, no falsified findings, and no dead URLs. | `jq` |
@@ -55,7 +56,7 @@ Scripts that manage capability packs, ontology resolution, and artifact synthesi
 
 | Script | Purpose | Key dependency |
 | --- | --- | --- |
-| `scripts/sync-packs.sh` | Materialises `harness.config.json` `packs[]` into `enabled-packs.json` and `.claude/settings.json` `enabledPlugins`. | `jq` |
+| `scripts/sync-packs.sh` | Materialises `harness.config.json` `packs[]` into `.claude/enabled-packs.json` and `.claude/settings.json` `enabledPlugins`. | `jq` |
 | `scripts/pack-toggle.sh` | Flips a pack's `enabled` flag in `harness.config.json` then re-materialises via `sync-packs.sh`. | `jq` |
 | `scripts/resolve-ontology.sh` | Topical ontology resolution for one MIF finding. Fail-closed: an unresolvable type returns non-zero. Falls back to discovery-pattern classification. | `yq`, `jq`, `ajv` |
 | `scripts/ontology-review.sh` | Reviews and validates ontology coverage across topics; refreshes `reports/<topic>/ontology-map.json`. | `jq`, `yq`, `ajv` |
