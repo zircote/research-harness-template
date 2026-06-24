@@ -1,7 +1,7 @@
 ---
 name: briefing
 description: Genre template for a one-page briefing or standup update (what's new, why it matters, what's next). Use when the deliverable is a terse status or situational update for a recurring audience.
-version: 0.1.1
+version: 0.1.2
 ---
 
 # Genre Template: Briefing

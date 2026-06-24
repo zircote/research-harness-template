@@ -9,7 +9,11 @@
     // Structured-MADR ADRs carry a frontmatter `title:` AND a body `# ADR-NNNN:`
     // H1. Disable front-matter-title detection so the body H1 is the single
     // canonical title and the two do not collide as duplicate top-level headings.
-    "MD025": { "front_matter_title": "" }
+    "MD025": { "front_matter_title": "" },
+    // Keep a Changelog repeats `### Added` / `### Changed` under each version
+    // section; allow identical headings when they are not siblings (still flags
+    // true duplicate siblings).
+    "MD024": { "siblings_only": true }
   },
   "ignores": [
     "node_modules/**",

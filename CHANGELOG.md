@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet. Changes land here before the next tagged release.
 
+## [0.1.2] - 2026-06-24
+
+### Added
+
+- `SECURITY.md` with a "Verifying Release Artifacts" section documenting the
+  strict `gh attestation verify` command (pinned to the release workflow via
+  `--signer-workflow`) and how to report vulnerabilities.
+
+### Changed
+
+- The release workflow re-verifies the SLSA build-provenance attestation
+  before publishing (fail-closed) and pins trust to the release workflow with
+  `--signer-workflow`, so a tag never publishes an unverified artifact and an
+  attestation from any other workflow in the repository is rejected.
+
 ## [0.1.1] - 2026-06-23
 
 First release of the domain-general research harness template.
@@ -44,5 +59,6 @@ First release of the domain-general research harness template.
 - **Distribution** as a Copier living template and a Claude Code plugin
   marketplace.
 
-[Unreleased]: https://github.com/zircote/research-harness-template/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/zircote/research-harness-template/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/zircote/research-harness-template/releases/tag/v0.1.2
 [0.1.1]: https://github.com/zircote/research-harness-template/releases/tag/v0.1.1
