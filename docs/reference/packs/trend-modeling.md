@@ -52,9 +52,10 @@ Six required output sections:
 
 ### Dependencies
 
-None beyond the core engine. Mermaid rendering is optional (required for the
-transitional graph section, which degrades to a text representation when Mermaid
-is unavailable).
+None beyond the core engine. The transitional graph is emitted as a Mermaid
+`stateDiagram-v2` code block (plain text), so the pack runs with no extra tools.
+Mermaid tooling is optional and only needed to *render* that block into an image
+(for example in PDF or HTML output).
 
 ### Benefits
 

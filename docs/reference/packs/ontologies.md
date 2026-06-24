@@ -24,10 +24,11 @@ apply to them. Enabling an ontology is two steps:
 1. Set its `enabled` flag to `true` in `ontologies[]` (the per-pack "Enable"
    command below does exactly this for that pack's `id`).
 2. Bind the enabled ontology to a research topic with the `/ontology-review`
-   command, whose deterministic engine is `scripts/resolve-ontology.sh`. Binding
-   is what lets findings in that topic resolve to the ontology's entity types.
+   command, whose deterministic engine is `scripts/ontology-review.sh`. Binding
+   is what lets findings in that topic resolve to the ontology's entity types;
+   per-finding classification is handled by `scripts/resolve-ontology.sh`.
 
-The `resolve-ontology.sh` engine requires `yq`, `jq`, and `ajv` (see
+`resolve-ontology.sh` requires `yq`, `jq`, and `ajv` (see
 [dependencies](../dependencies.md)).
 
 ---
