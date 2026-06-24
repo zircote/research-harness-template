@@ -34,27 +34,9 @@
       "verbatim": false
     },
     {
-      "path": "packs/ontologies/k12-educational-publishing/k12-educational-publishing.ontology.yaml",
-      "upstream": "ontologies/examples/k12-educational-publishing.ontology.yaml",
-      "sha256": "dba76dd7817757f48df255a9e5219bf73c114777003e1fcda468435ae62f3459",
-      "verbatim": false
-    },
-    {
       "path": "packs/ontologies/biology-research-lab/biology-research-lab.ontology.yaml",
       "upstream": "ontologies/examples/biology-research-lab.ontology.yaml",
       "sha256": "c10d8c14ba29d0f14a4bd5aab6f72938e0346bb5c248fe796b5d10233e5c7a50",
-      "verbatim": false
-    },
-    {
-      "path": "packs/ontologies/backstage/backstage.ontology.yaml",
-      "upstream": "ontologies/examples/backstage.ontology.yaml",
-      "sha256": "2681c6f0a7e54303358cc496ca59160a8ccb6060879f4190142038cff45606b1",
-      "verbatim": false
-    },
-    {
-      "path": "packs/ontologies/csi-5w1h/csi-5w1h.ontology.yaml",
-      "upstream": "ontologies/examples/csi-5w1h.ontology.yaml",
-      "sha256": "12f3c512728e5f6af225c89513ce28e0bd641d72cad4f183d8ce6ef94575067c",
       "verbatim": false
     },
     {

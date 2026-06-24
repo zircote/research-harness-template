@@ -158,23 +158,11 @@
       "enabled": false
     },
     {
-      "id": "k12-educational-publishing",
-      "enabled": false
-    },
-    {
       "id": "software-engineering",
       "enabled": false
     },
     {
       "id": "biology-research-lab",
-      "enabled": false
-    },
-    {
-      "id": "backstage",
-      "enabled": false
-    },
-    {
-      "id": "csi-5w1h",
       "enabled": false
     },
     {

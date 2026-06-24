@@ -1040,12 +1040,23 @@ gate_m12() {
     bad "VENDOR.lock floor wrong: verbatim-set=[$verbatim_set] expected=[$expected_set] checksum-mismatch=[${lbad:-none}]"
   fi
 
-  # Build a real catalog (core + k12 enabled) to drive the resolver fixtures.
+  # Build a catalog (core + the dedicated edu-fixture TEST ontology) to drive the
+  # resolver fixtures. The fixture lives under evals/fixtures/ (it is NOT a
+  # distributable example pack), so this matrix never depends on packs/ontologies/
+  # churn; the pack-enable path is exercised separately in 12h against a surviving
+  # real pack. software-engineering is deliberately ABSENT here (12g binds it
+  # expecting an uncataloged failure).
   local T; T="$(mktemp -d)"
-  jq '(.ontologies[] | select(.id=="k12-educational-publishing") | .enabled) |= true' harness.config.json > "$T/cfg.json"
-  scripts/sync-packs.sh "$T/cfg.json" "$T/cat.json" "$T/settings.json" >/dev/null 2>&1
-  # config: topic 'edu' binds k12; 'bare' binds nothing
-  jq '.topics = [{"id":"edu","namespace":"x/edu","ontologies":["k12-educational-publishing"]},{"id":"bare","namespace":"x/bare"}]' "$T/cfg.json" > "$T/rcfg.json"
+  cat > "$T/cat.json" <<'JSON'
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false}
+]}
+JSON
+  # config: topic 'edu' binds edu-fixture; 'bare' binds nothing
+  echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["edu-fixture"]},{"id":"bare","namespace":"x/bare"}]}' > "$T/rcfg.json"
   local RO="scripts/resolve-ontology.sh"
   local G='{"name":"Algebra I","entity_type":"title","isbn":"9780000000002","subject":"mathematics","grade_range":{"min":9,"max":12}}'
   printf '{"@id":"f-good","entity":%s}\n' "$G" > "$T/good.json"
@@ -1064,7 +1075,7 @@ gate_m12() {
   ro good bare;   local rb=$?
   local gro; gro=$(jq -r '.[0] | "\(.resolved_ontology)|\(.basis)|\(.valid)"' "$T/good.edu.map" 2>/dev/null)
   if [ "$ru" = 0 ] && [ "$rg" = 0 ] && [ "$re" = 0 ] && [ "$rm" != 0 ] && [ "$rd" != 0 ] && [ "$rb" != 0 ] \
-     && [ "$gro" = "k12-educational-publishing@0.1.0|resolved|true" ]; then
+     && [ "$gro" = "edu-fixture@0.1.0|resolved|true" ]; then
     ok "resolver: typed finding resolves+validates; missing/undeclared/unbound fail; map records the mapping"
   else
     bad "resolver matrix wrong (untyped=$ru good=$rg extra=$re missing=$rm undecl=$rd unbound=$rb rec=$gro)"
@@ -1100,13 +1111,25 @@ gate_m12() {
     bad "binding to a disabled ontology did not fail (exit $bind)"
   fi
 
-  # 12h. Pack-enable path end-to-end: the enabled k12 pack is cataloged from its
-  #      data pack and a bound topic's finding resolves against it.
-  if jq -e '.ontologies[] | select(.id=="k12-educational-publishing" and .core==false)' "$T/cat.json" >/dev/null 2>&1 && [ "$rg" = 0 ]; then
-    ok "an enabled ontology data pack is cataloged and a bound topic's finding resolves against it"
+  # 12h. Pack-enable path end-to-end (sync-packs): enabling a real ontology DATA
+  #      PACK in the manifest catalogs it from its data pack, and a bound topic's
+  #      finding resolves against it. Exercised against the surviving
+  #      software-engineering pack — edu-fixture above is deliberately not a pack, so
+  #      the pack-enable mechanism must run against a real one. Uses its OWN catalog
+  #      (12g needs software-engineering absent from the matrix catalog, so the two
+  #      cannot share a catalog).
+  local TP; TP="$(mktemp -d)"
+  jq '(.ontologies[] | select(.id=="software-engineering") | .enabled) |= true' harness.config.json > "$TP/cfg.json"
+  scripts/sync-packs.sh "$TP/cfg.json" "$TP/cat.json" "$TP/settings.json" >/dev/null 2>&1
+  echo '{"topics":[{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$TP/rcfg.json"
+  printf '{"@id":"f-se","entity":{"name":"Auth Service","entity_type":"component","responsibility":"authenticate users"}}\n' > "$TP/se.json"
+  scripts/resolve-ontology.sh "$TP/se.json" --topic eng --catalog "$TP/cat.json" --config "$TP/rcfg.json" --map "$TP/se.map" >/dev/null 2>&1; local rse=$?
+  if jq -e '.ontologies[] | select(.id=="software-engineering" and .core==false)' "$TP/cat.json" >/dev/null 2>&1 && [ "$rse" = 0 ]; then
+    ok "an enabled ontology data pack is cataloged (sync-packs) and a bound topic's finding resolves against it"
   else
-    bad "pack-enable path broken (k12 not cataloged or bound finding did not resolve)"
+    bad "pack-enable path broken (software-engineering not cataloged or bound finding did not resolve)"
   fi
+  rm -rf "$TP"
 
   # 12i. Always-on generic typing + ambiguity. The generic core (mif-generic) types
   #      ANY topic, including core-only; a type a generic and a bound domain ontology
@@ -1184,7 +1207,7 @@ gate_m13() {
     bad "concordance schema does not validate its sample"
   fi
 
-  # Fixture corpus: 2 topics (edu->k12, eng->software-engineering). edu finding is a
+  # Fixture corpus: 2 topics (edu->edu-fixture, eng->software-engineering). edu finding is a
   # 'title' that belongs_to a 'program'; eng finding is a 'component' (FALSIFIED) that
   # depends_on a 'technology'; both reference a SHARED 'organization' entity.
   local T; T="$(mktemp -d)"
@@ -1192,11 +1215,11 @@ gate_m13() {
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
  {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
- {"id":"k12-educational-publishing","version":"0.1.0","source":"packs/ontologies/k12-educational-publishing/k12-educational-publishing.ontology.yaml","core":false},
+ {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false},
  {"id":"software-engineering","version":"0.1.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
 ]}
 JSON
-  echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["k12-educational-publishing"]},{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$T/cfg.json"
+  echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["edu-fixture"]},{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$T/cfg.json"
   mkdir -p "$T/reports/edu/findings" "$T/reports/eng/findings"
   cat > "$T/reports/edu/findings/f1.json" <<'JSON'
 {"@id":"urn:mif:concept:x/edu:f1","title":"Algebra textbook","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"survived","verdict_basis":"x"}}},"entity":{"name":"Algebra I","entity_type":"title"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:prog:math"},"name":"Math Program","entityType":"program"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"belongs_to","target":"urn:mif:entity:prog:math","strength":1}]}
@@ -1204,7 +1227,7 @@ JSON
   cat > "$T/reports/eng/findings/f1.json" <<'JSON'
 {"@id":"urn:mif:concept:x/eng:f1","title":"Kafka adoption","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"falsified","verdict_basis":"y"}}},"entity":{"name":"Service","entity_type":"component"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:tech:kafka"},"name":"Kafka","entityType":"technology"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"depends_on","target":"urn:mif:entity:tech:kafka","strength":1}]}
 JSON
-  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"k12-educational-publishing@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"edu-fixture@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
   echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"software-engineering@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
 
   CONFIG="$T/cfg.json" scripts/build-concordance.sh "$T/reports" "$T/concordance.json" >/dev/null 2>&1
@@ -1231,7 +1254,7 @@ JSON
   # 13d. Concept nodes are stamped with their ontology entity_type + verdict.
   local stamp
   stamp=$(jq -r '.nodes[] | select(.id=="urn:mif:concept:x/edu:f1") | "\(.entityType)|\(.verdict)|\(.ontology)"' "$T/concordance.json")
-  if [ "$stamp" = "title|survived|k12-educational-publishing@0.1.0" ]; then
+  if [ "$stamp" = "title|survived|edu-fixture@0.1.0" ]; then
     ok "concept nodes are stamped with resolved ontology entity_type + verdict (from ontology-map.json)"
   else
     bad "concept node not stamped (got '$stamp')"

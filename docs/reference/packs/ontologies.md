@@ -33,52 +33,6 @@ apply to them. Enabling an ontology is two steps:
 
 ---
 
-## backstage
-
-**Version:** 0.1.0 | **Kind:** ontology
-
-### Purpose
-
-Provides an entity vocabulary for the Backstage.io software catalog model. Modeled
-from the Backstage System Model, Descriptor Format, Well-Known Annotations, and
-Well-Known Relations specifications.
-
-### Domain
-
-Developer portals and internal service catalogs built on Backstage.io.
-
-### Entities, relationships, and traits
-
-**Entity types:** component (service / website / library / documentation / template),
-api (openapi / asyncapi / graphql / grpc / trpc), resource (database / s3-bucket /
-cluster / queue / cache / other), system, domain, group, user, location, template,
-annotation, catalog-refresh, techdocs-build, scaffolder-task.
-
-**Key relationships:** `owned_by`, `part_of`, `has_part`, `member_of`, `has_member`,
-`parent_of`, `child_of`, `provides_api`, `consumes_api`, `depends_on`,
-`dependency_of`.
-
-**Traits applied:** `lifecycle`, `owned`, `tagged`, `documented`, `versioned`,
-`contactable`.
-
-**Discovery patterns:** recognizes catalog-info.yaml files, openapi.yaml, schema.graphql,
-mkdocs.yml; detects component/api/resource/system/domain/group/template mentions
-in content.
-
-### When to bind
-
-Bind `backstage` when researching developer portal adoption, internal platform
-engineering, service catalog design, or Backstage plugin ecosystems.
-
-### Enable
-
-```sh
-jq '(.ontologies[] | select(.id=="backstage") | .enabled) |= true' \
-  harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
-```
-
----
-
 ## biology-research-lab
 
 **Version:** 0.1.0 | **Kind:** ontology
@@ -130,50 +84,6 @@ jq '(.ontologies[] | select(.id=="biology-research-lab") | .enabled) |= true' \
 
 ---
 
-## csi-5w1h
-
-**Version:** 1.0.0 | **Kind:** ontology
-
-### Purpose
-
-Provides an entity vocabulary for classifying customer technical support tickets using
-the 5W1H framework (Who / What / When / Where / Why / How). Derived from data-driven
-analysis of 78,405 HMH Customer Support (CSI) Jira tickets spanning January 2014
-through February 2026, processed across 55 parallel analyst agents.
-
-### Domain
-
-Customer technical support ticket classification for K-12 EdTech platforms
-(HMH Ed, ThinkCentral, my.hrw.com).
-
-### Entities, relationships, and traits
-
-**Namespaces (semantic):** tickets (symptom taxonomies, issue type hierarchies),
-products (Core Curriculum / Intervention / Supplemental / Platform), platforms
-(HMH Ed, ThinkCentral, my.hrw.com), organizations (teams, districts, schools).
-
-**Analytical dimensions:** 11 dimensions covering symptom taxonomy, root cause
-analysis, resolution pathways, platform mapping, team assignments, temporal patterns,
-and impact assessment.
-
-**Discovery patterns:** recognizes Jira ticket references, HMH product names, support
-platform identifiers, and 5W1H classification markers.
-
-### When to bind
-
-Bind `csi-5w1h` when researching customer support operations, EdTech platform
-reliability, support ticket taxonomy design, or historical support pattern analysis
-in K-12 educational technology.
-
-### Enable
-
-```sh
-jq '(.ontologies[] | select(.id=="csi-5w1h") | .enabled) |= true' \
-  harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
-```
-
----
-
 ## data-engineering
 
 **Version:** 0.1.0 | **Kind:** ontology
@@ -212,47 +122,6 @@ adoption, data governance frameworks, or modern data engineering tooling and pra
 
 ```sh
 jq '(.ontologies[] | select(.id=="data-engineering") | .enabled) |= true' \
-  harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
-```
-
----
-
-## k12-educational-publishing
-
-**Version:** 0.1.0 | **Kind:** ontology
-
-### Purpose
-
-Provides an entity vocabulary for K-12 educational publishers covering curriculum,
-textbooks, digital content, and state adoption processes. Modeled after legacy
-publishers' operational structures (sources: EdReports.org, NASBE, California
-Department of Education, Common Core State Standards Initiative, ISTE Standards,
-Association of American Publishers).
-
-### Domain
-
-K-12 educational content publishing, curriculum programs, and state adoption
-processes.
-
-### Entities, relationships, and traits
-
-**Namespaces (semantic):** titles (published titles, editions, ISBNs), programs
-(curriculum programs, series, bundles), content (learning objects, assessments,
-standards alignments).
-
-**Discovery patterns:** recognizes ISBN identifiers, grade-level and standards
-references, curriculum program names, state adoption terminology.
-
-### When to bind
-
-Bind `k12-educational-publishing` when researching the K-12 educational publishing
-market, curriculum adoption cycles, EdTech content strategy, or state standards
-alignment processes.
-
-### Enable
-
-```sh
-jq '(.ontologies[] | select(.id=="k12-educational-publishing") | .enabled) |= true' \
   harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
 ```
 

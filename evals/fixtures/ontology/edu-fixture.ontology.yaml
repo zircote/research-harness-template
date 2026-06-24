@@ -1,0 +1,110 @@
+---
+# edu-fixture — a dedicated TEST ontology for the harness ontology-resolution and
+# concordance gates (verify.sh M11/M12, evals/run-evals.sh ontology-* and
+# concordance-*). It is NOT a distributable example pack: it lives under
+# evals/fixtures/ precisely so the gates never depend on an example pack in
+# packs/ontologies/ (which are freely added/removed during reconciliation).
+#
+# It declares only the surface the tests exercise:
+#   - entity types: title (required name/isbn/subject/grade_range), program, author
+#   - relationship: belongs_to (title -> program) — so a title->author edge is a
+#     domain violation, and an undeclared type (e.g. "wizard") fails
+#   - discovery patterns: title vs program, so a title-only content classifies and
+#     a content matching both stays untyped (ambiguous)
+# Traits are intentionally omitted (the ontology schema does not require them and
+# the resolver validates entities against `schema`, not traits).
+
+ontology:
+  id: edu-fixture
+  version: "0.1.0"
+  description: "Minimal education-domain ontology for harness ontology/concordance tests"
+  extends:
+    - mif-base
+
+namespaces:
+  semantic:
+    children:
+      titles:
+        description: "Published titles"
+        type_hint: semantic
+      programs:
+        description: "Curriculum programs"
+        type_hint: semantic
+      contributors:
+        description: "Authors and contributors"
+        type_hint: semantic
+
+entity_types:
+  - name: title
+    description: "A published educational title"
+    base: semantic
+    schema:
+      required:
+        - name
+        - isbn
+        - subject
+        - grade_range
+      properties:
+        name:
+          type: string
+        isbn:
+          type: string
+          pattern: "^97[89]\\d{10}$"
+        subject:
+          type: string
+          enum:
+            - english_language_arts
+            - mathematics
+            - science
+            - social_studies
+        grade_range:
+          type: object
+          properties:
+            min:
+              type: integer
+            max:
+              type: integer
+
+  - name: program
+    description: "A curriculum program or series"
+    base: semantic
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        subject:
+          type: string
+
+  - name: author
+    description: "A content author or contributor"
+    base: semantic
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+
+relationships:
+  belongs_to:
+    description: "Title belongs to program"
+    from:
+      - title
+    to:
+      - program
+    symmetric: false
+
+discovery:
+  enabled: true
+  confidence_threshold: 0.8
+  patterns:
+    - content_pattern: "\\b(ISBN|textbook|workbook|edition)\\b"
+      suggest_entity: title
+      suggest_namespace: _semantic/titles
+    - content_pattern: "\\b(curriculum|program|series)\\b"
+      suggest_entity: program
+      suggest_namespace: _semantic/programs
