@@ -18,7 +18,14 @@ ROOT="$(pwd)"
 # template machinery to exercise — skip cleanly. In the template copier.yml is
 # tracked, so this guard is a no-op and the full gate runs. (Kept byte-identical
 # template-and-instance so `copier update` never conflicts on this file.)
-if ! git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
+#
+# Skip ONLY when affirmatively in an instance: a git work tree where copier.yml is
+# untracked. Outside a git work tree (no git, or a source tarball) we must NOT skip
+# — the script genuinely requires git (it runs `git ls-files`/`git init` below), so
+# it should fail loudly with that requirement rather than silently pass having
+# exercised nothing.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+   && ! git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
   echo "copier-update: SKIP — no template machinery tracked (running in an instance, not the template)"
   exit 0
 fi

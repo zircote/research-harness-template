@@ -131,7 +131,7 @@ run "models-authoring" python3 evals/test_models.py
 #    without it shows a visible SKIP rather than a silent pass.
 if command -v markdownlint-cli2 >/dev/null 2>&1; then
   run "progress-log-multisession-lint" bash -c '
-    d=$(mktemp -d); trap "rm -rf $d" EXIT
+    d=$(mktemp -d); trap '\''rm -rf "$d"'\'' EXIT
     cat > "$d/good.md" <<EOF
 # Research Progress: demo
 

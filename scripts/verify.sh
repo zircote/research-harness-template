@@ -1734,10 +1734,11 @@ gate_m19() {
   #      it fails deterministically there otherwise (D1), aborting CI before the
   #      lint gate runs. Assert the guard is present and its predicate (a tracked
   #      copier.yml) agrees with THIS context.
-  if grep -qE 'git ls-files --error-unmatch copier\.yml' evals/copier-update.sh; then
-    ok "copier-update.sh guards against running inside an instance (skips when copier.yml is untracked)"
+  if grep -qE 'git rev-parse --is-inside-work-tree' evals/copier-update.sh \
+     && grep -qE 'git ls-files --error-unmatch copier\.yml' evals/copier-update.sh; then
+    ok "copier-update.sh skips only in an instance (git work tree + copier.yml untracked), not on missing git"
   else
-    bad "copier-update.sh has no instance guard — fails deterministically in every instance (issue #85 D1)"
+    bad "copier-update.sh lacks the instance guard or skips on any git failure — fails in instances or silently passes outside a repo (issue #85 D1)"
   fi
   if [ "$IS_TEMPLATE" = 1 ]; then
     if git ls-files --error-unmatch copier.yml >/dev/null 2>&1; then
