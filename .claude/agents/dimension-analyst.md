@@ -330,8 +330,13 @@ such stated link** as a MIF `relationships[]` entry on the finding that asserts 
 ]
 ```
 
-- `type` is a kebab-case token; use the canonical set — `derived-from`,
-  `supports`, `contradicts`, `refines`, `relates-to`, `supersedes`.
+- `type` is a kebab-case token. Prefer the harness's **9 MIF-native
+  structural-core** relationships — the set the concordance validates against
+  (`scripts/validate-concordance.sh` `STRUCTURAL_CORE`): `supports`,
+  `contradicts`, `derived-from`, `relates-to`, `supersedes`, `refines`,
+  `part-of`, `depends-on`, `updates`. A bound domain ontology may declare
+  additional relationship types, and a custom namespaced type
+  (`<ns>:<token>`) is also valid.
 - `target` is the sibling finding's full `@id` (or a `urn:mif:` id of an external
   concept). Re-validate the finding after adding `relationships[]`.
 
