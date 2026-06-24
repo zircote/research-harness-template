@@ -94,7 +94,10 @@ jobs:
         run: npm install -g markdownlint-cli2
 
       - name: markdownlint (G5 — 0 errors)
-        run: markdownlint-cli2 "**/*.md"
+        # Pass the project config explicitly (matching the md_guard hook and the
+        # eval suite) so the ruleset is applied deterministically regardless of
+        # cli2's implicit config discovery.
+        run: markdownlint-cli2 --config .markdownlint-cli2.jsonc "**/*.md"
 
   pin-check:
     # Supply-chain gate: every GitHub Actions `uses:` across all workflow files
