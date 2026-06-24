@@ -20,18 +20,18 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | github-discuss | channels | channel | Posts findings-grounded GitHub Discussions threads | gh, jq |
 | github-issues | channels | channel | Files categorized GitHub Issues from findings | gh, jq |
 | notebooklm | channels | channel | Adds findings to a NotebookLM notebook and exports assets | nlm, jq, python3 |
-| pdf | channels | channel | Produces a self-contained PDF report via pandoc | pandoc + PDF engine, jq |
-| competitive-analysis | market-research | methodology | Porter's 5 Forces, competitor matrix, and positioning map | none |
+| pdf | channels | channel | Produces a self-contained PDF report via pandoc | pandoc + PDF engine, @mermaid-js/mermaid-cli (optional), jq |
+| competitive-analysis | market-research | methodology | Porter's 5 Forces, competitor matrix, and positioning map | @mermaid-js/mermaid-cli (optional) |
 | customer-research | market-research | methodology | Persona, JTBD, journey mapping, and segmentation | none |
 | financial-analysis | market-research | methodology | Unit economics, SaaS benchmarks, and revenue-model analysis | none |
 | market-sizing | market-research | methodology | TAM / SAM / SOM sizing across three methodologies | none |
 | regulatory-review | market-research | methodology | Regulatory landscape, risk matrix, and penalty ranges | none |
 | academic | reports | genre | Peer-review-style academic paper | none |
 | briefing | reports | genre | One-page decision brief | none |
-| engineering | reports | genre | Technical engineering report with comparison tables | mermaid (optional) |
+| engineering | reports | genre | Technical engineering report with comparison tables | @mermaid-js/mermaid-cli (optional) |
 | exec-summary | reports | genre | 1-2 page BLUF executive summary | none |
-| trend-analysis | reports | genre | Trajectory report with scenario diagrams | mermaid (optional) |
-| trend-modeling | trend-modeling | methodology | Three-valued logic (INC/DEC/CONST) scenario modeling | mermaid (optional) |
+| trend-analysis | reports | genre | Trajectory report with scenario diagrams | @mermaid-js/mermaid-cli (optional) |
+| trend-modeling | trend-modeling | methodology | Three-valued logic (INC/DEC/CONST) scenario modeling | @mermaid-js/mermaid-cli (optional) |
 | backstage | ontologies | ontology | Backstage.io software catalog entity vocabulary | none |
 | biology-research-lab | ontologies | ontology | Full research lab lifecycle entity vocabulary | none |
 | csi-5w1h | ontologies | ontology | 5W1H CSI ticket entity vocabulary (78,405-ticket corpus) | none |
