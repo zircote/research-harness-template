@@ -200,11 +200,22 @@ gap dims=[$(echo $WORK_DIMS | tr '\n' ' ')]; stale to re-verify=$(jq '.stale|len
    ```
 
 3. **Write the initial progress entry** to
-   `$REPORTS_DIR/research-progress.md`:
+   `$REPORTS_DIR/research-progress.md`. The `# Research Progress: {topic}` H1 is the
+   file's single top-level title — write it **only when first creating the file**.
+   A later session (the file already exists) must **not** re-emit the H1: a second
+   top-level heading is MD025, and a duplicate of an existing one is MD024, so any
+   topic researched twice would otherwise be guaranteed lint-dirty. Every session,
+   including the first, then appends the dated section.
+
+   On file creation (first session for this topic) only:
 
    ```markdown
    # Research Progress: {topic}
+   ```
 
+   Every session — append (never overwrite the phase log):
+
+   ```markdown
    ## {ISO_DATE} — Session Initialized
    - Goal: {goal_statement}
    - Mode: {full|update|augment}
@@ -585,24 +596,20 @@ Append to the progress file:
    )
    ```
 
-2. **Render the progress view.** APPEND a status section to
-   `research-progress.md` (never overwrite — the phase log is an audit trail):
+2. **Render the progress view.** APPEND a dated summary section to
+   `research-progress.md` (never overwrite — the phase log is an audit trail; and
+   never re-emit the `# Research Progress` H1, which exists once from file
+   creation). Use a **date-qualified** H2 so repeated sessions never collide — a
+   fixed `## Findings Summary` / `## Next Steps` would duplicate across sessions
+   (MD024) — and keep the status and next-steps as bullets (not sub-headings):
 
    ```markdown
-   # Research Progress: {topic}
-
-   **Status**: {active|complete}
-   **Goal met**: {yes | partial — {unmet checks}}
-   **Dimensions**: {list}
-
-   ## Findings Summary
-   - Active: {N} (survived {N}, weakened {N})
-   - Quarantined: {N} (falsified — see quarantine/)
-
-   ## Next Steps
-   - `/start --augment [<dimension>]` — deepen a dimension (every goal dimension if omitted)
-   - `/start --update` — refresh with latest data
-   - `/resume` — continue this session
+   ## {ISO_DATE} — Session Summary
+   - **Status:** {active|complete}
+   - **Goal met:** {yes | partial — {unmet checks}}
+   - **Dimensions:** {list}
+   - **Findings:** active {N} (survived {N}, weakened {N}); quarantined {N} (falsified — see quarantine/)
+   - **Next steps:** `/start --augment [<dimension>]` (deepen a dimension, every goal dimension if omitted), `/start --update` (refresh with latest data), `/resume` (continue this session)
    ```
 
 3. **Update the topic status** in `harness.config.json` (single atomic jq

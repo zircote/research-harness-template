@@ -1727,10 +1727,62 @@ gate_m18() {
   fi
 }
 
+gate_m19() {
+  info "Milestone 19 — instance-safe CI: template-only propagation gate + idempotent progress-log headings (issue #85)"
+
+  # 19a. The propagation gate (evals/copier-update.sh) must skip in an instance —
+  #      it fails deterministically there otherwise (D1), aborting CI before the
+  #      lint gate runs. Assert the guard is present and its predicate (a tracked
+  #      copier.yml) agrees with THIS context.
+  # Lock the EXACT guard condition, not merely "a git ls-files call exists": the
+  # work-tree probe AND the negated tracked-copier.yml test. A regressed guard that
+  # dropped the `!` or the `&&` would no longer match.
+  if grep -qE 'git rev-parse --is-inside-work-tree' evals/copier-update.sh \
+     && grep -qE '&& ! git ls-files --error-unmatch copier\.yml' evals/copier-update.sh; then
+    ok "copier-update.sh guard matches the exact instance condition (work-tree AND copier.yml untracked)"
+  else
+    bad "copier-update.sh guard does not match '&& ! git ls-files ... copier.yml' — a regressed guard could pass (issue #85 D1)"
+  fi
+  # Behaviorally exercise the guard: copy the real script into a throwaway git repo
+  # with NO tracked copier.yml (an instance) and confirm it actually SKIPs. This
+  # catches a logic regression (lost `!`/`&&`) even when the strings are present —
+  # copier-update.sh `cd`s to its own dir, so it operates on this temp repo. The
+  # template path (copier.yml tracked -> runs, not skip) is covered by the separate
+  # `copier update propagation` CI step, which PASSes only by running fully.
+  local t; t="$(mktemp -d)"
+  mkdir -p "$t/evals"
+  cp evals/copier-update.sh "$t/evals/copier-update.sh"
+  ( cd "$t" && git init -q && echo x > f && git add -A \
+      && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1
+  if ( cd "$t" && bash evals/copier-update.sh 2>/dev/null | grep -q '^copier-update: SKIP' ); then
+    ok "copier-update.sh behaviorally SKIPs in an instance (git repo, copier.yml untracked)"
+  else
+    bad "copier-update.sh did NOT skip in an instance — instance CI would fail (issue #85 D1)"
+  fi
+  rm -rf "$t"
+
+  # 19b. orchestrator.md emits the progress-log title H1 in exactly ONE place (file
+  #      creation), so a multi-session research-progress.md never gains a second H1
+  #      (MD025) or a duplicate heading (MD024); and uses no fixed cross-session
+  #      snapshot heading that would collide across sessions (D2).
+  local h1
+  h1=$(grep -cE '^[[:space:]]*# Research Progress: \{topic\}' .claude/agents/orchestrator.md)
+  if [ "$h1" -eq 1 ]; then
+    ok "orchestrator.md emits the progress-log H1 in exactly one place (no per-session H1 duplication)"
+  else
+    bad "orchestrator.md emits the progress-log H1 in $h1 places (must be 1 — duplicate H1 -> MD025 on multi-session topics; issue #85 D2)"
+  fi
+  if grep -qE '^[[:space:]]*## (Findings Summary|Next Steps)[[:space:]]*$' .claude/agents/orchestrator.md; then
+    bad "orchestrator.md still uses a fixed '## Findings Summary'/'## Next Steps' heading (collides across sessions -> MD024)"
+  else
+    ok "orchestrator.md uses no fixed cross-session snapshot heading (date-qualified summary instead)"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19)
 
 for g in "${GATES[@]}"; do "$g"; done
 
