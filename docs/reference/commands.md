@@ -91,8 +91,10 @@ Resumes a paused or interrupted research session.
 **Purpose:** Reads the session continuity file for the topic, validates the
 current goal against `schemas/goal.schema.json`, runs
 `scripts/reconcile-session.sh` to derive a fresh checkpoint from disk (a
-finding is DONE iff it has a `verification` block), then re-spawns the
-`orchestrator` agent in `full` mode with the reconciled state.
+finding is DONE iff it schema-validates — which requires a `verification` block
+— **and** its verdict is not `falsified`; a falsified-but-valid finding is left
+not-done so its dimension is reworked), then re-spawns the `orchestrator` agent
+in `full` mode with the reconciled state.
 
 **Usage:**
 
