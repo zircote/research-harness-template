@@ -43,15 +43,18 @@ you enable.
 and render scripts; `yq` reads every YAML input. If the engine's schema gates
 are to run, both must be present.
 
-## Validation toolchain (required for the verify gate and docs)
+## Validation toolchain (required for schema validation and docs)
 
-The `scripts/verify.sh` conformance gate validates JSON against the vendored MIF
-schema closure with `ajv`, and the documentation gate runs `markdownlint-cli2`.
-CI installs these globally with `npm`.
+`ajv` validates JSON against the vendored MIF schema closure, and the
+documentation gate runs `markdownlint-cli2`. CI installs both globally with
+`npm`. `ajv` is **not** only for the `verify.sh` gate — the finding and session
+scripts that write or reconcile MIF data (`write-finding.sh`, `wrap-source.sh`,
+`reconcile-session.sh`, `import-corpus.sh`, `render-artifact.sh`, and others)
+validate with `ajv` too, so it is effectively a core dependency.
 
 | Tool | Minimum | Required by | Install / Check |
 | --- | --- | --- | --- |
-| `ajv-cli` + `ajv-formats` | current | `verify.sh` schema validation (findings, goal, pack, config against draft-2020 schemas) | `npm install -g ajv-cli ajv-formats` · `ajv help` |
+| `ajv-cli` + `ajv-formats` | current | `verify.sh` plus the finding/session scripts (`write-finding.sh`, `wrap-source.sh`, `reconcile-session.sh`, …) — schema validation against draft-2020 schemas | `npm install -g ajv-cli ajv-formats` · `ajv help` |
 | `markdownlint-cli2` | current | Documentation lint gate (`.markdownlint-cli2.jsonc`) | `npm install -g markdownlint-cli2` · `markdownlint-cli2 --version` |
 
 ## Instantiation (the recommended adoption path)
@@ -91,7 +94,7 @@ pack that does not need them.
 | `gh` (GitHub CLI) | 2.x (2.95.0 verified) | `github-discuss`, `github-issues` | `gh --version` |
 | `nlm` (NotebookLM CLI) | 0.7.x (0.7.7 verified) | `notebooklm` | `nlm --version` |
 | `pandoc` | 3.x (3.10 verified) | `pdf` | `pandoc --version` |
-| PDF engine — `xelatex` / `weasyprint` / `wkhtmltopdf` | any one | `pdf` (pandoc needs an engine) | `xelatex --version` |
+| PDF engine — `xelatex` / `weasyprint` / `wkhtmltopdf` | any one | `pdf` (pandoc needs an engine) | check whichever you installed, e.g. `xelatex --version`, `weasyprint --version`, or `wkhtmltopdf --version` |
 | `@mermaid-js/mermaid-cli` (run via `npx`) | current | `pdf` diagrams; optional in `engineering`, `trend-analysis`, `competitive-analysis`, `trend-modeling` | `npx --yes @mermaid-js/mermaid-cli --version` |
 
 Notes:
@@ -133,8 +136,9 @@ attestation or a pinned SHA-256 before installing.
 
 | Component | Needs |
 | --- | --- |
-| Core engine + most scripts | `git`, `jq`, `yq`, `node`, `python3` |
+| Core engine + most scripts | `git`, `jq`, `yq`, `ajv-cli` + `ajv-formats`, `python3` |
 | `verify.sh` conformance gate | `ajv-cli` + `ajv-formats`, plus `jq`, `yq` |
+| `node` | install path for `ajv`/`markdownlint-cli2` (`npm`) and Mermaid (`npx`) |
 | Documentation lint gate | `markdownlint-cli2` |
 | Instantiate / update the template | `copier` |
 | Release verification | `gh` (2.x+) |
