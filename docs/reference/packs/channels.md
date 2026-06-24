@@ -16,7 +16,7 @@ For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ## book
 
-**Version:** 0.1.2 | **Kind:** channel | **MIF level:** exempt (output only)
+**Version:** 0.1.2 | **Kind:** channel | **MIF level:** exempt (output only) | **Skill:** `book:book-author`
 
 ### Purpose
 
@@ -27,7 +27,8 @@ technical, children's, fiction, history, and non-fiction genres.
 
 ### When to use
 
-Use `book` when the research outcome is a long-form narrative document — a published
+Enabling the `book` pack provides the `book-author` skill (`book:book-author`).
+Use it when the research outcome is a long-form narrative document — a published
 chapter, a white paper structured as a book, or any manuscript that requires genre-aware
 prose rather than a structured report.
 
@@ -58,7 +59,7 @@ scripts/pack-toggle.sh book on
 
 ## diataxis
 
-**Version:** 0.1.2 | **Kind:** channel | **MIF level:** L1 only (output)
+**Version:** 0.1.2 | **Kind:** channel | **MIF level:** L1 only (output) | **Skill:** `diataxis:diataxis-docs`
 
 ### Purpose
 
@@ -80,7 +81,8 @@ Every page it generates carries MIF Level 1 typed-identity frontmatter and a
 
 ### When to use
 
-Use `diataxis` when research findings need to be published as structured documentation
+Enabling the `diataxis` pack provides the `diataxis-docs` skill
+(`diataxis:diataxis-docs`). Use it when research findings need to be published as structured documentation
 rather than a prose report — for example, turning API research into a reference site or
 methodology research into a how-to guide set.
 
