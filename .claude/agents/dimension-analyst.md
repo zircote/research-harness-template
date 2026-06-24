@@ -242,6 +242,12 @@ finding = {
     "citations": [{"@type": "Citation", "citationType": "documentation",
                    "citationRole": "supports", "title": "...", "url": "https://..."}],
     "extensions": {"harness": {"dimension": "<dim>"}},
+    # Optional: typed links to sibling findings (see Step 5c). Encode the
+    # derivations/agreements you ALREADY state in prose — this is what makes the
+    # knowledge graph relationally linked, not just entity-mentions.
+    # "relationships": [{"type": "derived-from",
+    #                    "target": "urn:mif:concept:<topic>:<other-slug>",
+    #                    "strength": 0.9}],
 }
 emit.write(finding, sys.argv[1])  # canonical: sorted keys, 2-space indent, valid JSON
 ```
@@ -309,6 +315,35 @@ mapping AND, for a finding you leave untyped, attempts discovery-pattern classif
 from the bound ontologies' own `content_pattern` → `suggest_entity` before recording it
 untyped — so a clearly on-topic finding still gets a domain type without you guessing.
 A finding you stamp with a type that does not resolve will fail that gate.
+
+### Step 5c — Link related findings (`relationships[]`, SPEC §4a)
+
+Findings rarely stand alone: a synthesis finding **derives from** the findings it
+aggregates, one finding **supports** or **contradicts** another, a refinement
+**refines** an earlier claim. You almost always state these links in the `content`
+already (e.g. "closed loop: DETECT (f_op_14) … DIAGNOSE (f_op_15)"). **Encode every
+such stated link** as a MIF `relationships[]` entry on the finding that asserts it:
+
+```jsonc
+"relationships": [
+  { "type": "derived-from", "target": "urn:mif:concept:<topic>:<sibling-slug>", "strength": 0.9 }
+]
+```
+
+- `type` is a kebab-case token. Prefer the harness's **9 MIF-native
+  structural-core** relationships — the set the concordance validates against
+  (`scripts/validate-concordance.sh` `STRUCTURAL_CORE`): `supports`,
+  `contradicts`, `derived-from`, `relates-to`, `supersedes`, `refines`,
+  `part-of`, `depends-on`, `updates`. A bound domain ontology may declare
+  additional relationship types, and a custom namespaced type
+  (`<ns>:<token>`) is also valid.
+- `target` is the sibling finding's full `@id` (or a `urn:mif:` id of an external
+  concept). Re-validate the finding after adding `relationships[]`.
+
+This is the substrate the knowledge graph traverses: without it the graph is only
+finding→entity mentions, and `scripts/assert-graph-mif.sh` fails its "≥1 typed
+relationship edge" check. Encode the links you genuinely assert — never invent a
+relationship to satisfy the gate.
 
 ## Step 6 — Self-reflection (max 2 refinement iterations)
 
