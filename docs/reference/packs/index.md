@@ -34,9 +34,14 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | trend-modeling | trend-modeling | methodology | Three-valued logic (INC/DEC/CONST) scenario modeling | @mermaid-js/mermaid-cli (optional) |
 | biology-research-lab | ontologies | ontology | Full research lab lifecycle entity vocabulary | none |
 | data-engineering | ontologies | ontology | Data engineering domain entity vocabulary | none |
+| market-research | ontologies | ontology | Market and competitive research entity vocabulary | none |
 | regenerative-agriculture | ontologies | ontology | Farm business operations entity vocabulary | none |
 | regenerative-agriculture-research | ontologies | ontology | Regenerative agriculture research entity vocabulary | none |
+| regulatory-legal | ontologies | ontology | Regulatory and legal domain entity vocabulary | none |
+| scientific | ontologies | ontology | Scientific research and data-provenance entity vocabulary | none |
+| security | ontologies | ontology | Security threat-intelligence and compliance entity vocabulary | none |
 | software-engineering | ontologies | ontology | Software engineering entity vocabulary | none |
+| trend-analysis | ontologies | ontology | Strategic foresight and trend-analysis entity vocabulary | none |
 
 ## Family pages
 

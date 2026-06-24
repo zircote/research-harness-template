@@ -1817,10 +1817,40 @@ gate_m19() {
   fi
 }
 
+gate_m20() {
+  info "Milestone 20 — cross-pack relationship reference integrity"
+  # gate_m12 validates each ontology in isolation and cannot see a relationship
+  # endpoint that names a type living in ANOTHER pack — the intended cross-pack
+  # edges (e.g. security's `realizes`/`mitigates_threat` -> software-engineering's
+  # security-incident/security-threat). Assert every relationship from/to across ALL
+  # registry ontologies resolves to a type declared in SOME registry ontology, so a
+  # future rename can't silently dangle an edge. (Membership via grep -Fxq, not comm
+  # — comm needs both inputs in its own byte collation, which a locale-aware `sort`
+  # does not guarantee for type names mixing `-` and `_`.)
+  local types rels orphans n r
+  types=$(for y in schemas/ontologies/*/*.yaml packs/ontologies/*/*.ontology.yaml; do
+    [ -f "$y" ] && yq -o=json '.' "$y" 2>/dev/null | jq -r '.entity_types[]?.name // empty'
+  done | sort -u)
+  rels=$(for y in packs/ontologies/*/*.ontology.yaml; do
+    [ -f "$y" ] && yq -o=json '.' "$y" 2>/dev/null | jq -r '(.relationships // {}) | to_entries[] | (.value.from[]?, .value.to[]?)'
+  done | sort -u)
+  orphans=""
+  while IFS= read -r r; do
+    [ -n "$r" ] || continue
+    printf '%s\n' "$types" | grep -Fxq -- "$r" || orphans="${orphans}${r} "
+  done <<< "$rels"
+  n=$(printf '%s\n' "$types" | grep -c .)
+  if [ -z "$orphans" ]; then
+    ok "every cross-pack relationship endpoint resolves to a declared entity type ($n types across the registry)"
+  else
+    bad "relationship endpoint(s) declared in no registry ontology: ${orphans}"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20)
 
 for g in "${GATES[@]}"; do "$g"; done
 

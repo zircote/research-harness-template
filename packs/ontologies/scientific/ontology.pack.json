@@ -1,0 +1,11 @@
+{
+  "name": "scientific",
+  "version": "0.1.0",
+  "kind": "ontology",
+  "description": "Scientific research domain ontology — studies, methods, data, provenance",
+  "provides": {
+    "ontologies": [
+      "scientific"
+    ]
+  }
+}

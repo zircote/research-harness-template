@@ -1,0 +1,11 @@
+{
+  "name": "regulatory-legal",
+  "version": "0.1.0",
+  "kind": "ontology",
+  "description": "Regulatory and legal domain ontology — legislative acts, treaties, obligations, rights, jurisdictions, authorities, contracts, licenses, court decisions, sanctions, and compliance reporting, grounded in LKIF-Core, FIBO, ELI, Akoma Ntoso, and NIST OSCAL.",
+  "provides": {
+    "ontologies": [
+      "regulatory-legal"
+    ]
+  }
+}

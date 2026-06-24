@@ -172,6 +172,26 @@
     {
       "id": "regenerative-agriculture-research",
       "enabled": false
+    },
+    {
+      "id": "market-research",
+      "enabled": false
+    },
+    {
+      "id": "regulatory-legal",
+      "enabled": false
+    },
+    {
+      "id": "scientific",
+      "enabled": false
+    },
+    {
+      "id": "security",
+      "enabled": false
+    },
+    {
+      "id": "trend-analysis",
+      "enabled": false
     }
   ]
 }
