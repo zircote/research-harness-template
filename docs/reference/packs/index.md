@@ -32,14 +32,16 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | exec-summary | reports | genre | 1-2 page BLUF executive summary | none |
 | trend-analysis | reports | genre | Trajectory report with scenario diagrams | @mermaid-js/mermaid-cli (optional) |
 | trend-modeling | trend-modeling | methodology | Three-valued logic (INC/DEC/CONST) scenario modeling | @mermaid-js/mermaid-cli (optional) |
-| backstage | ontologies | ontology | Backstage.io software catalog entity vocabulary | none |
 | biology-research-lab | ontologies | ontology | Full research lab lifecycle entity vocabulary | none |
-| csi-5w1h | ontologies | ontology | 5W1H CSI ticket entity vocabulary (78,405-ticket corpus) | none |
 | data-engineering | ontologies | ontology | Data engineering domain entity vocabulary | none |
-| k12-educational-publishing | ontologies | ontology | K-12 educational publishing entity vocabulary | none |
+| market-research | ontologies | ontology | Market and competitive research entity vocabulary | none |
 | regenerative-agriculture | ontologies | ontology | Farm business operations entity vocabulary | none |
 | regenerative-agriculture-research | ontologies | ontology | Regenerative agriculture research entity vocabulary | none |
+| regulatory-legal | ontologies | ontology | Regulatory and legal domain entity vocabulary | none |
+| scientific | ontologies | ontology | Scientific research and data-provenance entity vocabulary | none |
+| security | ontologies | ontology | Security threat-intelligence and compliance entity vocabulary | none |
 | software-engineering | ontologies | ontology | Software engineering entity vocabulary | none |
+| trend-analysis | ontologies | ontology | Strategic foresight and trend-analysis entity vocabulary | none |
 
 ## Family pages
 

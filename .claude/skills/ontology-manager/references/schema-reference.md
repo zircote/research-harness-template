@@ -152,5 +152,4 @@ discovery:
 | `ontologies/shared-traits.ontology.yaml` | shared-traits | 0 | Reusable traits library |
 | `ontologies/examples/software-engineering.ontology.yaml` | software-engineering | 8 | Dev domain example |
 | `ontologies/examples/biology-research-lab.ontology.yaml` | biology-research-lab | - | Science domain |
-| `ontologies/examples/k12-educational-publishing.ontology.yaml` | k12-educational-publishing | - | Education domain |
 | `ontologies/examples/regenerative-agriculture.ontology.yaml` | regenerative-agriculture | - | Agriculture domain |

@@ -1,0 +1,799 @@
+---
+# Scientific Research Ontology
+#
+# A MIF entity ontology for scientific research: studies and investigations,
+# methods and protocols, samples and measurements, datasets and their provenance,
+# instruments, publications, and funding. Extends the MIF base cognitive triad
+# with domain-specific entity types grounded in actively-maintained, standards-
+# body and community ontologies.
+#
+# Compatible with: mif-base v0.1.0, shared-traits v0.1.0
+#
+# Version: 0.1.0
+#
+# Provenance: authored from the `domain-ontology-pack-expansion` research session
+# (entity-inventory.json, 17 scientific rows; relationship-inventory.json, 11
+# scientific edges; ontology-build-spec.md §2.3). Every entity type traces to a
+# named top-level class in a cited source vocabulary; OBO IRIs are OLS4/Ontobee-
+# confirmed and ship the gate-corrected values (IAO:0000415 hypothesis,
+# OBI:0000747 material sample, COB:0001300 device).
+#
+# Sources:
+# - OBO Foundry / OBI (Ontology for Biomedical Investigations)  https://obofoundry.org/ontology/obi.html
+# - IAO (Information Artifact Ontology)                          https://obofoundry.org/ontology/iao.html
+# - COB (Core Ontology for Biology and Biomedicine)             https://obofoundry.org/ontology/cob.html
+# - W3C DCAT 3 (Data Catalog Vocabulary)                        https://www.w3.org/TR/vocab-dcat-3/
+# - W3C PROV-O (Provenance Ontology)                            https://www.w3.org/TR/prov-o/
+# - schema.org                                                  https://schema.org/
+
+ontology:
+  id: scientific
+  version: "0.1.0"
+  description: "Scientific research domain ontology — studies, methods, data, provenance"
+  extends:
+    - mif-base
+    - shared-traits
+
+# ===========================================================================
+# CUSTOM NAMESPACES (nested under the mif-base cognitive triad)
+# ===========================================================================
+
+namespaces:
+  semantic:
+    children:
+      science:
+        description: "Hypotheses, methods, measurements, samples"
+        type_hint: semantic
+      instruments:
+        description: "Research instruments and devices"
+        type_hint: semantic
+      catalogs:
+        description: "Datasets, catalogs, distributions, services"
+        type_hint: semantic
+      publications:
+        description: "Research publications and scholarly outputs"
+        type_hint: semantic
+      funding:
+        description: "Grants and research funding"
+        type_hint: semantic
+  episodic:
+    children:
+      studies:
+        description: "Studies, investigations, cohorts"
+        type_hint: episodic
+      provenance:
+        description: "Data provenance and derivation events"
+        type_hint: episodic
+  procedural:
+    children:
+      protocols:
+        description: "Methods and protocol applications"
+        type_hint: procedural
+
+# ===========================================================================
+# ENTITY TYPES
+# ===========================================================================
+
+entity_types:
+  # ----- Studies & investigations -----------------------------------------
+  - name: study
+    description: "A scientific study with a defined design"
+    base: episodic
+    # OBI:0000066 investigation (study design sub-type)
+    traits:
+      - lifecycle
+      - auditable
+      - scheduled
+      - reviewed
+    schema:
+      required:
+        - study_id
+        - title
+      properties:
+        study_id:
+          type: string
+        title:
+          type: string
+        study_type:
+          type: string
+          enum:
+            - observational
+            - experimental
+            - randomized-controlled
+            - cohort
+            - case-control
+            - cross-sectional
+            - computational
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - planned
+            - in-progress
+            - completed
+            - retracted
+        objective:
+          type: string
+        principal_investigator:
+          type: string
+
+  - name: research-investigation
+    description: "A research investigation spanning planning, execution and reporting"
+    base: episodic
+    # OBI:0000066 investigation
+    traits:
+      - lifecycle
+      - auditable
+      - scheduled
+      - budgeted
+      - reviewed
+    schema:
+      required:
+        - investigation_id
+        - title
+      properties:
+        investigation_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - planned
+            - active
+            - completed
+            - published
+            - retracted
+        ethical_approval_id:
+          type: string
+        funding_ref:
+          type: string
+        publication_refs:
+          type: array
+          items:
+            type: string
+
+  - name: cohort
+    description: "A defined study population (subjects of an investigation)"
+    base: episodic
+    # OBI:0000070 planned process (study population sub-type) / NCIt cohort C61410
+    traits:
+      - lifecycle
+      - measured
+      - inventoried
+      - bounded
+    schema:
+      required:
+        - cohort_id
+      properties:
+        cohort_id:
+          type: string
+        cohort_size:
+          type: integer
+        inclusion_criteria:
+          type: string
+        exclusion_criteria:
+          type: string
+        study_ref:
+          type: string
+        follow_up_duration:
+          type: string
+        demographics_summary:
+          type: string
+
+  # ----- Methods & protocols ----------------------------------------------
+  - name: method
+    description: "A scientific method or assay"
+    base: procedural
+    # OBI:0000070 assay (planned process)
+    traits:
+      - auditable
+      - reviewed
+      - quality_controlled
+    schema:
+      required:
+        - method_name
+        - method_type
+      properties:
+        method_name:
+          type: string
+        method_type:
+          type: string
+        description:
+          type: string
+        instrument_ref:
+          type: string
+        reagents:
+          type: array
+          items:
+            type: string
+        output_type:
+          type: string
+
+  - name: protocol-application
+    description: "The execution of a protocol (distinct from the method specification)"
+    base: procedural
+    # OBI:0000272 protocol (the application/execution thereof)
+    traits:
+      - auditable
+      - lifecycle
+      - quality_controlled
+      - reviewed
+    schema:
+      required:
+        - protocol_name
+      properties:
+        protocol_name:
+          type: string
+        version:
+          type: string
+        procedure_steps:
+          type: array
+          items:
+            type: string
+        protocol_type:
+          type: string
+        ethics_approval_id:
+          type: string
+        doi:
+          type: string
+          format: uri
+        instrument_requirements:
+          type: string
+
+  # ----- Samples & measurements -------------------------------------------
+  - name: sample-organism
+    description: "A material sample (organism, tissue, or specimen)"
+    base: semantic
+    # OBI:0000747 material sample (current, non-deprecated; corrected from "specimen")
+    traits:
+      - located
+      - lifecycle
+      - inventoried
+      - measured
+    schema:
+      required:
+        - sample_id
+        - organism_name
+      properties:
+        sample_id:
+          type: string
+        taxon_id:
+          type: string
+        organism_name:
+          type: string
+        tissue_type:
+          type: string
+        collection_date:
+          type: string
+          format: date
+        preservation_method:
+          type: string
+        collection_site:
+          type: string
+
+  - name: measurement
+    description: "A measurement datum (a value specification)"
+    base: semantic
+    # OBI:0001938 value specification / IAO:0000109 measurement datum
+    traits:
+      - measured
+      - quality_controlled
+      - auditable
+    schema:
+      required:
+        - measurement_id
+        - value
+      properties:
+        measurement_id:
+          type: string
+        measured_property:
+          type: string
+        value:
+          type: string
+        unit:
+          type: string
+        measurement_method:
+          type: string
+        instrument_ref:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  - name: hypothesis
+    description: "A falsifiable scientific hypothesis"
+    base: semantic
+    # IAO:0000415 hypothesis textual entity (corrected from IAO:0000015 information carrier)
+    traits:
+      - lifecycle
+      - reviewed
+      - categorized
+    schema:
+      required:
+        - statement
+        - investigation_ref
+      properties:
+        statement:
+          type: string
+        investigation_ref:
+          type: string
+        hypothesis_type:
+          type: string
+          enum:
+            - "null"
+            - directional
+            - mechanistic
+            - predictive
+            - exploratory
+        operationalization:
+          type: string
+        status:
+          type: string
+          enum:
+            - untested
+            - supported
+            - refuted
+            - inconclusive
+        derived_from:
+          type: string
+
+  # ----- Instruments ------------------------------------------------------
+  - name: research-instrument
+    description: "A research instrument or device"
+    base: semantic
+    # COB:0001300 device (OBI:0000968 obsolete, replaced per OBI->COB reconciliation)
+    traits:
+      - lifecycle
+      - maintainable
+      - located
+      - inventoried
+      - quality_controlled
+    schema:
+      required:
+        - instrument_id
+        - instrument_type
+      properties:
+        instrument_id:
+          type: string
+        instrument_type:
+          type: string
+          enum:
+            - sequencer
+            - mass-spectrometer
+            - microscope
+            - assay-platform
+            - imaging-device
+            - survey-platform
+            - flow-cytometer
+            - other
+        manufacturer:
+          type: string
+        model:
+          type: string
+        serial_number:
+          type: string
+        calibration_date:
+          type: string
+          format: date
+        location:
+          type: string
+
+  # ----- Publications & funding -------------------------------------------
+  - name: research-publication
+    description: "A research publication or scholarly output"
+    base: semantic
+    # IAO:0000311 publication / schema.org ScholarlyArticle
+    traits:
+      - lifecycle
+      - reviewed
+      - auditable
+      - categorized
+      - tagged
+    schema:
+      required:
+        - title
+        - publication_type
+      properties:
+        title:
+          type: string
+        publication_type:
+          type: string
+          enum:
+            - journal-article
+            - preprint
+            - book-chapter
+            - conference-paper
+            - dataset-descriptor
+            - technical-report
+        doi:
+          type: string
+          format: uri
+        authors:
+          type: array
+          items:
+            type: string
+        journal_or_venue:
+          type: string
+        year:
+          type: integer
+        reports_investigation:
+          type: string
+        open_access:
+          type: boolean
+
+  - name: research-funding
+    description: "A grant providing monetary support for research"
+    base: semantic
+    # schema.org MonetaryGrant (extended with research-linkage facets)
+    traits:
+      - lifecycle
+      - budgeted
+      - owned
+      - auditable
+      - renewable
+    schema:
+      required:
+        - grant_id
+        - funder_name
+      properties:
+        grant_id:
+          type: string
+        funder_name:
+          type: string
+        amount:
+          type: string
+        currency:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        funding_scheme:
+          type: string
+        investigation_ref:
+          type: string
+
+  # ----- Datasets, catalogs, distributions, services (DCAT 3) -------------
+  - name: dataset
+    description: "A published dataset"
+    base: semantic
+    # dcat:Dataset (W3C DCAT 3) / schema.org Dataset
+    traits:
+      - lifecycle
+      - auditable
+      - owned
+      - reviewed
+      - categorized
+      - tagged
+    schema:
+      required:
+        - title
+        - identifier
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        identifier:
+          type: string
+        theme:
+          type: string
+        license:
+          type: string
+        temporal_coverage:
+          type: string
+        spatial_coverage:
+          type: string
+        creator:
+          type: string
+        distribution_ref:
+          type: array
+          items:
+            type: string
+
+  - name: data-distribution
+    description: "A specific representation of a dataset (a downloadable/accessible form)"
+    base: semantic
+    # dcat:Distribution (W3C DCAT 3)
+    traits:
+      - lifecycle
+      - auditable
+      - owned
+    schema:
+      required:
+        - access_url
+        - dataset_ref
+      properties:
+        access_url:
+          type: string
+          format: uri
+        download_url:
+          type: string
+          format: uri
+        media_type:
+          type: string
+        byte_size:
+          type: integer
+        format:
+          type: string
+        checksum:
+          type: string
+        license:
+          type: string
+        dataset_ref:
+          type: string
+
+  - name: data-service
+    description: "A data access service (an endpoint serving datasets)"
+    base: semantic
+    # dcat:DataService (W3C DCAT 3)
+    traits:
+      - lifecycle
+      - auditable
+      - maintainable
+      - quality_controlled
+    schema:
+      required:
+        - endpoint_url
+      properties:
+        endpoint_url:
+          type: string
+          format: uri
+        endpoint_description:
+          type: string
+        serves_dataset:
+          type: array
+          items:
+            type: string
+        contact_point:
+          type: string
+        license:
+          type: string
+        access_rights:
+          type: string
+          enum:
+            - open
+            - restricted
+            - embargoed
+        service_type:
+          type: string
+
+  - name: dataset-series
+    description: "A collection of datasets published as a series"
+    base: semantic
+    # dcat:DatasetSeries (W3C DCAT 3)
+    traits:
+      - lifecycle
+      - auditable
+      - scheduled
+      - categorized
+    schema:
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        temporal_coverage:
+          type: string
+        frequency:
+          type: string
+        first_member_ref:
+          type: string
+        last_member_ref:
+          type: string
+        theme:
+          type: string
+        license:
+          type: string
+
+  - name: data-catalog
+    description: "A curated catalog of datasets and services"
+    base: semantic
+    # dcat:Catalog (W3C DCAT 3) / schema.org DataCatalog
+    traits:
+      - auditable
+      - owned
+      - reviewed
+      - lifecycle
+      - categorized
+    schema:
+      required:
+        - title
+        - catalog_url
+      properties:
+        title:
+          type: string
+        catalog_url:
+          type: string
+          format: uri
+        publisher:
+          type: string
+        themes:
+          type: array
+          items:
+            type: string
+        dataset_count:
+          type: integer
+        license:
+          type: string
+        access_rights:
+          type: string
+          enum:
+            - open
+            - restricted
+            - embargoed
+
+  - name: data-provenance
+    description: "A provenance record tracing how a data artifact was generated and derived"
+    base: episodic
+    # W3C PROV-O: prov:Entity + prov:Activity + prov:Agent derivation graph
+    traits:
+      - auditable
+      - lifecycle
+      - reviewed
+    schema:
+      required:
+        - entity_ref
+        - generated_by
+      properties:
+        entity_ref:
+          type: string
+        generated_by:
+          type: string
+        derived_from:
+          type: string
+        attributed_to:
+          type: string
+        generation_time:
+          type: string
+          format: date-time
+        usage_ref:
+          type: string
+        revision_of:
+          type: string
+
+# ===========================================================================
+# RELATIONSHIPS  (grounded in OBO RO, PROV-O, DCAT 3, IAO, schema.org)
+# ===========================================================================
+
+relationships:
+  uses_method:
+    description: "A study uses a method (RO:0000056 participates-in)"
+    from:
+      - study
+    to:
+      - method
+    symmetric: false
+  has_sample:
+    description: "A study has a sample (RO:0002233 has-input)"
+    from:
+      - study
+    to:
+      - sample-organism
+    symmetric: false
+  produces:
+    description: "A method produces a measurement (RO:0002234 has-output)"
+    from:
+      - method
+    to:
+      - measurement
+    symmetric: false
+  measured_on:
+    description: "A measurement is taken on a sample"
+    from:
+      - measurement
+    to:
+      - sample-organism
+    symmetric: false
+  tests:
+    description: "An investigation tests a hypothesis"
+    from:
+      - research-investigation
+    to:
+      - hypothesis
+    symmetric: false
+  applies:
+    description: "An investigation applies a protocol-application"
+    from:
+      - research-investigation
+    to:
+      - protocol-application
+    symmetric: false
+  uses_instrument:
+    description: "A protocol-application uses a research-instrument"
+    from:
+      - protocol-application
+    to:
+      - research-instrument
+    symmetric: false
+  reports_in:
+    description: "An investigation is reported in a publication (IAO:0000136 is-about)"
+    from:
+      - research-investigation
+    to:
+      - research-publication
+    symmetric: false
+  funded_by:
+    description: "An investigation is funded by a grant (schema:funder)"
+    from:
+      - research-investigation
+    to:
+      - research-funding
+    symmetric: false
+  enrolls:
+    description: "An investigation enrolls a cohort"
+    from:
+      - research-investigation
+    to:
+      - cohort
+    symmetric: false
+  catalogs:
+    description: "A data-catalog catalogs a dataset (dcat:dataset)"
+    from:
+      - data-catalog
+    to:
+      - dataset
+    symmetric: false
+
+# ===========================================================================
+# DISCOVERY PATTERNS
+# ===========================================================================
+
+discovery:
+  enabled: true
+  confidence_threshold: 0.8
+  patterns:
+    - content_pattern: "\\b(study|trial|investigation|cohort|randomi[sz]ed controlled)\\b"
+      suggest_entity: study
+      suggest_namespace: _episodic/studies
+    - content_pattern: "\\b(assay|protocol|method|procedure|RNA-seq|ChIP-seq)\\b"
+      suggest_entity: method
+      suggest_namespace: _semantic/science
+    - content_pattern: "\\b(specimen|material sample|organism|cell line|tissue|taxon)\\b"
+      suggest_entity: sample-organism
+      suggest_namespace: _semantic/science
+    - content_pattern: "\\b(measurement|measured value|reading|datum)\\b"
+      suggest_entity: measurement
+      suggest_namespace: _semantic/science
+    - content_pattern: "\\b(hypothesis|we hypothesi[sz]e|null hypothesis)\\b"
+      suggest_entity: hypothesis
+      suggest_namespace: _semantic/science
+    - content_pattern: "\\b(protocol application|batch|run performed|executed protocol)\\b"
+      suggest_entity: protocol-application
+      suggest_namespace: _procedural/protocols
+    - content_pattern: "\\b(ClinicalTrials\\.gov|OSF|PROSPERO|multi-omics)\\b"
+      suggest_entity: research-investigation
+      suggest_namespace: _episodic/studies
+    - content_pattern: "\\b(sequencer|mass spectrometer|microscope|flow cytometer|instrument)\\b"
+      suggest_entity: research-instrument
+      suggest_namespace: _semantic/instruments
+    - content_pattern: "\\b(DOI|preprint|journal article|ScholarlyArticle)\\b"
+      suggest_entity: research-publication
+      suggest_namespace: _semantic/publications
+    - content_pattern: "\\b(MonetaryGrant|grant number|funded by|award)\\b"
+      suggest_entity: research-funding
+      suggest_namespace: _semantic/funding
+    - content_pattern: "\\b(dataset|data catalog|DCAT|distribution|data download)\\b"
+      suggest_entity: dataset
+      suggest_namespace: _semantic/catalogs
+    - content_pattern: "\\b(prov:wasDerivedFrom|provenance|lineage|wasGeneratedBy)\\b"
+      suggest_entity: data-provenance
+      suggest_namespace: _episodic/provenance

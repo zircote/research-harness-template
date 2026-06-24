@@ -19,9 +19,9 @@
       "core": true
     },
     {
-      "id": "k12-educational-publishing",
+      "id": "edu-fixture",
       "version": "0.1.0",
-      "source": "packs/ontologies/k12-educational-publishing/k12-educational-publishing.ontology.yaml",
+      "source": "evals/fixtures/ontology/edu-fixture.ontology.yaml",
       "core": false
     },
     {

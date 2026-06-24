@@ -1,0 +1,9 @@
+{
+  "name": "market-research",
+  "version": "0.1.0",
+  "kind": "ontology",
+  "description": "Market-research domain ontology — market segments, competitors and brands, buyer personas, market sizing, competitive forces, service offerings and demand, value propositions, market-intelligence reports, data sources, survey instruments, and win-loss analyses.",
+  "provides": {
+    "ontologies": ["market-research"]
+  }
+}

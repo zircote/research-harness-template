@@ -158,10 +158,6 @@
       "enabled": false
     },
     {
-      "id": "k12-educational-publishing",
-      "enabled": false
-    },
-    {
       "id": "software-engineering",
       "enabled": false
     },
@@ -170,19 +166,31 @@
       "enabled": false
     },
     {
-      "id": "backstage",
-      "enabled": false
-    },
-    {
-      "id": "csi-5w1h",
-      "enabled": false
-    },
-    {
       "id": "data-engineering",
       "enabled": false
     },
     {
       "id": "regenerative-agriculture-research",
+      "enabled": false
+    },
+    {
+      "id": "market-research",
+      "enabled": false
+    },
+    {
+      "id": "regulatory-legal",
+      "enabled": false
+    },
+    {
+      "id": "scientific",
+      "enabled": false
+    },
+    {
+      "id": "security",
+      "enabled": false
+    },
+    {
+      "id": "trend-analysis",
       "enabled": false
     }
   ]

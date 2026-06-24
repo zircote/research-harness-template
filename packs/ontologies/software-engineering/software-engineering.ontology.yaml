@@ -6,12 +6,18 @@
 #
 # Compatible with: mif-base v0.1.0 (cognitive triad hierarchy)
 #
-# Version: 0.3.0
-# Last Updated: 2026-06-21
+# Version: 0.4.0
+# Last Updated: 2026-06-24
+#
+# 0.4.0 (domain-ontology-pack-expansion): security-threat, security-framework, and
+# compliance-regulation EXTENDED with strict-superset fields for the new security
+# and regulatory-legal packs; security-incident added (specialization of
+# incident-report). adoption-trend DEPRECATED — its canonical successor `trend` is
+# extracted into the new trend-analysis pack; retained (not deleted) for back-compat.
 
 ontology:
   id: software-engineering
-  version: "0.3.0"
+  version: "0.4.0"
   description: "Software engineering domain ontology"
   extends:
     - mif-base
@@ -138,6 +144,46 @@ entity_types:
         duration_minutes:
           type: integer
           description: "Incident duration in minutes"
+  # 0.4.0 ADD — a security breach specialization of incident-report (VERIS schema).
+  # An ops outage and a security breach share the episodic incident shape; a disjoint
+  # type would fork the incident graph (domain-ontology-pack-expansion, security-pack-spec).
+  - name: security-incident
+    description: "A security breach/incident — a specialization of incident-report carrying the VERIS four A's"
+    base: episodic
+    # VERIS — Incident (Actor + Action + Asset + Attribute)
+    traits:
+      - timeline
+      - stakeholders
+      - cited
+    schema:
+      required:
+        - severity
+        - impact
+        - resolution
+      properties:
+        severity:
+          type: string
+          enum:
+            - critical
+            - high
+            - medium
+            - low
+        impact:
+          type: string
+        resolution:
+          type: string
+        actor:
+          type: string
+          description: "VERIS Actor — external / internal / partner"
+        action:
+          type: string
+          description: "VERIS Action — malware / hacking / social / error / misuse"
+        asset:
+          type: string
+          description: "VERIS Asset — the device/data affected"
+        attribute:
+          type: string
+          description: "VERIS Attribute — how affected (CIA)"
   - name: technology
     description: "A technology, framework, or tool"
     base: semantic
@@ -324,6 +370,16 @@ entity_types:
           type: array
           items:
             type: string
+        # 0.4.0 EXTEND (MITRE ATT&CK / CAPEC) — strict superset, required set unchanged
+        attack_id:
+          type: string
+          description: "ATT&CK technique/sub-technique (e.g. T1566) or CAPEC ID"
+        tactic:
+          type: string
+          description: "ATT&CK tactic / kill-chain phase"
+        adversary:
+          type: string
+          description: "Intrusion set / ATT&CK Group"
   - name: security-framework
     description: "A security or assurance framework, taxonomy, or standard (e.g. OWASP Top 10, MITRE ATLAS, SLSA, NIST SSDF)"
     base: semantic
@@ -345,6 +401,13 @@ entity_types:
         relationship:
           type: string
           description: "How it relates to or composes with other frameworks"
+        # 0.4.0 EXTEND (NIST CSF / OWASP) — strict superset, required set unchanged
+        version:
+          type: string
+          description: "Framework version/edition (e.g. CSF 2.0, OWASP Top 10:2025)"
+        structure:
+          type: string
+          description: "Framework structure (e.g. CSF: 6 functions / 22 categories / 106 subcategories)"
   - name: compliance-regulation
     description: "A law, regulation, or government mandate bearing on secure software development"
     base: semantic
@@ -366,8 +429,19 @@ entity_types:
         effective_dates:
           type: string
           description: "Relevant entry-into-force or compliance deadlines"
+        # 0.4.0 EXTEND (LKIF-Core / FIBO FBC) — strict superset, required set unchanged
+        legal_source_type:
+          type: string
+          description: "LKIF legal-source kind: statute, regulation, directive, customary law, case law"
+        citation_ref:
+          type: string
+          description: "Official citation (e.g. Regulation (EU) 2016/679)"
+  # DEPRECATED in 0.4.0: the canonical generic `trend` is extracted into the
+  # trend-analysis pack. adoption-trend is retained (not deleted) so existing
+  # typed instances do not dangle; prefer trend-analysis `trend` for new typing.
   - name: adoption-trend
-    description: "A momentum, maturation, or standardization signal in the direction of travel"
+    description: "DEPRECATED (0.4.0) — superseded by trend-analysis `trend`. A momentum, maturation, or standardization signal in the direction of travel."
+    deprecated: true
     base: semantic
     traits:
       - cited

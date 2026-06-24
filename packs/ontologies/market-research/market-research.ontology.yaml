@@ -1,0 +1,623 @@
+---
+# Market-Research Ontology
+#
+# A MIF entity ontology for market and competitive research: market segments,
+# competitors and their brands, buyer personas and respondent cohorts, market
+# sizing, competitive forces, service offerings and demand, value propositions,
+# market-intelligence reports and data sources, survey instruments, and win-loss
+# analyses. Extends the MIF base cognitive triad with domain-specific entity
+# types grounded in schema.org commerce primitives and established
+# market-research frameworks (Porter Five Forces, TAM/SAM/SOM, Strategyzer
+# Value Proposition Canvas, Umbrex market-mapping).
+#
+# Compatible with: mif-base v0.1.0, shared-traits v0.1.0
+#
+# Version: 0.1.0
+#
+# Provenance: authored from the `domain-ontology-pack-expansion` research session
+# (entity-inventory.json, 14 market-research rows; relationship-inventory.json, 9
+# market-research edges; ontology-build-spec.md §2.4, §3.1). Every entity type
+# traces to a named source class in a cited vocabulary or framework. schema.org
+# reuses/extends are authored in this pack: competitor EXTENDS schema:Organization;
+# service-offering EXTENDS schema:Service; brand REUSES schema:Brand;
+# buyer-persona REUSES schema:Audience; market-data-source REUSES schema:DataCatalog;
+# market-demand REUSES schema:Demand.
+#
+# Sources:
+# - schema.org                                                  https://schema.org/
+# - GoodRelations (BusinessEntity, hasBrand)                    http://www.heppnetz.de/projects/goodrelations/
+# - W3C DCAT 3 (Data Catalog Vocabulary)                        https://www.w3.org/TR/vocab-dcat-3/
+# - IAO (Information Artifact Ontology)                         https://obofoundry.org/ontology/iao.html
+# - Porter Five Forces (HBR 1979/2008)                          https://hbr.org/2008/01/the-five-competitive-forces-that-shape-strategy
+# - HubSpot TAM/SAM/SOM sizing methodology                      https://blog.hubspot.com/marketing/tam-sam-som
+# - Strategyzer Value Proposition Canvas (Osterwalder)          https://www.strategyzer.com/library/the-value-proposition-canvas
+# - Umbrex market-mapping (universe of entities)                https://umbrex.com/
+# - Clozd / Corporate Visions win-loss methodology              https://www.clozd.com/
+
+ontology:
+  id: market-research
+  version: "0.1.0"
+  description: "Market-research domain ontology — segments, competitors, sizing, demand, intelligence"
+  extends:
+    - mif-base
+    - shared-traits
+
+# ===========================================================================
+# LOCAL TRAITS (not provided by shared-traits; referenced by some entity types)
+# ===========================================================================
+
+traits:
+  versioned:
+    description: "Adds version tracking fields"
+    fields:
+      version:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+.*$"
+      changelog:
+        type: array
+        items:
+          type: object
+
+# ===========================================================================
+# CUSTOM NAMESPACES (nested under the mif-base cognitive triad)
+# ===========================================================================
+
+namespaces:
+  semantic:
+    children:
+      market:
+        description: "Segments, competitors, brands, personas, sizing, forces, demand, data sources"
+        type_hint: semantic
+      reports:
+        description: "Market-intelligence reports and analyses"
+        type_hint: semantic
+  procedural:
+    children:
+      research:
+        description: "Survey instruments and research plan specifications"
+        type_hint: procedural
+  episodic:
+    children:
+      research:
+        description: "Win-loss analyses and research episodes"
+        type_hint: episodic
+
+# ===========================================================================
+# ENTITY TYPES
+# ===========================================================================
+
+entity_types:
+  # ----- Market structure -------------------------------------------------
+  - name: segment
+    description: "A market segment — a defined slice of a market"
+    base: semantic
+    # market segment taxon (Umbrex universe-of-entities taxonomy)
+    traits:
+      - measured
+      - categorized
+      - bounded
+      - scored
+      - tagged
+      - located
+      - seasonal
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        geographic_area: # aliases schema:geographicArea
+          type: string
+        audience_type: # aliases schema:audienceType
+          type: string
+        identifier:
+          type: string
+
+  - name: competitor
+    description: "A competing organization in a market (EXTENDS schema:Organization)"
+    base: semantic
+    # Organization (schema.org/Organization / GoodRelations BusinessEntity)
+    traits:
+      - located
+      - owned
+      - contactable
+      - measured
+      - scored
+      - tagged
+      - categorized
+      - reviewed
+    schema:
+      required:
+        - legal_name
+      properties:
+        legal_name: # aliases schema:legalName
+          type: string
+        url:
+          type: string
+          format: uri
+        area_served: # aliases schema:areaServed
+          type: string
+        number_of_employees: # aliases schema:numberOfEmployees
+          type: integer
+        founding_date: # aliases schema:foundingDate
+          type: string
+          format: date
+        makes_offer: # aliases schema:makesOffer
+          type: array
+          items:
+            type: string
+
+  - name: brand
+    description: "A brand maintained by a competitor (REUSES schema:Brand)"
+    base: semantic
+    # Brand (schema.org/Brand — Thing > Intangible > Brand)
+    traits:
+      - owned
+      - categorized
+      - scored
+      - reviewed
+      - tagged
+      - measured
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        logo:
+          type: string
+          format: uri
+        slogan:
+          type: string
+        aggregate_rating: # aliases schema:aggregateRating
+          type: string
+        review:
+          type: array
+          items:
+            type: string
+        url:
+          type: string
+          format: uri
+
+  - name: buyer-persona
+    description: "A target buyer audience or ideal-customer profile (REUSES schema:Audience)"
+    base: semantic
+    # Audience (schema.org/Audience / schema.org/PeopleAudience)
+    traits:
+      - categorized
+      - scored
+      - tagged
+      - located
+      - measured
+    schema:
+      required:
+        - audience_type
+      properties:
+        audience_type: # aliases schema:audienceType
+          type: string
+        geographic_area: # aliases schema:geographicArea
+          type: string
+        required_gender: # aliases schema:requiredGender
+          type: string
+        required_min_age: # aliases schema:requiredMinAge
+          type: integer
+        required_max_age: # aliases schema:requiredMaxAge
+          type: integer
+
+  - name: respondent-segment
+    description: "A survey-respondent cohort defined by screening criteria"
+    base: semantic
+    # respondent cohort (Pollfish market-research survey methodology)
+    traits:
+      - measured
+      - categorized
+      - scored
+      - bounded
+      - tagged
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        audience_type: # aliases schema:audienceType
+          type: string
+        geographic_area: # aliases schema:geographicArea
+          type: string
+        required_min_age: # aliases schema:requiredMinAge
+          type: integer
+        required_max_age: # aliases schema:requiredMaxAge
+          type: integer
+
+  # ----- Sizing & competitive analysis ------------------------------------
+  - name: sizing-estimate
+    description: "A market-sizing estimate (TAM/SAM/SOM)"
+    base: semantic
+    # total-addressable-market (HubSpot TAM/SAM/SOM sizing methodology)
+    traits:
+      - measured
+      - scored
+      - auditable
+      - bounded
+      - reviewed
+      - seasonal
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        estimated_value: # aliases schema:estimatedValue
+          type: string
+        valid_through: # aliases schema:validThrough
+          type: string
+          format: date
+        eligible_region: # aliases schema:eligibleRegion
+          type: string
+        description:
+          type: string
+
+  - name: competitive-force
+    description: "A Porter competitive force shaping competitive intensity"
+    base: semantic
+    # competitive-force (Porter Five Forces framework, HBR 1979/2008)
+    traits:
+      - scored
+      - measured
+      - categorized
+      - reviewed
+      - seasonal
+    schema:
+      required:
+        - force_type
+        - industry_scope
+      properties:
+        force_type:
+          type: string
+          enum:
+            - new-entrants
+            - buyer-power
+            - supplier-power
+            - substitutes
+            - competitive-rivalry
+        intensity:
+          type: string
+          enum:
+            - high
+            - medium
+            - low
+            - indeterminate
+        industry_scope:
+          type: string
+        key_drivers:
+          type: string
+        trend_direction:
+          type: string
+          enum:
+            - increasing
+            - stable
+            - decreasing
+
+  # ----- Offerings, demand & value ----------------------------------------
+  - name: service-offering
+    description: "A service offering provided into a market (EXTENDS schema:Service)"
+    base: semantic
+    # Service (schema.org/Service — Thing > Intangible > Service)
+    traits:
+      - categorized
+      - measured
+      - scored
+      - located
+      - auditable
+      - reviewed
+      - tagged
+      - seasonal
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        provider:
+          type: string
+        audience:
+          type: string
+        brand:
+          type: string
+        area_served: # aliases schema:areaServed
+          type: string
+        service_type: # aliases schema:serviceType
+          type: string
+        offers:
+          type: array
+          items:
+            type: string
+
+  - name: market-demand
+    description: "Market demand for an offered item (REUSES schema:Demand)"
+    base: semantic
+    # Demand (schema.org/Demand — Thing > Intangible > Demand, inverse of Offer)
+    traits:
+      - measured
+      - bounded
+      - seasonal
+      - categorized
+      - scored
+      - located
+    schema:
+      required:
+        - item_offered
+      properties:
+        item_offered: # aliases schema:itemOffered
+          type: string
+        eligible_region: # aliases schema:eligibleRegion
+          type: string
+        seller:
+          type: string
+        business_function: # aliases schema:businessFunction
+          type: string
+        valid_from: # aliases schema:validFrom
+          type: string
+          format: date
+        valid_through: # aliases schema:validThrough
+          type: string
+          format: date
+
+  - name: value-proposition
+    description: "A value proposition mapping offerings to customer jobs, pains and gains"
+    base: semantic
+    # value-proposition (Osterwalder Value Proposition Canvas methodology)
+    traits:
+      - scored
+      - reviewed
+      - tagged
+      - categorized
+      - measured
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        audience:
+          type: string
+        service_type: # aliases schema:serviceType
+          type: string
+        slogan:
+          type: string
+
+  # ----- Intelligence, data sources & instruments -------------------------
+  - name: market-intelligence-report
+    description: "A market-intelligence report or analysis"
+    base: semantic
+    # Report (schema.org/Report / IAO:0000311 publication)
+    traits:
+      - auditable
+      - reviewed
+      - versioned
+      - categorized
+      - tagged
+      - measured
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        date_published: # aliases schema:datePublished
+          type: string
+          format: date
+        publisher:
+          type: string
+        about:
+          type: string
+        mentions:
+          type: array
+          items:
+            type: string
+        is_based_on: # aliases schema:isBasedOn
+          type: array
+          items:
+            type: string
+
+  - name: market-data-source
+    description: "A catalog of market-intelligence data (REUSES schema:DataCatalog)"
+    base: semantic
+    # DataCatalog (schema.org/DataCatalog / W3C DCAT 3 dcat:Catalog)
+    traits:
+      - auditable
+      - reviewed
+      - versioned
+      - categorized
+      - measured
+      - tagged
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        provider:
+          type: string
+        dataset:
+          type: array
+          items:
+            type: string
+        measurement_technique: # aliases schema:measurementTechnique
+          type: string
+        date_modified: # aliases schema:dateModified
+          type: string
+          format: date
+
+  - name: survey-instrument
+    description: "A survey instrument — a research plan specification"
+    base: procedural
+    # plan-specification (IAO plan-specification / OBI protocol)
+    traits:
+      - versioned
+      - auditable
+      - reviewed
+      - scheduled
+      - tagged
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        measurement_technique: # aliases schema:measurementTechnique
+          type: string
+        about:
+          type: string
+        audience:
+          type: string
+
+  # ----- Research episodes ------------------------------------------------
+  - name: win-loss-analysis
+    description: "A win-loss analysis episode — post-decision interviews with won/lost prospects"
+    base: episodic
+    # win-loss artifact (Clozd / Corporate Visions win-loss methodology)
+    traits:
+      - auditable
+      - reviewed
+      - measured
+      - scored
+      - tagged
+      - seasonal
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        about:
+          type: string
+        date_created: # aliases schema:dateCreated
+          type: string
+          format: date
+        mentions:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+
+# ===========================================================================
+# RELATIONSHIPS  (grounded in schema.org / GoodRelations)
+# ===========================================================================
+
+relationships:
+  analyzes-competitor:
+    description: "A win-loss-analysis analyzes a competitor (schema:about)"
+    from:
+      - win-loss-analysis
+    to:
+      - competitor
+    symmetric: false
+  based-on-source:
+    description: "A market-intelligence-report is based on a market-data-source (schema:isBasedOn)"
+    from:
+      - market-intelligence-report
+    to:
+      - market-data-source
+    symmetric: false
+  covers-segment:
+    description: "A market-intelligence-report covers a segment (schema:about)"
+    from:
+      - market-intelligence-report
+    to:
+      - segment
+    symmetric: false
+  item-offered:
+    description: "Market-demand is for an offered service-offering (schema:itemOffered)"
+    from:
+      - market-demand
+    to:
+      - service-offering
+    symmetric: false
+  maintains-brand:
+    description: "A competitor maintains a brand (schema:brand / gr:hasBrand)"
+    from:
+      - competitor
+    to:
+      - brand
+    symmetric: false
+  operates-in:
+    description: "A service-offering operates in a segment (schema:areaServed, extended to segment)"
+    from:
+      - service-offering
+    to:
+      - segment
+    symmetric: false
+  provides-service:
+    description: "A competitor provides a service-offering (inverse of schema:provider)"
+    from:
+      - competitor
+    to:
+      - service-offering
+    symmetric: false
+  targets-audience:
+    description: "A value-proposition targets a buyer-persona (schema:audience)"
+    from:
+      - value-proposition
+    to:
+      - buyer-persona
+    symmetric: false
+  tracks-competitive-force:
+    description: "A competitor tracks a competitive-force (schema:knowsAbout)"
+    from:
+      - competitor
+    to:
+      - competitive-force
+    symmetric: false
+
+# ===========================================================================
+# DISCOVERY PATTERNS
+# ===========================================================================
+
+discovery:
+  enabled: true
+  confidence_threshold: 0.8
+  patterns:
+    - content_pattern: "\\b(segment|vertical|buyer size|price band|market segment)\\b"
+      suggest_entity: segment
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(competitor|incumbent|rival vendor|market player)\\b"
+      suggest_entity: competitor
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(buyer persona|target audience|ICP|jobs[- ]to[- ]be[- ]done)\\b"
+      suggest_entity: buyer-persona
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(TAM|SAM|SOM|total addressable market|market siz(e|ing))\\b"
+      suggest_entity: sizing-estimate
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(five forces|bargaining power|threat of substitutes|new entrants)\\b"
+      suggest_entity: competitive-force
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(market report|landscape analysis|competitive intelligence report)\\b"
+      suggest_entity: market-intelligence-report
+      suggest_namespace: _semantic/reports
+    - content_pattern: "\\b(questionnaire|survey instrument|conjoint|MaxDiff|NPS survey)\\b"
+      suggest_entity: survey-instrument
+      suggest_namespace: _procedural/research
+    - content_pattern: "\\b(respondent|screener|n=\\d+|qualified respondents)\\b"
+      suggest_entity: respondent-segment
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(value proposition|jobs addressed|pains relieved|gains created)\\b"
+      suggest_entity: value-proposition
+      suggest_namespace: _semantic/market
+    - content_pattern: "\\b(win[- ]loss|win rate|deal review|loss reasons)\\b"
+      suggest_entity: win-loss-analysis
+      suggest_namespace: _episodic/research
+    - content_pattern: "\\b(syndicated|panel data|transaction data|data provider)\\b"
+      suggest_entity: market-data-source
+      suggest_namespace: _semantic/market

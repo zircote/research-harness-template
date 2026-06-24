@@ -1,0 +1,11 @@
+{
+  "name": "trend-analysis",
+  "version": "0.1.0",
+  "kind": "ontology",
+  "description": "Strategic foresight and trend-analysis domain ontology — signals, drivers, trends, scenarios, forecasts",
+  "provides": {
+    "ontologies": [
+      "trend-analysis"
+    ]
+  }
+}

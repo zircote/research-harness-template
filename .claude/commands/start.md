@@ -139,8 +139,8 @@ for o in packs/ontologies/*/; do
 done
 ```
 
-Match the topic to the best-fitting ontology (e.g. an education topic →
-`k12-educational-publishing`; a pasture/farm topic → `regenerative-agriculture`;
+Match the topic to the best-fitting ontology (e.g. a biology research topic →
+`biology-research-lab`; a pasture/farm topic → `regenerative-agriculture`;
 software → `software-engineering`). **If the match is ambiguous or none fits, ask
 the user** (AskUserQuestion) — offer the top candidates plus "core only" — rather
 than guessing. Then **incorporate** the chosen ontology: enable its data pack and

@@ -10,7 +10,7 @@
         "edu"
       ],
       "entityType": "title",
-      "ontology": "k12-educational-publishing@0.1.0",
+      "ontology": "edu-fixture@0.1.0",
       "verdict": "survived",
       "flagged": false
     },
