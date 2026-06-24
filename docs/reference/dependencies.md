@@ -33,7 +33,7 @@ you enable.
 
 | Tool | Minimum | Required by | Check |
 | --- | --- | --- | --- |
-| `git` | any supported | Clone, `run-lock.sh`, goal versioning, release tarball | `git --version` |
+| `git` | any supported | Clone the template; `git grep` identity-leak gate in `verify.sh`; `git archive` release tarball (`release.yml`) | `git --version` |
 | `jq` | 1.7+ (1.8.2 verified) | The engine — index, graph, findings, render, falsify (most scripts) | `jq --version` |
 | `yq` (mikefarah) | `v4.53.3` — *repo-pinned in CI* (4.53.3 verified) | YAML frontmatter and ontology YAML in `verify.sh`, `mif-project.sh`, `resolve-ontology.sh`, `validate-concordance.sh` | `yq --version` |
 | `node` | Active LTS — *repo-declared* `lts/*` (26.x verified) | `npm` to install the validation toolchain (`ajv-cli`, `ajv-formats`, `markdownlint-cli2`); `npx` for Mermaid | `node --version` |
