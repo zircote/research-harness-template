@@ -84,6 +84,11 @@
       "description": "[reports/genre] Genre template for a 1-2 page decision-oriented executive summary (BLUF, key findings, recommendation, risks)"
     },
     {
+      "name": "systematic-review",
+      "source": "./packs/reports/systematic-review",
+      "description": "[reports/genre] Genre template for a PRISMA 2020 systematic review (structured abstract, methods, results with PRISMA flow diagram, discussion, registration)"
+    },
+    {
       "name": "trend-analysis",
       "source": "./packs/reports/trend-analysis",
       "description": "[reports/genre] Genre template for a trajectory report (trajectory, signals, scenarios over time)"
