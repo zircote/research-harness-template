@@ -85,11 +85,21 @@ done
 # type to itself + all its `subtype_of` ancestors, so a subtype node satisfies a
 # relationship endpoint written against any of its supertypes (substitutability). A
 # subtype_of parent that resolves to no declared type is caught by gate_m22.
-SUP=$(jq -cn --argjson onto "$ONTO" '
+if ! SUP=$(jq -cn --argjson onto "$ONTO" '
   ( [ $onto[] | .sub[]? | {key:.name, value:.parents} ] | from_entries ) as $P
-  | def supers($t): [$t] + ( ($P[$t] // []) | map(supers(.)) | add // [] ) | unique;
+  # Cycle-safe transitive supertype closure. `$seen` is the current ancestor path; a
+  # node revisited on its own path is a subtype_of cycle (A -> B -> A) — error out so
+  # user-authored data cannot drive unbounded recursion / a jq stack failure. A diamond
+  # (shared ancestor via two paths) is NOT a cycle and is handled correctly.
+  | def supers($t; $seen):
+      if ($seen | index($t)) then error("subtype_of cycle involving \($t)")
+      else [$t] + ( ($P[$t] // []) | map(supers(.; $seen + [$t])) | add // [] ) | unique
+      end;
   ( [ $onto[] | .types[]? ] | unique ) as $alltypes
-  | reduce $alltypes[] as $t ({}; . + {($t): supers($t)})')
+  | reduce $alltypes[] as $t ({}; . + {($t): supers($t; [])})'); then
+  echo "validate-concordance: subtype_of graph contains a cycle — aborting (fail closed)" >&2
+  exit 4
+fi
 # MIF core vocabulary, always valid: the built-in entity types (the entity-reference
 # enum, e.g. Concept/Person/Organization/Technology/File) and the MIF-native STRUCTURAL
 # relationship types — domain-agnostic links treated as structural (no from/to check).

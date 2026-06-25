@@ -193,9 +193,10 @@ entity_types:
 
   # Cross-cutting universals. These recur across the engineering domains (security,
   # data, software) — a control, an artifact and its provenance, a policy. The domain
-  # packs specialize them by CONVENTION (e.g. software-security `security-control`);
-  # true entity-type subsumption is a MIF spec extension (see docs/proposals/), so today
-  # the link is documented, not enforced.
+  # packs specialize them via `subtype_of` (e.g. software-security `security-control`
+  # is `subtype_of: [control]`); subsumption is ENFORCED — validate-concordance.sh
+  # builds the transitive supertype closure so a subtype satisfies a supertype-typed
+  # relationship endpoint, and gate_m22 proves it.
   - name: control
     description: "A control or safeguard governing a component, artifact, or asset (security, data-governance, or compliance control)"
     base: semantic
