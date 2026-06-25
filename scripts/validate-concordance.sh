@@ -24,6 +24,10 @@ done
 # never validate with an empty/unknowable binding set (which could pass a domain graph vacuously).
 [ -f "$CATALOG" ] || { echo "validate-concordance: catalog missing ($CATALOG) — run sync-packs.sh; refusing to validate" >&2; exit 3; }
 [ -f "$CONFIG" ]  || { echo "validate-concordance: config missing ($CONFIG) — topic bindings unknowable; refusing to validate" >&2; exit 3; }
+# The config must be valid JSON with a .topics array. Otherwise the per-topic loop would
+# (with jq errors silenced) read NO topics and validate against core-only — a vacuous
+# pass with unknowable bindings. Fail closed instead.
+jq -e '.topics | type == "array"' "$CONFIG" >/dev/null 2>&1 || { echo "validate-concordance: config ($CONFIG) is not valid JSON with a .topics array — refusing to validate (fail closed)" >&2; exit 3; }
 
 src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$CATALOG" | head -1; }
 core_ids=$(jq -r '.ontologies[]? | select(.core) | .id' "$CATALOG")

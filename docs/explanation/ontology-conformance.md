@@ -16,7 +16,7 @@ referenced ontology existed, that an `entity_type` was one the ontology declared
 that an entity's fields matched. Ontology was conformance-*claimed* but unenforced —
 pure agent trust. `gate_m12` makes it real: the build fails on any unresolvable
 reference, undeclared/ambiguous type, missing required field, dangling
-binding/catalog link, or checksum mismatch.
+binding/catalog link, or broken (missing/invalid) `VENDOR.lock` provenance.
 
 ## Vendored from MIF, not invented
 

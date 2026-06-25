@@ -125,11 +125,20 @@ classify_from_discovery() {
   # inherited supertypes (e.g. engineering-base `design-pattern` under a
   # software-engineering topic). Fails closed via ancestors_of (exit 4).
   expanded="$bound"
-  for bspec in $bound; do anc=$(ancestors_of "${bspec%@*}") || exit 4; expanded="$expanded $anc"; done
+  for bspec in $bound; do
+    bid="${bspec%@*}"
+    # A bound id MUST be cataloged — fail closed on a binding/config mistake, consistent
+    # with the typed path (an untyped finding must not pass silently on a misconfigured bind).
+    if [ -z "$(src_of "$bid")" ]; then
+      echo "resolve-ontology: topic '$TOPIC' binds '$bid' which is not cataloged — fail (run sync-packs.sh)" >&2; exit 4
+    fi
+    anc=$(ancestors_of "$bid") || exit 4
+    expanded="$expanded $anc"
+  done
   bound=$(printf '%s\n' $expanded | sed '/^$/d' | sort -u)
   for bspec in $bound; do
     bid="${bspec%@*}"
-    src="$(src_of "$bid")"; [ -z "$src" ] && continue   # not cataloged -> typed path fails it; discovery skips
+    src="$(src_of "$bid")"; [ -z "$src" ] && continue   # cataloged-checked above; safety net
     case "$bspec" in                                     # a version-pinned binding must match the catalog
       *@*) bver="${bspec#*@}"; cver=$(jq -r --arg id "$bid" '.ontologies[]? | select(.id==$id) | .version' "$CATALOG" | head -1)
            [ "$bver" = "$cver" ] || continue ;;
@@ -162,7 +171,7 @@ classify_from_discovery() {
 #    pattern classification before recording it untyped.
 has_entity=false; jq -e 'has("entity") and (.entity != null)' "$FINDING" >/dev/null 2>&1 && has_entity=true
 if [ -z "$et" ] && [ -z "$oid" ] && [ "$has_entity" != true ]; then
-  dhit=$(classify_from_discovery)
+  dhit=$(classify_from_discovery) || exit 4   # propagate fail-closed (uncataloged bind / yq error) out of the subshell
   if [ -n "$dhit" ]; then
     det=$(printf '%s' "$dhit" | cut -f1); dont=$(printf '%s' "$dhit" | cut -f2); dver=$(printf '%s' "$dhit" | cut -f3)
     record "$det" "$dont@$dver" "discovery" true
