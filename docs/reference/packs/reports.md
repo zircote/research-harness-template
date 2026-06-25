@@ -198,6 +198,58 @@ scripts/pack-toggle.sh exec-summary on
 
 ---
 
+## humanities-chicago
+
+**Version:** 0.2.0 | **Kind:** genre
+
+### Purpose
+
+Produces an argumentative humanities essay from the surviving findings corpus in Chicago
+Notes-Bibliography style: an Introduction stating a thesis, thematic argument sections
+(claim, evidence, interpretation), a Conclusion, numbered footnotes, and a full
+Bibliography. There is no Method or Results section.
+
+### When to use
+
+Use `humanities-chicago` when the deliverable is a humanities argument — a literary,
+historical, or critical essay — rather than an empirical IMRaD paper. The absence of
+Method/Results and the footnote-and-Bibliography citation form are what distinguish it from
+the `academic` genre, which targets STEM/social-science empirical writing.
+
+### What it provides
+
+- Argumentative structure (thesis introduction, thematic sections, conclusion)
+- Chicago Notes-Bibliography citations: numbered footnotes plus a full Bibliography
+- Each footnote shows the human-readable source citation (URL); it resolves internally to a
+  MIF finding `@id` for traceability, which is never printed in the output
+- Verdict-aware handling (weakened annotated, falsified excluded)
+
+### Dependencies
+
+None beyond the core engine.
+
+### Benefits
+
+- The claim/evidence/interpretation argument sections suit humanities reasoning, which
+  argues rather than reports
+- Footnote-and-Bibliography form matches how humanities scholars document sources
+- The genre carries the weakened-verdict caveat so citation conventions are not
+  over-attributed
+
+### Edition currency
+
+Chicago Manual of Style editions evolve (the 18th Edition supersedes the 17th). The genre
+instructs the author to verify the current edition live rather than baking an edition
+number into output.
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh humanities-chicago on
+```
+
+---
+
 ## trend-analysis
 
 **Version:** 0.2.0 | **Kind:** genre
