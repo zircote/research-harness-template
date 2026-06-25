@@ -89,6 +89,11 @@
       "description": "[reports/genre] Genre template for a trajectory report (trajectory, signals, scenarios over time)"
     },
     {
+      "name": "market-research-report",
+      "source": "./packs/reports/market-research-report",
+      "description": "[reports/genre] Genre template for a full ESOMAR/ISO 20252-style market research report (background, methodology, findings, conclusions/recommendations, technical appendix); the ESOMAR/ICC structure is conventional practice, not a codified format standard"
+    },
+    {
       "name": "trend-modeling",
       "source": "./packs/trend-modeling/trend-modeling",
       "description": "[trend-modeling/methodology] Use when the user asks to \"model trends with limited data\", \"three-valued logic analysis\", \"scenario generation\", \"transitional graphs\", \"qualitative trend analysis\", \"uncertain data analysis\", \"minimal-information modeling\", or needs trend"
