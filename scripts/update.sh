@@ -55,7 +55,15 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-for t in git gh copier gzip yq; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: '$t' is required" >&2; exit 2; }; done
+# A caller MUST NOT override the verified ref through passthrough args — that would defeat
+# the verify-then-pin guarantee and could apply unverified content.
+for a in ${COPIER_ARGS[@]+"${COPIER_ARGS[@]}"}; do
+  case "$a" in
+    -r|--vcs-ref|--vcs-ref=*) echo "update.sh: --vcs-ref/-r cannot be passed through — it pins the verified commit" >&2; exit 2 ;;
+  esac
+done
+
+for t in git gh copier gzip yq awk; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: '$t' is required" >&2; exit 2; }; done
 [ -f "$ANSWERS" ] || { echo "update.sh: $ANSWERS not found — run from a clone instantiated by copier" >&2; exit 2; }
 
 # A copier update requires a clean work tree (it computes and re-applies a diff).
@@ -129,8 +137,11 @@ echo "update.sh: provenance verified — applying update pinned to ${SHA}"
 # whose recorded origin lags an org move (e.g. the zircote -> modeled-information-format
 # transfer) is healed. Surgical single-line rewrite preserves the rest of the file.
 if [ "$src_path" != "$PINNED_SRC" ]; then
-  perl -i -pe "s{^_src_path:.*}{_src_path: ${PINNED_SRC}}" "$ANSWERS" \
-    || { echo "update.sh: failed to normalize _src_path in $ANSWERS" >&2; exit 2; }
+  # Surgical single-line rewrite via awk (already required) — preserves the file's header
+  # comment and other answers; avoids a perl dependency and yq's reformatting.
+  awk -v s="_src_path: ${PINNED_SRC}" '/^_src_path:/{print s; next} {print}' "$ANSWERS" > "$ANSWERS.tmp" \
+    && mv "$ANSWERS.tmp" "$ANSWERS" \
+    || { echo "update.sh: failed to normalize _src_path in $ANSWERS" >&2; rm -f "$ANSWERS.tmp"; exit 2; }
   echo "update.sh: pinned _src_path -> ${PINNED_SRC} (was '${src_path:-<none>}')"
 fi
 

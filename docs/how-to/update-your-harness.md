@@ -37,12 +37,14 @@ It will:
 
 1. Resolve the latest release tag of the **pinned upstream template** and pin it to
    a concrete commit SHA. (The trust root — repository + release-workflow identity —
-   is baked into `update.sh`, not taken from `.copier-answers.yml`; `_src_path` is
-   read only to warn if your clone's recorded origin differs from it.)
+   is baked into `update.sh`, not taken from `.copier-answers.yml`.)
 2. Reproduce the release artifact from that tree and verify its SLSA
    build-provenance attestation, pinned to the repository **and** the release
    workflow identity (`gh attestation verify … --signer-workflow …`).
-3. On success only, run `copier update --vcs-ref <verified-sha>` — so Copier
+3. On success only: normalize `_src_path` in `.copier-answers.yml` to the pinned
+   upstream (so Copier applies from exactly the verified repo, and a clone whose
+   recorded origin lags an org move is healed — this **rewrites** that line of the
+   answers file), then run `copier update --vcs-ref <verified-sha>` — so Copier
    applies exactly the bytes that were verified.
 
 To update to a specific tag, or to pass extra Copier flags:
