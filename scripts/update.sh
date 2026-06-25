@@ -88,10 +88,13 @@ esac
 if [ -z "$TARGET_TAG" ]; then
   # Latest tag by version. `sort -V` is GNU-only (absent on macOS/BSD), so fall back to a
   # zero-padded decorate-sort-undecorate on v<major>.<minor>.<patch> tags.
-  TARGET_TAG=$(git ls-remote --tags --refs "$REMOTE" 2>/dev/null | sed -n 's#.*refs/tags/##p' \
+  # Let git's stderr surface (no 2>/dev/null) so a network/auth/TLS failure is
+  # diagnosable instead of a silent abort; a clean run with no tags is handled below.
+  TARGET_TAG=$(git ls-remote --tags --refs "$REMOTE" | sed -n 's#.*refs/tags/##p' \
     | { if printf '%s\n' 1.0.0 1.0.10 | sort -V >/dev/null 2>&1; then sort -V
         else awk '{v=$0; sub(/^v/,"",v); split(v,a,"."); printf "%010d.%010d.%010d\t%s\n", a[1]+0,a[2]+0,a[3]+0,$0}' | sort | cut -f2
-        fi; } | tail -1)
+        fi; } | tail -1) \
+    || { echo "update.sh: could not list tags at $REMOTE (network/auth/TLS?)" >&2; exit 1; }
   [ -n "$TARGET_TAG" ] || { echo "update.sh: no tags found at $REMOTE" >&2; exit 1; }
 fi
 # Peel annotated tags to the underlying commit (^{}); fall back to the ref itself for a
