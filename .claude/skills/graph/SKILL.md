@@ -34,10 +34,21 @@ finding is added or changed.
 
 ## Visualization
 
-Render a standalone, dependency-free HTML view:
+Render a standalone, dependency-free HTML view. The HTML is an **ephemeral**
+artifact: with no output path it renders to a `mktemp` file **outside** the
+project tree and prints the path (`build-graph-viz: wrote <path>`) — report that
+path to the user. Never write it into `reports/`, which dirties the tree and
+blocks `copier update`.
 
 ```bash
-bash scripts/build-graph-viz.sh <knowledge-graph.json>   # -> knowledge-graph.html
+bash scripts/build-graph-viz.sh <knowledge-graph.json>   # -> /tmp/mif-graph-XXXXXX.html (reported)
+```
+
+Only when the user **explicitly asks to persist** the viz, pass an in-repo
+output path as the second argument:
+
+```bash
+bash scripts/build-graph-viz.sh <knowledge-graph.json> reports/<topic>/knowledge-graph.html
 ```
 
 ## Querying

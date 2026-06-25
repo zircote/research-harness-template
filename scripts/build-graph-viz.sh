@@ -5,10 +5,15 @@
 # adjacency rendering with no external network dependency.
 #
 # Usage: build-graph-viz.sh <knowledge-graph.json> [<out.html>]
+#
+# The HTML view is an ephemeral, non-committed artifact. With no <out.html>, it
+# defaults to a mktemp path OUTSIDE the project tree (never next to its input in
+# reports/) so it can't dirty the working tree or block `copier update`. Callers
+# that want an in-repo path (the sample fixture, the verify gate) pass $2.
 
 set -uo pipefail
 G="${1:?usage: build-graph-viz.sh <knowledge-graph.json> [out.html]}"
-OUT="${2:-${G%.json}.html}"
+OUT="${2:-$(mktemp -t mif-graph-XXXXXX).html}"
 [ -f "$G" ] || { echo "build-graph-viz: not found: $G" >&2; exit 2; }
 
 DATA=$(cat "$G")
