@@ -1,8 +1,8 @@
 {
   "name": "trend-analysis",
-  "version": "0.1.2",
+  "version": "0.3.0",
   "kind": "genre",
-  "description": "Genre template for a trajectory report (trajectory, signals, scenarios over time)",
+  "description": "Genre template for a trajectory report (trajectory, signals, scenarios over time), with an optional STEEP/PESTLE environmental scan and a methodology appendix. Anchored to a foresight convention, not a codified standard.",
   "license": "MIT",
   "author": {
     "name": "zircote"
