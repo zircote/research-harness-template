@@ -285,13 +285,18 @@ gate_m4() {
     scripts/assert-graph-mif.sh "$KG" 2>&1 | sed 's/^/      /' >&2
   fi
 
-  # 4c. The graph viz renders.
-  if scripts/build-graph-viz.sh "$KG" "${KG%.json}.html" >/dev/null 2>&1 \
-     && [ -s "${KG%.json}.html" ]; then
+  # 4c. The graph viz renders. Render the probe HTML into a temp dir outside the
+  #     tree (the gate only asserts the renderer produces non-empty output) so it
+  #     never dirties the working tree or clobbers the committed sample fixture.
+  local vdir; vdir="$(mktemp -d)" || vdir=""
+  if [ -n "$vdir" ] \
+     && scripts/build-graph-viz.sh "$KG" "$vdir/kg.html" >/dev/null 2>&1 \
+     && [ -s "$vdir/kg.html" ]; then
     ok "graph visualization renders to HTML"
   else
     bad "graph visualization failed"
   fi
+  [ -n "$vdir" ] && rm -rf "$vdir"
 
   # 4d. The five services exist as flat skills with descriptions (#21-25).
   local s smiss=""

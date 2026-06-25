@@ -10,6 +10,15 @@ but several are run directly by adopters — for example `pack-toggle.sh` to
 enable a pack and `verify.sh` as the conformance gate. `jq` is a near-universal
 dependency; see [dependencies](dependencies.md) for installation.
 
+**Artifact placement.** Scripts must write non-committed (ephemeral or derived)
+artifacts to a `mktemp` path **outside** the project tree — never next to their
+input inside the repo, where they dirty the working tree and block `copier
+update`. Only **tracked data artifacts** — findings, the knowledge graph
+(`knowledge-graph.json`), the concordance (`concordance.json`), and maps —
+belong in `reports/`. The HTML graph viz is ephemeral: `build-graph-viz.sh`
+defaults to `mktemp` and only writes into `reports/` when an explicit output
+path is passed.
+
 ---
 
 ## Graph and index
