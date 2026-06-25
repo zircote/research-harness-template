@@ -6,8 +6,11 @@ diataxis_type: how-to
 
 `scripts/update.sh` is the **only supported way** to pull later template
 improvements into an already-instantiated clone. It verifies the provenance of
-the target release **before** any template content is fetched and applied, and is
+the target release **before any template content is applied to your clone**, and is
 **fail-closed**: a verification miss aborts the update and nothing is applied.
+(The target tag is fetched into a throwaway temp repo to reproduce and verify the
+release artifact; your clone is never touched — `copier update` is not invoked —
+unless verification passes.)
 
 Do **not** run `copier update` directly — that bypasses the provenance gate and
 executes template `_tasks`/`_migrations` under `--trust` against an unverified
