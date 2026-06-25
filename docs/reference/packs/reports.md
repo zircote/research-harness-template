@@ -198,6 +198,57 @@ scripts/pack-toggle.sh exec-summary on
 
 ---
 
+## regulatory-disclosure
+
+**Version:** 0.2.0 | **Kind:** genre
+
+### Purpose
+
+Produces an SEC-style annual disclosure report from the surviving findings corpus,
+following Regulation S-K / Form 10-K item order: Business, Risk Factors, Properties &
+Legal Proceedings, Selected Financial Data, MD&A, Financial Statements & Supplementary
+Data, and Controls & Procedures. The Selected Financial Data heading is always emitted, but
+its content is conditional: Reg S-K item requirements evolve, so when the currently effective
+rules no longer call for it the section is marked N/A and its highlights fold into MD&A.
+It reproduces the disclosure *structure* only.
+
+### When to use
+
+Use `regulatory-disclosure` when the deliverable must present information in the order and
+categories an investor or analyst expects from a public-company annual report. It does not
+assert 10-K compliance, legal or financial sufficiency, or audit assurance — the
+underlying disclosure-landscape evidence is weakened, so the genre reproduces structure,
+not conformance.
+
+### What it provides
+
+- Seven-section structure in Reg S-K item order, with MD&A as the analytical core and
+  Risk Factors surfaced early (all seven headings always emitted; Selected Financial Data
+  marked N/A and folded into MD&A when not currently required)
+- Disclosure references to source filings, each resolving to a MIF finding `@id` + URL
+- Forward-looking-statement flagging and verdict-aware handling (weakened annotated,
+  falsified excluded)
+
+### Dependencies
+
+None beyond the core engine.
+
+### Benefits
+
+- Reg S-K item ordering puts material risk and management analysis where readers of annual
+  reports expect them
+- The explicit scope caveat prevents over-claiming conformance the evidence does not support
+- Inline XBRL tagging is deliberately out of scope — it is an orthogonal serialization that
+  ships as a separate `xbrl` channel pack, keeping this genre focused on narrative structure
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh regulatory-disclosure on
+```
+
+---
+
 ## trend-analysis
 
 **Version:** 0.2.0 | **Kind:** genre
