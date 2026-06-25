@@ -160,6 +160,13 @@
             "type": "string"
           }
         },
+        "subtype_of": {
+          "type": "array",
+          "description": "Names of parent entity types this type specializes (subsumption). A subtype is substitutable for any of its supertypes at a relationship endpoint; its schema must remain compatible with the parent's. Parents may be declared in this ontology or any ancestor reached via extends.",
+          "items": {
+            "type": "string"
+          }
+        },
         "schema": {
           "type": "object",
           "description": "JSON Schema for entity fields",

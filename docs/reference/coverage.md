@@ -67,8 +67,8 @@ Ontology data packs (10, under `packs/ontologies/`):
 | regenerative-agriculture-research | [packs/ontologies.md](packs/ontologies.md#regenerative-agriculture-research) |
 | regulatory-legal | [packs/ontologies.md](packs/ontologies.md#regulatory-legal) |
 | scientific | [packs/ontologies.md](packs/ontologies.md#scientific) |
-| security | [packs/ontologies.md](packs/ontologies.md#security) |
 | software-engineering | [packs/ontologies.md](packs/ontologies.md#software-engineering) |
+| software-security | [packs/ontologies.md](packs/ontologies.md#software-security) |
 | trend-analysis | [packs/ontologies.md](packs/ontologies.md#trend-analysis) |
 
 ## Core skills (10)

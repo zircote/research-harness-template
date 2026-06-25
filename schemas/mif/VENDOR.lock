@@ -1,19 +1,19 @@
 {
   "source": "github.com/zircote/MIF",
   "commit": "031ad2a",
-  "note": "Vendored MIF ontology CONTRACT (ontology.schema.json + context) is verbatim/checksum-gated (the trust root). Ontology DEFINITION files are vendored-as-seed but UNLOCKED (verbatim:false) so they can be created, expanded, and enriched via the ontology-manager skill; gate_m12 re-validates every edited ontology against the contract.",
+  "note": "MIF ontology contract + definitions are vendored-as-seed and FULLY UNLOCKED (verbatim:false, nothing checksum-gated): the contract is first-class and evolves in-repo (e.g. subtype_of) on its way back to MIF. gate_m12 re-validates every ontology against the contract; checksums here are provenance seeds, not a lock.",
   "files": [
     {
       "path": "schemas/mif/ontology.schema.json",
       "upstream": "schema/ontology/ontology.schema.json",
-      "sha256": "e16ea5aaaa3188ab41bdf8a05da25b4cb351d7f6d48e3493e6dce38349200587",
-      "verbatim": true
+      "sha256": "aac68c2572fe7583a0572172b285d1c215b3f4fbe0435f50b36bf908cff76c07",
+      "verbatim": false
     },
     {
       "path": "schemas/mif/ontology.context.jsonld",
       "upstream": "schema/ontology/ontology.context.jsonld",
       "sha256": "50c12542044aa540ddfb236c405e46642c2e469543b2d5def9865b01468e6445",
-      "verbatim": true
+      "verbatim": false
     },
     {
       "path": "schemas/ontologies/mif-base/0.1.0.yaml",

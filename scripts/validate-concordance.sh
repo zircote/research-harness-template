@@ -28,11 +28,48 @@ done
 src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$CATALOG" | head -1; }
 core_ids=$(jq -r '.ontologies[]? | select(.core) | .id' "$CATALOG")
 
+# Transitive CATALOGED ancestors of an ontology id via .ontology.extends (the layered
+# spine). Mirrors resolve-ontology.sh so both agree on the bound set. Fail CLOSED: a yq
+# error or an `extends` target that is named but NOT cataloged aborts (exit 4).
+ancestors_of() {
+  local start="$1" worklist="$1" seen=" " cur csrc parents p out=""
+  while [ -n "$worklist" ]; do
+    cur="${worklist%% *}"; worklist="${worklist#"$cur"}"; worklist="${worklist# }"
+    case "$seen" in *" $cur "*) continue ;; esac
+    seen="$seen$cur "
+    csrc="$(src_of "$cur")"; [ -z "$csrc" ] && continue
+    if ! parents=$(yq -r '.ontology.extends[]?' "$ROOT/$csrc" 2>/dev/null); then
+      echo "validate-concordance: yq failed reading extends of '$cur' ($csrc) — aborting (fail closed)" >&2; exit 4
+    fi
+    for p in $parents; do
+      [ -z "$p" ] && continue
+      if [ -z "$(src_of "$p")" ]; then
+        echo "validate-concordance: ontology '$cur' extends '$p' which is not cataloged — fail (run sync-packs.sh)" >&2; exit 4
+      fi
+      case "$seen" in *" $p "*) ;; *) worklist="$worklist $p"; out="$out $p" ;; esac
+    done
+  done
+  printf '%s' "$out"
+}
+
 # Gather every relevant ontology's declared types + relationships into one JSON doc,
 # and a topic -> allowed-ontology-ids map. Reading the YAML with yq (not in jq).
-all_ids=$(
-  { printf '%s\n' $core_ids
-    jq -r '.topics[]?.ontologies[]?' "$CONFIG" 2>/dev/null | sed 's/@.*//'; } | sed '/^$/d' | sort -u)
+# Per-topic allowed ontology id set = core ∪ the topic's bound ids ∪ each bound id's
+# transitive cataloged ancestors (the layered spine: a topic binding software-engineering
+# also resolves engineering-base's declared types). Ancestor expansion fails closed.
+ALLOWED='{}'; all_acc="$core_ids"
+for tp in $(jq -r '.topics[].id' "$CONFIG" 2>/dev/null); do
+  tids="$core_ids"
+  for b in $(jq -r --arg t "$tp" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG" 2>/dev/null | sed 's/@.*//' | sed '/^$/d'); do
+    anc=$(ancestors_of "$b") || exit 4
+    tids="$tids $b $anc"
+  done
+  all_acc="$all_acc $tids"
+  ids=$(printf '%s\n' $tids | sed '/^$/d' | sort -u | jq -R . | jq -cs .)
+  ALLOWED=$(jq -c --arg t "$tp" --argjson ids "$ids" '. + {($t):$ids}' <<<"$ALLOWED")
+done
+all_ids=$(printf '%s\n' $all_acc | sed '/^$/d' | sort -u)
+# Load every relevant ontology's declared types + relationships into one doc.
 ONTO='{}'
 for oid in $all_ids; do
   src="$(src_of "$oid")"; [ -z "$src" ] && continue
@@ -40,16 +77,19 @@ for oid in $all_ids; do
   if ! ofull=$(yq -o=json '.' "$ROOT/$src" 2>/dev/null); then
     echo "validate-concordance: yq failed reading ontology '$oid' ($src) — aborting (fail closed)" >&2; exit 4
   fi
-  od=$(jq -c '{types:[.entity_types[]?.name], rels:(.relationships // {})}' <<<"$ofull")
+  od=$(jq -c '{types:[.entity_types[]?.name], rels:(.relationships // {}),
+              sub:[.entity_types[]? | select(.subtype_of) | {name:.name, parents:.subtype_of}]}' <<<"$ofull")
   ONTO=$(jq -c --arg id "$oid" --argjson d "$od" '. + {($id):$d}' <<<"$ONTO")
 done
-ALLOWED='{}'
-for tp in $(jq -r '.topics[].id' "$CONFIG" 2>/dev/null); do
-  ids=$( { printf '%s\n' $core_ids
-           jq -r --arg t "$tp" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG" 2>/dev/null | sed 's/@.*//'; } \
-         | sed '/^$/d' | sort -u | jq -R . | jq -cs .)
-  ALLOWED=$(jq -c --arg t "$tp" --argjson ids "$ids" '. + {($t):$ids}' <<<"$ALLOWED")
-done
+# Transitive supertype closure (SPEC §8d entity-type subsumption): map each declared
+# type to itself + all its `subtype_of` ancestors, so a subtype node satisfies a
+# relationship endpoint written against any of its supertypes (substitutability). A
+# subtype_of parent that resolves to no declared type is caught by gate_m22.
+SUP=$(jq -cn --argjson onto "$ONTO" '
+  ( [ $onto[] | .sub[]? | {key:.name, value:.parents} ] | from_entries ) as $P
+  | def supers($t): [$t] + ( ($P[$t] // []) | map(supers(.)) | add // [] ) | unique;
+  ( [ $onto[] | .types[]? ] | unique ) as $alltypes
+  | reduce $alltypes[] as $t ({}; . + {($t): supers($t)})')
 # MIF core vocabulary, always valid: the built-in entity types (the entity-reference
 # enum, e.g. Concept/Person/Organization/Technology/File) and the MIF-native STRUCTURAL
 # relationship types — domain-agnostic links treated as structural (no from/to check).
@@ -68,10 +108,13 @@ STRUCTURAL=$(jq -cn --argjson base "$STRUCTURAL_CORE" --argjson onto "$ONTO" --a
 
 # All conformance logic in one jq (deterministic, portable).
 if ! viol=$(jq -rn --slurpfile W "$GRAPH" --argjson onto "$ONTO" --argjson allowed "$ALLOWED" \
-              --argjson builtin "$BUILTIN" --argjson structural "$STRUCTURAL" '
+              --argjson builtin "$BUILTIN" --argjson structural "$STRUCTURAL" --argjson sup "$SUP" '
   $W[0] as $G
   | ($G.nodes | map({key:.id, value:.}) | from_entries) as $byid
-  | def allowed_ids($topics): [ ($topics // [])[] | $allowed[.] // [] ] | add // [] | unique;
+  # A node type satisfies a relationship domain if the type, OR any of its transitive
+  # supertypes (subtype_of), is in the domain list (Liskov substitutability).
+  | def hits($et; $domain): ( $sup[$et] // [$et] ) as $u | any($u[]; . as $x | ($domain // []) | index($x));
+    def allowed_ids($topics): [ ($topics // [])[] | $allowed[.] // [] ] | add // [] | unique;
     ( [ $G.nodes[]
         | select(.entityType != null and (.external != true))
         | .entityType as $et
@@ -86,7 +129,7 @@ if ! viol=$(jq -rn --slurpfile W "$GRAPH" --argjson onto "$ONTO" --argjson allow
             ( [ allowed_ids($s.topics // [])[] | ($onto[.].rels[$e.type] // empty) ] ) as $rels
             | if ($rels | length) == 0
               then "edge \($e.source) ->\($e.type)-> \($e.target) (topic: \(($s.topics // []) | join(","))): relationship type not MIF-core nor declared by a bound ontology — fix: /ontology-review --topic \(($s.topics // [])[0] // "<id>") --enrich"
-              elif any($rels[]; ((.from // []) | index($s.entityType)) and ((.to // []) | index($t.entityType)))
+              elif any($rels[]; hits($s.entityType; .from) and hits($t.entityType; .to))
               then empty
               else "edge \($e.source) ->\($e.type)-> \($e.target): from/to domain violation (\($s.entityType // "null") -> \($t.entityType // "null"))"
               end

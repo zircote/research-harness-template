@@ -5,20 +5,27 @@
 # data products, governance, data quality, storage architecture, pipelines, and
 # the platforms/tools the field runs on.
 #
-# Compatible with: mif-base v0.1.0 (cognitive triad hierarchy)
+# Shared engineering supertypes (technology, design-pattern, architectural-decision,
+# delivery-metric, engineering-practice, process-discipline) are inherited from the
+# engineering-base layer this pack EXTENDS / the generic core — no longer copied here.
 #
-# Version: 0.1.0
-# Last Updated: 2026-06-20
+# Version: 0.2.0
+# Last Updated: 2026-06-24
+#
+# 0.2.0 (ontology-spine-relayering): re-parented onto engineering-base; shed the copied
+# shared supertypes (now inherited), the generic `technology` (mif-generic),
+# `compliance-regulation` (-> regulatory-legal), the security types (-> software-security),
+# and the deprecated `adoption-trend` (-> trend-analysis `trend`). Only data-specific
+# types remain. Clean break — no back-compat aliases (pre-stable).
 
 ontology:
   id: data-engineering
-  version: "0.1.0"
+  version: "0.2.0"
   description: "Data engineering domain ontology"
   extends:
-    - mif-base
+    - engineering-base
 
 # Custom Namespaces
-# These extend the base cognitive triad hierarchy.
 namespaces:
   semantic:
     children:
@@ -37,8 +44,7 @@ namespaces:
         description: "Pipeline and data-movement patterns"
         type_hint: procedural
 
-# Entity Types
-# Structured entities with JSON Schema validation.
+# Entity Types — data-specific (shared engineering supertypes inherited from engineering-base).
 entity_types:
   - name: data-contract
     description: "A data contract: an enforceable agreement on schema, semantics, and SLAs between data producers and consumers"
@@ -185,212 +191,6 @@ entity_types:
         use_case:
           type: string
           description: "Primary role in the data stack"
-  # Reused research types (same shapes as software-engineering)
-  - name: technology
-    description: "A technology, framework, or tool"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - name
-        - category
-      properties:
-        name:
-          type: string
-        category:
-          type: string
-          enum:
-            - database
-            - framework
-            - language
-            - infrastructure
-            - tool
-            - library
-        use_case:
-          type: string
-          description: "Why/where this technology is used"
-  - name: design-pattern
-    description: "A design pattern or architectural pattern"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - pattern_name
-        - context
-        - solution
-      properties:
-        pattern_name:
-          type: string
-        context:
-          type: string
-          description: "When to use this pattern"
-        solution:
-          type: string
-          description: "How the pattern solves the problem"
-  - name: architectural-decision
-    description: "An architectural decision with full context"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - decision
-        - rationale
-      properties:
-        decision:
-          type: string
-          description: "The decision made"
-        rationale:
-          type: string
-          description: "Why this decision was made"
-        alternatives:
-          type: array
-          description: "Alternatives considered"
-          items:
-            type: object
-  - name: adoption-trend
-    description: "A momentum, maturation, or standardization signal in the direction of travel"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - trend_name
-        - direction
-      properties:
-        trend_name:
-          type: string
-        direction:
-          type: string
-          description: "Where the trend is heading"
-        evidence:
-          type: string
-          description: "Signals supporting the trend"
-        maturity:
-          type: string
-          description: "How established the trend is (emerging, mainstream)"
-  - name: delivery-metric
-    description: "A data-delivery, market, or reliability metric (e.g. revenue, TAM, MTTR, SLO, throughput)"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - metric_name
-      properties:
-        metric_name:
-          type: string
-        definition:
-          type: string
-          description: "What the metric measures"
-        benchmark:
-          type: string
-          description: "Target or reported value"
-        source:
-          type: string
-          description: "Originating framework or study"
-  - name: compliance-regulation
-    description: "A law, regulation, or government mandate bearing on data governance"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - regulation_name
-        - jurisdiction
-      properties:
-        regulation_name:
-          type: string
-        jurisdiction:
-          type: string
-          description: "Governing jurisdiction (e.g. EU, US federal, California)"
-        key_obligations:
-          type: string
-          description: "Core obligations the regulation imposes"
-        effective_dates:
-          type: string
-          description: "Relevant entry-into-force or compliance deadlines"
-  - name: security-framework
-    description: "A security, assurance, or control framework, taxonomy, or standard (e.g. COSO, NIST CSF, RBAC/ABAC models)"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - framework_name
-        - scope
-      properties:
-        framework_name:
-          type: string
-        scope:
-          type: string
-          description: "What the framework governs"
-        maintainer:
-          type: string
-          description: "Organization that maintains the framework"
-  - name: security-threat
-    description: "A security threat, attack class, or vulnerability affecting data systems"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - threat_name
-        - attack_vector
-      properties:
-        threat_name:
-          type: string
-        attack_vector:
-          type: string
-          description: "How the threat is exploited"
-        impact:
-          type: string
-          description: "What an attacker gains or breaks"
-        mitigation_summary:
-          type: string
-          description: "Primary defenses against this threat"
-  - name: engineering-practice
-    description: "An organizational, cultural, or operating practice (e.g. data mesh, federated governance, stewardship roles)"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - practice_name
-      properties:
-        practice_name:
-          type: string
-        description:
-          type: string
-          description: "What the practice is"
-        evidence:
-          type: string
-          description: "Empirical support or outcome"
-        origin:
-          type: string
-          description: "Originating model, study, or author"
-  - name: process-discipline
-    description: "A governance or production-readiness discipline (e.g. RACI, change enablement, stewardship cadence, escalation path)"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - discipline_name
-      properties:
-        discipline_name:
-          type: string
-        purpose:
-          type: string
-          description: "What the discipline governs"
-        criteria:
-          type: string
-          description: "Acceptance or gating criteria"
-        stage:
-          type: string
-          description: "Lifecycle stage where it applies"
 
 # Traits (Mixins)
 traits:
@@ -398,18 +198,6 @@ traits:
     description: "Requires citations/sources"
     requires:
       - citations
-  versioned:
-    description: "Adds version tracking fields"
-    fields:
-      version:
-        type: string
-        pattern: "^\\d+\\.\\d+\\.\\d+.*$"
-  documented:
-    description: "Adds documentation reference"
-    fields:
-      documentation_url:
-        type: string
-        format: uri
 
 # Relationships
 relationships:
@@ -439,6 +227,19 @@ relationships:
       - pipeline-pattern
       - design-pattern
       - architectural-decision
+    symmetric: false
+  # Cross-branch: a data product/architecture is governed by an engineering-base
+  # control or policy (the data-governance / security cross-cut the corpus surfaced —
+  # tag-driven ABAC, policy-as-code on data assets). Endpoints in the ancestor layer
+  # resolve via the extends chain.
+  governed_by:
+    description: "A data product or storage architecture is governed by a control or policy"
+    from:
+      - data-product
+      - storage-architecture
+    to:
+      - control
+      - policy
     symmetric: false
 
 # Discovery Configuration

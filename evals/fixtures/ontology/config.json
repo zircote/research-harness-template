@@ -15,7 +15,8 @@
       "id": "eng",
       "namespace": "x/eng",
       "ontologies": [
-        "software-engineering"
+        "software-engineering",
+        "collide-fixture"
       ]
     }
   ]

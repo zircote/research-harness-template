@@ -1,0 +1,9 @@
+{
+  "name": "software-security",
+  "version": "0.2.0",
+  "kind": "ontology",
+  "description": "Software-security domain ontology — the software-facing slice of security: threats, vulnerabilities, controls, threat actors, campaigns, indicators of compromise, malware, supply-chain risk, policies, incidents, frameworks, and assessments, grounded in MITRE ATT&CK/CAPEC, CVE/CWE/NVD, NIST 800-53/OSCAL/800-161r1, STIX 2.1, OWASP, and VERIS. Extends engineering-base.",
+  "provides": {
+    "ontologies": ["software-security"]
+  }
+}

@@ -20,15 +20,16 @@ binding/catalog link, or checksum mismatch.
 
 ## Vendored from MIF, not invented
 
-The **contract** (`schemas/mif/ontology.schema.json` + context) is vendored verbatim
-from `github.com/zircote/MIF`, pinned by commit + SHA-256 in `schemas/mif/VENDOR.lock`
-and checksum-locked by `gate_m12` — it is the trust root and does not change. The
-base ontologies (`mif-base`, `shared-traits`) and the example ontologies were
-vendored as a **seed but are unlocked** (`VENDOR.lock` records them `verbatim:false`):
-they can be created, expanded, and enriched via the `ontology-manager` skill (see
+The **contract** (`schemas/mif/ontology.schema.json` + context) was seeded from
+`github.com/zircote/MIF`, with provenance (source, commit, seed SHA-256) recorded in
+`schemas/mif/VENDOR.lock`. **Nothing is locked** — the contract is first-class and
+evolves in-repo (e.g. the `subtype_of` entity-type subsumption field) on its way back
+to MIF; `gate_m12` asserts no file is verbatim-locked. The base ontologies (`mif-base`,
+`shared-traits`) and the example ontologies were seeded the same way and are equally
+editable: created, expanded, and enriched via the `ontology-manager` skill (see
 `/ontology-review` Phase 3). `gate_m12` re-validates every ontology — original or
-edited — against the contract on each build, so authoring stays fail-closed without a
-checksum freezing the definitions. The `ontology-manager` skill is copied in and
+edited — against the contract on each build, so authoring stays fail-closed by
+*validation*, not by freezing files. The `ontology-manager` skill is copied in and
 tweaked for the harness: PyPI-stripped (its optional `jsonschema`→`ajv`, `pyyaml`
 dropped for `yq`), repointed at the vendored schema. The only authored ontology is
 `mif-generic` — MIF's built-in entity types (concept/person/organization/technology/
@@ -45,12 +46,23 @@ to whatever `yq` version produced the json.
 ## Per-topic binding, with an always-on core
 
 `mif-generic` + `mif-base` are **always enabled for every topic** (cataloged as core),
-so any finding can be typed generically even with no domain ontology. The six example
+so any finding can be typed generically even with no domain ontology. The example domain
 ontologies are optional **data packs** (`packs/ontologies/<id>/`, `kind: ontology`) —
 not Claude Code plugins, so they never touch `gate_m5`. They are disabled by default;
 `harness.config.json` `ontologies[]` enables them, `sync-packs.sh` catalogs the enabled
 subset, and `topics[].ontologies[]` binds them per topic. An extended ontology applies
 **only** to topics that bind it — domain typing stays scoped to where it belongs.
+
+Binding is **transitive over `extends`**: the resolved set for a topic is the always-on
+core ∪ the topic's bound ontologies ∪ each bound ontology's `extends` ancestors. A
+binding therefore reaches its ancestor LAYERS — e.g. binding `software-engineering`
+(which `extends: engineering-base`) also resolves the shared engineering supertypes
+`engineering-base` declares (`component`, `design-pattern`, …). The intermediate
+`engineering-base` layer is cataloged **present-but-not-core** (`core=false`): it is
+never always-on, so a non-engineering topic never resolves those types. This keeps the
+upstream-submittable generic core domain-neutral while the engineering domains share one
+supertype layer. `resolve-ontology.sh` and `validate-concordance.sh` both walk the chain
+and fail closed if an `extends` target is not cataloged.
 
 ## Classification vs resolution — the deterministic split
 
