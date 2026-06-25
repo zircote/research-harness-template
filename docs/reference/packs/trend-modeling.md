@@ -15,7 +15,7 @@ For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ## trend-modeling
 
-**Version:** 0.1.2 | **Kind:** methodology | **Dimension:** trend
+**Version:** 0.2.0 | **Kind:** methodology | **Dimension:** trend
 
 ### Purpose
 

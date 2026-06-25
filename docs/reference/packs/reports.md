@@ -18,7 +18,7 @@ For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ## academic
 
-**Version:** 0.1.2 | **Kind:** genre
+**Version:** 0.2.0 | **Kind:** genre
 
 ### Purpose
 
@@ -60,7 +60,7 @@ scripts/pack-toggle.sh academic on
 
 ## briefing
 
-**Version:** 0.1.2 | **Kind:** genre
+**Version:** 0.2.0 | **Kind:** genre
 
 ### Purpose
 
@@ -99,7 +99,7 @@ scripts/pack-toggle.sh briefing on
 
 ## engineering
 
-**Version:** 0.1.2 | **Kind:** genre
+**Version:** 0.2.0 | **Kind:** genre
 
 ### Purpose
 
@@ -142,7 +142,7 @@ scripts/pack-toggle.sh engineering on
 
 ## exec-summary
 
-**Version:** 0.1.2 | **Kind:** genre
+**Version:** 0.2.0 | **Kind:** genre
 
 ### Purpose
 
@@ -200,7 +200,7 @@ scripts/pack-toggle.sh exec-summary on
 
 ## trend-analysis
 
-**Version:** 0.1.2 | **Kind:** genre
+**Version:** 0.2.0 | **Kind:** genre
 
 ### Purpose
 

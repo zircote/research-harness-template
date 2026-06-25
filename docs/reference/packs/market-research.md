@@ -15,7 +15,7 @@ For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ## competitive-analysis
 
-**Version:** 0.1.2 | **Kind:** methodology | **Dimension:** competitive
+**Version:** 0.2.0 | **Kind:** methodology | **Dimension:** competitive
 
 ### Purpose
 
@@ -58,7 +58,7 @@ scripts/pack-toggle.sh competitive-analysis on
 
 ## customer-research
 
-**Version:** 0.1.2 | **Kind:** methodology | **Dimension:** customer
+**Version:** 0.2.0 | **Kind:** methodology | **Dimension:** customer
 
 ### Purpose
 
@@ -101,7 +101,7 @@ scripts/pack-toggle.sh customer-research on
 
 ## financial-analysis
 
-**Version:** 0.1.2 | **Kind:** methodology | **Dimension:** financial
+**Version:** 0.2.0 | **Kind:** methodology | **Dimension:** financial
 
 ### Purpose
 
@@ -146,7 +146,7 @@ scripts/pack-toggle.sh financial-analysis on
 
 ## market-sizing
 
-**Version:** 0.1.2 | **Kind:** methodology | **Dimension:** sizing
+**Version:** 0.2.0 | **Kind:** methodology | **Dimension:** sizing
 
 ### Purpose
 
@@ -193,7 +193,7 @@ scripts/pack-toggle.sh market-sizing on
 
 ## regulatory-review
 
-**Version:** 0.1.2 | **Kind:** methodology | **Dimension:** regulatory
+**Version:** 0.2.0 | **Kind:** methodology | **Dimension:** regulatory
 
 ### Purpose
 

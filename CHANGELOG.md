@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-25
+
 ### Added
 
 - Fail-closed provenance gate before `copier update` (issue #94). `scripts/update.sh`
@@ -66,6 +68,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (source/commit + seed checksums). The contract is first-class and evolves in-repo
   on its way back to MIF — conformance stays fail-closed by validation, not by
   freezing files.
+- The graph visualization is now a real interactive force-directed node-link
+  diagram (issue #91). `build-graph-viz.sh` replaces the two `<ul>` lists with a
+  deterministic SVG layout (seeded circle + fixed-iteration Fruchterman-Reingold,
+  no RNG), concept/entity nodes colored and sized by degree, typed edges
+  (`supports`/`contradicts`/`derived-from`/`mentions`) with distinct color, dash,
+  and arrowheads, edge-type labels, hover tooltips, a legend, and draggable nodes
+  — still self-contained vanilla SVG + JS (no CDN, no network). The embedded graph
+  JSON escapes `</` so a label containing `</script>` cannot break out of the tag.
+- Ephemeral viz HTML no longer dirties the working tree (issue #91).
+  `build-graph-viz.sh` defaults its output to a `mktemp` path **outside** the
+  project tree (an explicit second argument still writes in-repo); the `verify.sh`
+  M-graph gate renders its probe into a temp dir and removes it. Only tracked data
+  artifacts (findings, `knowledge-graph.json`, `concordance.json`, maps) belong in
+  `reports/` — documented in `docs/reference/scripts.md`.
 
 ### Removed
 

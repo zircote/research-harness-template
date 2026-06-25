@@ -16,7 +16,7 @@ For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ## book
 
-**Version:** 0.1.2 | **Kind:** channel | **MIF level:** exempt (output only) | **Skill:** `book:book-author`
+**Version:** 0.2.0 | **Kind:** channel | **MIF level:** exempt (output only) | **Skill:** `book:book-author`
 
 ### Purpose
 
@@ -59,7 +59,7 @@ scripts/pack-toggle.sh book on
 
 ## diataxis
 
-**Version:** 0.1.2 | **Kind:** channel | **MIF level:** L1 only (output) | **Skill:** `diataxis:diataxis-docs`
+**Version:** 0.2.0 | **Kind:** channel | **MIF level:** L1 only (output) | **Skill:** `diataxis:diataxis-docs`
 
 ### Purpose
 
@@ -115,7 +115,7 @@ scripts/pack-toggle.sh diataxis on
 
 ## github-discuss
 
-**Version:** 0.1.2 | **Kind:** channel
+**Version:** 0.2.0 | **Kind:** channel
 
 ### Purpose
 
@@ -159,7 +159,7 @@ scripts/pack-toggle.sh github-discuss on
 
 ## github-issues
 
-**Version:** 0.1.2 | **Kind:** channel
+**Version:** 0.2.0 | **Kind:** channel
 
 ### Purpose
 
@@ -209,7 +209,7 @@ scripts/pack-toggle.sh github-issues on
 
 ## notebooklm
 
-**Version:** 0.1.2 | **Kind:** channel
+**Version:** 0.2.0 | **Kind:** channel
 
 ### Purpose
 
@@ -261,7 +261,7 @@ scripts/pack-toggle.sh notebooklm on
 
 ## pdf
 
-**Version:** 0.1.2 | **Kind:** channel | **MIF level:** L1 in PDF metadata
+**Version:** 0.2.0 | **Kind:** channel | **MIF level:** L1 in PDF metadata
 
 ### Purpose
 
