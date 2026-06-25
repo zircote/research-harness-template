@@ -28,6 +28,7 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | regulatory-review | market-research | methodology | Regulatory landscape, risk matrix, and penalty ranges | none |
 | academic | reports | genre | Peer-review-style academic paper | none |
 | briefing | reports | genre | One-page decision brief | none |
+| computing-paper | reports | genre | ACM/IEEE computing paper with IEEE numbered citations | none |
 | engineering | reports | genre | Technical engineering report with comparison tables | @mermaid-js/mermaid-cli (optional) |
 | exec-summary | reports | genre | 1-2 page BLUF executive summary | none |
 | trend-analysis | reports | genre | Trajectory report with scenario diagrams | @mermaid-js/mermaid-cli (optional) |

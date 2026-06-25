@@ -132,6 +132,11 @@
       "source": "bundled"
     },
     {
+      "name": "computing-paper",
+      "enabled": false,
+      "source": "bundled"
+    },
+    {
       "name": "engineering",
       "enabled": true,
       "source": "bundled"
