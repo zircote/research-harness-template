@@ -304,3 +304,50 @@ archival.
 ```sh
 scripts/pack-toggle.sh pdf on
 ```
+
+---
+
+## ectd
+
+**Version:** 0.2.0 | **Kind:** channel | **MIF level:** L1 in backbone metadata (exempt)
+
+### Purpose
+
+Packages a clinical-submission into the FDA eCTD (electronic Common Technical Document)
+submission structure directly from the findings corpus. It lays out the five-module
+eCTD tree under a sequence directory — M1 (regional administrative), M2 (CTD summaries),
+M3 (quality / CMC), M4 (nonclinical study reports), M5 (clinical study reports) — writes
+a source-grounded summary leaf into each module, and emits the eCTD XML backbone that
+indexes every leaf and declares the resolved eCTD version. eCTD is an electronic
+submission packaging/transport format, orthogonal to MIF Level-3 markdown, so the channel
+declares `mif.exempt`; the canonical L3 source of truth stays in the `report` channel.
+Anchor to FDA eCTD v4.0 and verify the current version live.
+
+### When to use
+
+Use `ectd` when the deliverable must be an FDA-style electronic submission package — for
+regulatory hand-offs that expect the M1-M5 module tree and an eCTD backbone rather than a
+single prose document.
+
+### What it provides
+
+- The five-module eCTD tree (m1-m5) under a zero-padded submission sequence
+- One source-grounded module summary leaf per module, cited to primary sources
+- The eCTD XML backbone (`ectd-backbone.xml`) indexing every leaf
+- MIF L1 typed identity in the backbone metadata; resolved eCTD version stamped into the backbone's `ectd-version` attribute
+
+### Dependencies
+
+- `jq`
+
+### Benefits
+
+- Produces the regulatory module/backbone container expected by FDA eCTD tooling
+- Complete M1-M5 tree ensures no module is silently omitted from the submission
+- Backbone metadata embeds research identity and the resolved eCTD version
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh ectd on
+```

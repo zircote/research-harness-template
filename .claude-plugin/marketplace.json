@@ -39,6 +39,11 @@
       "description": "[channels/channel] Produce a styled, print-ready PDF directly from the SOURCES \u2014 a topic's surviving findings and their primary-source citations, composed into a comprehensive document and rendered with pandoc, a title page, and Mermaid diagrams; never built from a rendered report"
     },
     {
+      "name": "ectd",
+      "source": "./packs/channels/ectd",
+      "description": "[channels/channel] Package a clinical-submission artifact into the FDA eCTD module structure (M1-M5 + the XML backbone) directly from the SOURCES \u2014 a topic's surviving findings and their primary-source citations; lays out the eCTD module tree and writes the backbone; verify-live eCTD v4.0; never built from a rendered report"
+    },
+    {
       "name": "competitive-analysis",
       "source": "./packs/market-research/competitive-analysis",
       "description": "[market-research/methodology] Use when the user asks to \"analyze competitors\", \"map competitive landscape\", \"Porter's 5 Forces analysis\", \"competitor comparison\", \"competitive positioning\", \"identify competitors\", \"competitive intelligence\", or needs competitor research"
