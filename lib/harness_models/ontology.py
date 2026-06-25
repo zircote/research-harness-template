@@ -82,6 +82,7 @@ class EntityType(TypedDict):
     description: NotRequired[str]
     base: Literal["semantic", "episodic", "procedural"]
     traits: NotRequired[list[str]]
+    subtype_of: NotRequired[list[str]]
     schema: NotRequired[Schema]
 
 

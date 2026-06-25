@@ -80,6 +80,34 @@ record() { # entity_type resolved_ontology basis valid
 # fallback below can use it; the binding resolution further down uses it too.)
 src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$CATALOG" | head -1; }
 
+# Transitive CATALOGED ancestors of an ontology id via .ontology.extends (SPEC §8c
+# layered spine). Portable (bash 3.2 — no associative arrays): a worklist + a seen
+# string. Echoes each ancestor id once so the caller can fold them into `allowed`
+# (a topic that binds a child resolves types its ancestor layer declares — e.g.
+# binding software-engineering resolves engineering-base's `component`). Fail CLOSED:
+# a yq error, or an `extends` target that is named but NOT cataloged, aborts (exit 4)
+# — never silently drop an ancestor and read its types as "not declared".
+ancestors_of() {
+  local start="$1" worklist="$1" seen=" " cur csrc parents p out=""
+  while [ -n "$worklist" ]; do
+    cur="${worklist%% *}"; worklist="${worklist#"$cur"}"; worklist="${worklist# }"
+    case "$seen" in *" $cur "*) continue ;; esac
+    seen="$seen$cur "
+    csrc="$(src_of "$cur")"; [ -z "$csrc" ] && continue
+    if ! parents=$(yq -r '.ontology.extends[]?' "$ROOT/$csrc" 2>/dev/null); then
+      echo "resolve-ontology: yq failed reading extends of '$cur' ($csrc) — aborting (fail closed)" >&2; exit 4
+    fi
+    for p in $parents; do
+      [ -z "$p" ] && continue
+      if [ -z "$(src_of "$p")" ]; then
+        echo "resolve-ontology: ontology '$cur' extends '$p' which is not cataloged — fail (run sync-packs.sh)" >&2; exit 4
+      fi
+      case "$seen" in *" $p "*) ;; *) worklist="$worklist $p"; out="$out $p" ;; esac
+    done
+  done
+  printf '%s' "$out"
+}
+
 # Deterministic classification fallback — reuses the ontology's OWN discovery metadata
 # (NOT a separate classifier): apply the topic's bound DOMAIN ontologies' discovery
 # content_patterns (content_pattern -> suggest_entity) to the finding's CONTENT text.
@@ -90,12 +118,27 @@ src_of() { jq -r --arg id "$1" '.ontologies[]? | select(.id==$id) | .source' "$C
 # silently mis-resolves.
 classify_from_discovery() {
   [ -n "$TOPIC" ] && [ -f "$CATALOG" ] || return 0
-  local bound bspec bid bver cver src od disc='[]' text hit
+  local bound bspec bid bver cver src od disc='[]' text hit expanded anc
   bound=$(jq -r --arg t "$TOPIC" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG" 2>/dev/null | sort -u)
   [ -n "$bound" ] || return 0
+  # Include transitive ancestor layers so discovery can classify untyped findings to
+  # inherited supertypes (e.g. engineering-base `design-pattern` under a
+  # software-engineering topic). Fails closed via ancestors_of (exit 4).
+  expanded="$bound"
   for bspec in $bound; do
     bid="${bspec%@*}"
-    src="$(src_of "$bid")"; [ -z "$src" ] && continue   # not cataloged -> typed path fails it; discovery skips
+    # A bound id MUST be cataloged — fail closed on a binding/config mistake, consistent
+    # with the typed path (an untyped finding must not pass silently on a misconfigured bind).
+    if [ -z "$(src_of "$bid")" ]; then
+      echo "resolve-ontology: topic '$TOPIC' binds '$bid' which is not cataloged — fail (run sync-packs.sh)" >&2; exit 4
+    fi
+    anc=$(ancestors_of "$bid") || exit 4
+    expanded="$expanded $anc"
+  done
+  bound=$(printf '%s\n' $expanded | sed '/^$/d' | sort -u)
+  for bspec in $bound; do
+    bid="${bspec%@*}"
+    src="$(src_of "$bid")"; [ -z "$src" ] && continue   # cataloged-checked above; safety net
     case "$bspec" in                                     # a version-pinned binding must match the catalog
       *@*) bver="${bspec#*@}"; cver=$(jq -r --arg id "$bid" '.ontologies[]? | select(.id==$id) | .version' "$CATALOG" | head -1)
            [ "$bver" = "$cver" ] || continue ;;
@@ -128,7 +171,7 @@ classify_from_discovery() {
 #    pattern classification before recording it untyped.
 has_entity=false; jq -e 'has("entity") and (.entity != null)' "$FINDING" >/dev/null 2>&1 && has_entity=true
 if [ -z "$et" ] && [ -z "$oid" ] && [ "$has_entity" != true ]; then
-  dhit=$(classify_from_discovery)
+  dhit=$(classify_from_discovery) || exit 4   # propagate fail-closed (uncataloged bind / yq error) out of the subshell
   if [ -n "$dhit" ]; then
     det=$(printf '%s' "$dhit" | cut -f1); dont=$(printf '%s' "$dhit" | cut -f2); dver=$(printf '%s' "$dhit" | cut -f3)
     record "$det" "$dont@$dver" "discovery" true
@@ -173,7 +216,11 @@ if [ -n "$TOPIC" ]; then
              record "$et" "" "unresolved" false; exit 1
            fi ;;
     esac
-    allowed="$allowed $bid"
+    # Fold in the bound id PLUS its transitive cataloged ancestor layers, so a topic
+    # binding only a child (software-engineering) resolves types declared by an
+    # ancestor layer (engineering-base). ancestors_of fails closed via exit 4.
+    anc=$(ancestors_of "$bid") || exit 4
+    allowed="$allowed $bid $anc"
   done < <(jq -r --arg t "$TOPIC" '.topics[]? | select(.id==$t) | .ontologies[]?' "$CONFIG")
 fi
 

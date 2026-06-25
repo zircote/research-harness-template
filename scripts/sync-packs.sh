@@ -103,9 +103,16 @@ add_onto(){ # id version source core — skip a malformed ontology (empty/null i
   { [ -z "$1" ] || [ "$1" = "null" ] || [ -z "$2" ] || [ "$2" = "null" ]; } && return 0
   onto=$(jq -c --arg id "$1" --arg v "$2" --arg s "$3" --argjson core "$4" \
     '. + [{id:$id, version:$v, source:$s, core:$core}]' <<<"$onto"); }
+# Only the always-on generic core is core=true; other MIF-compliant layers under
+# schemas/ontologies/ (e.g. engineering-base) are cataloged present-but-not-core
+# (core=false) so they are reachable via a descendant's `extends` chain WITHOUT being
+# bound to every topic. This keeps the upstream generic core domain-neutral.
+CORE_IDS=" mif-base mif-generic shared-traits "
 for y in schemas/ontologies/*/*.yaml; do
   [ -e "$y" ] || continue
-  add_onto "$(yq -r '.ontology.id' "$y")" "$(yq -r '.ontology.version' "$y")" "$y" true
+  oid=$(yq -r '.ontology.id' "$y")
+  case "$CORE_IDS" in *" $oid "*) iscore=true ;; *) iscore=false ;; esac
+  add_onto "$oid" "$(yq -r '.ontology.version' "$y")" "$y" "$iscore"
 done
 while IFS= read -r oid; do
   [ -z "$oid" ] && continue

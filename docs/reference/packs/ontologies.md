@@ -12,6 +12,11 @@ classify, and relate domain entities found in sources.
 Ontology packs have no external dependencies and no SKILL.md — they are data packs,
 not skill packs.
 
+The vocabulary is layered in three tiers: the domain-neutral **generic core**
+(`mif-base` / `mif-generic` / `shared-traits`, the MIF-compliant always-on layer) →
+[`engineering-base`](#engineering-base) (shared engineering supertypes — MIF-compliant,
+opt-in via `extends`, never bound directly) → the bindable **domain packs** below.
+
 For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
 ## Enabling and binding an ontology
@@ -86,13 +91,14 @@ jq '(.ontologies[] | select(.id=="biology-research-lab") | .enabled) |= true' \
 
 ## data-engineering
 
-**Version:** 0.1.0 | **Kind:** ontology
+**Version:** 0.2.0 | **Kind:** ontology
 
 ### Purpose
 
 Provides an entity vocabulary for the data engineering domain: data contracts, data
 products, governance policies, data quality, storage architectures, and pipeline
-patterns.
+patterns. It `extends` [`engineering-base`](#engineering-base), inheriting the shared
+engineering supertypes and keeping only its data-specific types.
 
 ### Domain
 
@@ -105,8 +111,9 @@ governance (policies, controls, stewardship), storage (storage and scaling
 architectures). **Namespaces (procedural):** pipelines (pipeline and data-movement
 patterns).
 
-**Entity types include:** data-contract (enforceable schema + semantics + SLA
-agreements between producers and consumers).
+**Entity types:** data-contract (enforceable schema + semantics + SLA agreements between
+producers and consumers), data-product, data-governance-policy, data-quality-rule,
+storage-architecture, pipeline-pattern, data-platform.
 
 **Traits applied:** `cited`.
 
@@ -124,6 +131,54 @@ adoption, data governance frameworks, or modern data engineering tooling and pra
 jq '(.ontologies[] | select(.id=="data-engineering") | .enabled) |= true' \
   harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
 ```
+
+---
+
+## engineering-base
+
+**Version:** 0.1.0 | **Kind:** ontology (shared layer — not directly bindable)
+
+### Purpose
+
+A MIF-compliant **intermediate layer** between the domain-neutral generic core
+(`mif-base` / `mif-generic` / `shared-traits`) and the engineering DOMAIN packs. It
+declares the supertypes that recur across every engineering domain so the domains
+inherit them instead of each re-declaring its own copy. It is a layer, not a bindable
+domain pack: topics do not bind `engineering-base` directly — they bind a descendant
+(`software-engineering`, `data-engineering`, `software-security`), whose `extends` chain
+reaches here.
+
+### Domain
+
+Shared engineering vocabulary — architecture, components, patterns, decisions, delivery
+metrics, practices, and disciplines.
+
+### Entities, relationships, and traits
+
+**Entity types:** component, architectural-decision, design-pattern, delivery-metric,
+engineering-practice, process-discipline, plus the cross-cutting universals control,
+artifact, policy, provenance (recurring across security, data, and software — domain
+packs specialize them via `subtype_of`, e.g. software-security
+`security-control` is `subtype_of: [control]` — a subtype is substitutable for its
+supertype at a relationship endpoint, enforced by the concordance validator and
+`gate_m22`).
+
+**Relationships:** `depends_on`, `implements`, `governs` (control/policy →
+component/artifact), `attests` (provenance → artifact), `derived_from` (artifact lineage).
+
+**Traits applied:** `versioned`, `documented`, `dated`, `cited`.
+
+**Discovery patterns:** recognizes named design / architectural patterns (Factory,
+Singleton, Observer, Repository, Strategy, Decorator, CQRS, Event Sourcing, Saga).
+
+### Resolution
+
+`engineering-base` is cataloged present-but-NOT-core (`core=false`): it is never
+always-on and never auto-applied to a non-engineering topic (biology, agriculture,
+legal never resolve these types). Resolution is **transitive** — binding a descendant
+pack resolves the supertypes this layer declares, because `resolve-ontology.sh` walks
+the `extends` chain. There is no Enable command and no "When to bind" step for this
+layer; enable and bind one of its descendant domain packs instead.
 
 ---
 
@@ -297,7 +352,7 @@ compliance-report.
 **Discovery patterns:** recognizes regulation citations (Regulation (EU), U.S.C., GDPR,
 HIPAA), deontic language (shall / must / prohibited), jurisdictions, regulators, control
 crosswalks (OLIR), ELI / Akoma Ntoso URIs, case citations (ECLI), and contract / legal-role
-terminology. `control-mapping.control_ref` bridges to the security pack's `control` type.
+terminology. `control-mapping.control_ref` bridges to the software-security pack's `security-control` type.
 
 ### When to bind
 
@@ -361,19 +416,72 @@ jq '(.ontologies[] | select(.id=="scientific") | .enabled) |= true' \
 
 ---
 
-## security
+## software-engineering
 
-**Version:** 0.1.0 | **Kind:** ontology
+**Version:** 0.5.0 | **Kind:** ontology
 
 ### Purpose
 
-Provides an entity vocabulary for security research: vulnerabilities and weaknesses,
-controls, threat actors, campaigns and tactics, indicators of compromise, malware, tools
-and infrastructure, threat-intelligence reports, supply-chain risk, policies,
-assessments, and POA&Ms. Grounded in MITRE ATT&CK / CAPEC, CVE / CWE / NVD, NIST SP
-800-53 / OSCAL / 800-161r1, STIX 2.1, OWASP, and VERIS. (The `security-threat`,
-`security-framework`, and `security-incident` types live in the software-engineering pack,
-extended in place; this pack's relationships reference them across packs.)
+Provides an entity vocabulary for the SDLC-operational slice of software engineering:
+production incidents and operational procedures. It `extends`
+[`engineering-base`](#engineering-base), from which it inherits the shared engineering
+supertypes (component, architectural-decision, design-pattern, delivery-metric,
+engineering-practice, process-discipline); the generic `technology` comes from
+`mif-generic`. Security types (`security-threat`, `security-framework`,
+`security-incident`) live in the [`software-security`](#software-security) pack, and
+regulation is modeled in [`regulatory-legal`](#regulatory-legal) (subsumed by its
+`legal-act` / `obligation`). The former `adoption-trend` is gone — the
+[`trend-analysis`](#trend-analysis) pack's `trend` is canonical.
+
+### Domain
+
+Software development teams, software architecture research, and engineering process
+analysis.
+
+### Entities, relationships, and traits
+
+**Namespaces (procedural):** deployments (deployment procedures, release processes).
+
+**Entity types:** incident-report, runbook, deployment-procedure, migration-guide (the
+shared supertypes are inherited from `engineering-base`, not re-declared here).
+
+**Traits applied:** `versioned`, `dated`, `timeline`, `stakeholders`.
+
+**Discovery patterns:** recognizes incident / outage / postmortem / RCA, runbook /
+playbook / SOP, deployment / release, and migration / upgrade terminology in research
+sources.
+
+### When to bind
+
+Bind `software-engineering` when researching production incidents and postmortems,
+operational runbooks, deployment and release procedures, or system migration plans. For
+the shared engineering supertypes (components, architecture, decisions, patterns), bind
+this or any sibling engineering pack — they are inherited from `engineering-base`.
+
+### Enable
+
+```sh
+jq '(.ontologies[] | select(.id=="software-engineering") | .enabled) |= true' \
+  harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
+```
+
+---
+
+## software-security
+
+**Version:** 0.2.0 | **Kind:** ontology
+
+### Purpose
+
+Provides an entity vocabulary for the software-facing slice of security research:
+vulnerabilities and weaknesses, controls, threat actors, campaigns and tactics,
+indicators of compromise, malware, tools and infrastructure, threat-intelligence
+reports, supply-chain risk, policies, assessments, and POA&Ms. It `extends`
+[`engineering-base`](#engineering-base). Grounded in MITRE ATT&CK / CAPEC, CVE / CWE /
+NVD, NIST SP 800-53 / OSCAL / 800-161r1, STIX 2.1, OWASP, and VERIS. The
+`security-threat`, `security-framework`, and `security-incident` types live **here**, as
+SDLC-facing supertypes that the finer STIX / ATT&CK / CWE types (attack-tactic, weakness,
+vulnerability) refine.
 
 ### Domain
 
@@ -382,9 +490,9 @@ Cybersecurity threat intelligence, vulnerability management, and security compli
 ### Entities, relationships, and traits
 
 **Entity types:** attack-tactic, attack-mitigation, malware, vulnerability, weakness,
-control, threat-actor, attack-campaign, indicator-of-compromise, security-infrastructure,
+security-control, threat-actor, attack-campaign, indicator-of-compromise, security-infrastructure,
 security-tool, threat-intelligence-report, supply-chain-risk, security-policy,
-security-assessment, poam.
+security-assessment, poam, security-threat, security-framework, security-incident.
 
 **Key relationships:** `attributed_to`, `categorizes`, `defines`, `documents`, `exploits`,
 `hosts`, `indicates`, `mitigates`, `mitigates_threat`, `realizes`, `tracks`, `uses`.
@@ -400,63 +508,13 @@ family names.
 
 ### When to bind
 
-Bind `security` when researching threat intelligence, vulnerability and weakness
+Bind `software-security` when researching threat intelligence, vulnerability and weakness
 analysis, security controls and frameworks, or security compliance and assessment.
 
 ### Enable
 
 ```sh
-jq '(.ontologies[] | select(.id=="security") | .enabled) |= true' \
-  harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
-```
-
----
-
-## software-engineering
-
-**Version:** 0.4.0 | **Kind:** ontology
-
-### Purpose
-
-Provides an entity vocabulary for software engineering teams: components, architecture,
-dependencies, and deployment processes. As of **0.4.0** it also carries the collision
-types shared with the security and regulatory-legal packs, extended in place as strict
-supersets — `security-threat` (+ ATT&CK `attack_id`/`tactic`/`adversary`),
-`security-framework` (+ `version`/`structure`), `compliance-regulation`
-(+ `legal_source_type`/`citation_ref`) — plus a new `security-incident` (VERIS A's)
-specialization of `incident-report`. `adoption-trend` is **deprecated** in favour of the
-trend-analysis pack's canonical `trend` (retained, not deleted, for back-compat).
-
-### Domain
-
-Software development teams, software architecture research, and engineering process
-analysis.
-
-### Entities, relationships, and traits
-
-**Namespaces (semantic):** architecture (system architecture and component designs),
-components (software components, modules, services), dependencies (third-party libraries,
-packages, integrations). **Namespaces (procedural):** deployments (deployment
-procedures, release processes).
-
-**Entity types include:** component (a software component, module, or service with
-`name` and `responsibility` required fields).
-
-**Traits applied:** `versioned`, `documented`.
-
-**Discovery patterns:** recognizes component, service, module, architecture, and
-dependency terminology in research sources.
-
-### When to bind
-
-Bind `software-engineering` when researching software architecture patterns,
-engineering team practices, technology stack decisions, dependency management, or
-software delivery processes.
-
-### Enable
-
-```sh
-jq '(.ontologies[] | select(.id=="software-engineering") | .enabled) |= true' \
+jq '(.ontologies[] | select(.id=="software-security") | .enabled) |= true' \
   harness.config.json > harness.config.tmp && mv harness.config.tmp harness.config.json
 ```
 
@@ -475,7 +533,7 @@ Grounded in IFTF foresight, EU JRC / K4P, Sitra, Shell / GBN scenario planning, 
 Diffusion of Innovations, Gartner Hype Cycle, Three Horizons, the Futures Wheel, and
 OECD-OPSI. (Six types the inventory based on `analytical` are remapped to the `semantic`
 root, since the mif-base cognitive triad has no `_analytical` root.) This pack's `trend`
-is the canonical successor of the software-engineering pack's deprecated `adoption-trend`.
+is canonical, replacing the former `adoption-trend` (which has been removed).
 
 ### Domain
 

@@ -19,6 +19,12 @@
       "core": true
     },
     {
+      "id": "engineering-base",
+      "version": "0.1.0",
+      "source": "schemas/ontologies/engineering-base/0.1.0.yaml",
+      "core": false
+    },
+    {
       "id": "edu-fixture",
       "version": "0.1.0",
       "source": "evals/fixtures/ontology/edu-fixture.ontology.yaml",
@@ -26,8 +32,14 @@
     },
     {
       "id": "software-engineering",
-      "version": "0.1.0",
+      "version": "0.5.0",
       "source": "packs/ontologies/software-engineering/software-engineering.ontology.yaml",
+      "core": false
+    },
+    {
+      "id": "collide-fixture",
+      "version": "0.1.0",
+      "source": "evals/fixtures/ontology/collide-fixture.ontology.yaml",
       "core": false
     }
   ]

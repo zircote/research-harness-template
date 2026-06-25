@@ -1,0 +1,20 @@
+---
+# Collision TEST fixture (NOT a distributable pack). Re-declares the generic
+# `technology` so the resolver's ambiguity/disambiguation path has a genuine
+# multi-declarer collision to exercise after the spine relayering deduplicated
+# `technology` to a single home (mif-generic).
+ontology:
+  id: collide-fixture
+  version: "0.1.0"
+  description: "Test fixture that re-declares technology to force an ambiguity"
+  extends:
+    - mif-base
+entity_types:
+  - name: technology
+    base: semantic
+    schema:
+      required:
+        - name
+      properties:
+        name:
+          type: string

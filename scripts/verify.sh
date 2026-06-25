@@ -1021,23 +1021,22 @@ gate_m12() {
     bad "duplicate ontology id@version: $(echo $dupes)"
   fi
 
-  # 12d. The supply-chain floor is CONTRACT-only and EXACT: the verbatim set must be
-  #      precisely the vendored ontology schema + context (both, and nothing else), and
-  #      every verbatim checksum must match. Asserting the exact set catches unlocking a
-  #      contract file (weakening the floor) AND re-locking any other file (e.g. an
-  #      ontology definition, which would block editing).
-  local lbad="" ln=0
-  while IFS=$'\t' read -r lp lsum; do
-    [ -z "$lp" ] && continue; ln=$((ln+1))
-    [ "$(shasum -a 256 "$lp" 2>/dev/null | cut -d' ' -f1)" = "$lsum" ] || lbad="${lbad}${lp} "
-  done < <(jq -r '.files[] | select(.verbatim) | "\(.path)\t\(.sha256)"' schemas/mif/VENDOR.lock 2>/dev/null)
-  local verbatim_set expected_set
-  verbatim_set=$(jq -r '[.files[] | select(.verbatim) | .path] | sort | join(",")' schemas/mif/VENDOR.lock 2>/dev/null)
-  expected_set="schemas/mif/ontology.context.jsonld,schemas/mif/ontology.schema.json"   # sorted
-  if [ -z "$lbad" ] && [ "$verbatim_set" = "$expected_set" ]; then
-    ok "VENDOR.lock: exactly the 2 contract files are checksum-locked; ontology definitions unlocked (editable)"
+  # 12d. NOTHING is vendor-locked. The MIF contract is first-class and evolves in-repo
+  #      (it travels back to MIF), so no file may be verbatim/checksum-gated — a re-locked
+  #      file would freeze the contract and block that evolution. Assert the verbatim set
+  #      is EMPTY. (VENDOR.lock is retained for provenance: source/commit + seed checksums.)
+  local verbatim_set
+  # A missing/unreadable/invalid lock, or one whose `.files` is absent/not an array, must
+  # NOT read as an empty (== "nothing locked") set and pass vacuously — fail closed. Then
+  # extract the verbatim set under `jq -e` so a jq error is a failure, never an empty pass.
+  if ! jq -e '.files | type == "array"' schemas/mif/VENDOR.lock >/dev/null 2>&1; then
+    bad "VENDOR.lock missing, invalid JSON, or has no .files array — provenance broken (cannot assert the verbatim set)"
+  elif ! verbatim_set=$(jq -er '[.files[] | select(.verbatim) | .path] | sort | join(",")' schemas/mif/VENDOR.lock); then
+    bad "VENDOR.lock: could not extract the verbatim set (jq error) — fail closed"
+  elif [ -z "$verbatim_set" ]; then
+    ok "VENDOR.lock: nothing is verbatim-locked — the contract is first-class editable"
   else
-    bad "VENDOR.lock floor wrong: verbatim-set=[$verbatim_set] expected=[$expected_set] checksum-mismatch=[${lbad:-none}]"
+    bad "VENDOR.lock: file(s) verbatim-locked but nothing should be: [$verbatim_set]"
   fi
 
   # Build a catalog (core + the dedicated edu-fixture TEST ontology) to drive the
@@ -1131,23 +1130,39 @@ JSON
   fi
   rm -rf "$TP"
 
-  # 12i. Always-on generic typing + ambiguity. The generic core (mif-generic) types
-  #      ANY topic, including core-only; a type a generic and a bound domain ontology
-  #      both declare (technology) is ambiguous without an explicit ontology.id.
+  # 12i. Always-on generic typing + DEDUP + ambiguity mechanism. The generic core
+  #      (mif-generic) types ANY topic, including core-only. Post-spine-relayering the
+  #      generic `technology` is declared ONCE (mif-generic) — software-engineering no
+  #      longer shadows it — so it resolves UNAMBIGUOUSLY even from a domain topic. The
+  #      ambiguity/disambiguation mechanism is exercised with a self-contained collision
+  #      ontology that re-declares `technology` (robust to pack churn).
   jq '(.ontologies[] | select(.id=="software-engineering") | .enabled) |= true' harness.config.json > "$T/se.cfg"
   scripts/sync-packs.sh "$T/se.cfg" "$T/se.cat" "$T/se.set" >/dev/null 2>&1
   jq '.topics = [{"id":"core","namespace":"x/c"},{"id":"eng","namespace":"x/e","ontologies":["software-engineering"]}]' "$T/se.cfg" > "$T/se.rcfg"
   printf '{"@id":"g","entity":{"name":"REST","entity_type":"concept"}}\n' > "$T/gen.json"
-  printf '{"@id":"a","entity":{"name":"Kafka","entity_type":"technology","category":"infrastructure"}}\n' > "$T/amb.json"
-  printf '{"@id":"d","ontology":{"id":"software-engineering"},"entity":{"name":"Kafka","entity_type":"technology","category":"infrastructure"}}\n' > "$T/dis.json"
-  $RO "$T/gen.json" --topic core --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/g.map" >/dev/null 2>&1; local gen=$?
-  $RO "$T/amb.json" --topic eng  --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/a.map" >/dev/null 2>&1; local amb=$?
-  $RO "$T/dis.json" --topic eng  --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/d.map" >/dev/null 2>&1; local dis=$?
-  local genro; genro=$(jq -r '.[0].resolved_ontology' "$T/g.map" 2>/dev/null)
-  if [ "$gen" = 0 ] && [ "$genro" = "mif-generic@1.0.0" ] && [ "$amb" != 0 ] && [ "$dis" = 0 ]; then
-    ok "generic core types every topic; a generic/domain type collision is ambiguous without ontology.id"
+  printf '{"@id":"t","entity":{"name":"Kafka","entity_type":"technology"}}\n' > "$T/tech.json"
+  $RO "$T/gen.json"  --topic core --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/g.map" >/dev/null 2>&1; local gen=$?
+  $RO "$T/tech.json" --topic eng  --catalog "$T/se.cat" --config "$T/se.rcfg" --map "$T/t.map" >/dev/null 2>&1; local tech=$?
+  local genro techro; genro=$(jq -r '.[0].resolved_ontology' "$T/g.map" 2>/dev/null); techro=$(jq -r '.[0].resolved_ontology' "$T/t.map" 2>/dev/null)
+  # Self-contained collision: the committed collide-fixture ALSO declares `technology`
+  # (relative source path — the resolver resolves catalog sources against repo root).
+  cat > "$T/coll.cat" <<'JSON'
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"collide-fixture","version":"0.1.0","source":"evals/fixtures/ontology/collide-fixture.ontology.yaml","core":false}
+]}
+JSON
+  echo '{"topics":[{"id":"col","namespace":"x/col","ontologies":["collide-fixture"]}]}' > "$T/coll.cfg"
+  printf '{"@id":"a","entity":{"name":"Kafka","entity_type":"technology"}}\n' > "$T/amb.json"
+  printf '{"@id":"d","ontology":{"id":"collide-fixture"},"entity":{"name":"Kafka","entity_type":"technology"}}\n' > "$T/dis.json"
+  $RO "$T/amb.json" --topic col --catalog "$T/coll.cat" --config "$T/coll.cfg" --map "$T/a.map" >/dev/null 2>&1; local amb=$?
+  $RO "$T/dis.json" --topic col --catalog "$T/coll.cat" --config "$T/coll.cfg" --map "$T/d.map" >/dev/null 2>&1; local dis=$?
+  if [ "$gen" = 0 ] && [ "$genro" = "mif-generic@1.0.0" ] && [ "$tech" = 0 ] && [ "$techro" = "mif-generic@1.0.0" ] \
+     && [ "$amb" != 0 ] && [ "$dis" = 0 ]; then
+    ok "generic core types every topic; deduped `technology` resolves unambiguously to mif-generic; a real collision is ambiguous without ontology.id"
   else
-    bad "generic/ambiguity wrong (core-only generic=$gen ro=$genro ambiguous=$amb disambiguated=$dis)"
+    bad "generic/dedup/ambiguity wrong (generic=$gen ro=$genro tech=$tech techro=$techro ambiguous=$amb disambiguated=$dis)"
   fi
 
   # 12j. ontology-review.sh reviews/validates coverage across a topic's findings:
@@ -1215,8 +1230,10 @@ gate_m13() {
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
  {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"engineering-base","version":"0.1.0","source":"schemas/ontologies/engineering-base/0.1.0.yaml","core":false},
  {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false},
- {"id":"software-engineering","version":"0.1.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
+ {"id":"software-engineering","version":"0.5.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
 ]}
 JSON
   echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["edu-fixture"]},{"id":"eng","namespace":"x/eng","ontologies":["software-engineering"]}]}' > "$T/cfg.json"
@@ -1228,7 +1245,7 @@ JSON
 {"@id":"urn:mif:concept:x/eng:f1","title":"Kafka adoption","extensions":{"harness":{"dimension":"technical","verification":{"verdict":"falsified","verdict_basis":"y"}}},"entity":{"name":"Service","entity_type":"component"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:tech:kafka"},"name":"Kafka","entityType":"technology"},{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:org:acme"},"name":"Acme","entityType":"organization"}],"relationships":[{"type":"depends_on","target":"urn:mif:entity:tech:kafka","strength":1}]}
 JSON
   echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"edu-fixture@0.1.0","basis":"declared","valid":true}]' > "$T/reports/edu/ontology-map.json"
-  echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"software-engineering@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
+  echo '[{"finding_id":"urn:mif:concept:x/eng:f1","entity_type":"component","resolved_ontology":"engineering-base@0.1.0","basis":"declared","valid":true}]' > "$T/reports/eng/ontology-map.json"
 
   CONFIG="$T/cfg.json" scripts/build-concordance.sh "$T/reports" "$T/concordance.json" >/dev/null 2>&1
   vw() { scripts/validate-concordance.sh "$1" --config "$T/cfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; }
@@ -1849,10 +1866,90 @@ gate_m20() {
   fi
 }
 
+gate_m21() {
+  info "Milestone 21 — layered ontology spine (transitive extends + upstream boundary)"
+  # The engineering-base layer (core=false) is reached via a descendant's `extends`
+  # chain, NOT by being always-on. Prove BOTH directions against a self-contained
+  # catalog (relative sources; engineering-base present-but-not-core):
+  #   POSITIVE — a topic binding only software-engineering resolves `component`, a type
+  #              declared by engineering-base (an ANCESTOR), and the map records
+  #              engineering-base as the resolver — transitive `extends` works.
+  #   NEGATIVE — a topic binding a NON-engineering pack (edu-fixture, which extends
+  #              mif-base, not engineering-base) does NOT resolve `component` — the
+  #              engineering vocabulary does NOT leak into the generic core. This is the
+  #              upstream-submission boundary: engineering-base is a domain extension,
+  #              not part of the always-on MIF generic core.
+  local T; T="$(mktemp -d)"
+  cat > "$T/cat.json" <<'JSON'
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"engineering-base","version":"0.1.0","source":"schemas/ontologies/engineering-base/0.1.0.yaml","core":false},
+ {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false},
+ {"id":"software-engineering","version":"0.5.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
+]}
+JSON
+  echo '{"topics":[{"id":"eng","namespace":"x/e","ontologies":["software-engineering"]},{"id":"edu","namespace":"x/d","ontologies":["edu-fixture"]}]}' > "$T/cfg.json"
+  printf '{"@id":"c","entity":{"entity_type":"component","name":"AuthSvc","responsibility":"auth"}}\n' > "$T/comp.json"
+  scripts/resolve-ontology.sh "$T/comp.json" --topic eng --catalog "$T/cat.json" --config "$T/cfg.json" --map "$T/eng.map" >/dev/null 2>&1; local pos=$?
+  scripts/resolve-ontology.sh "$T/comp.json" --topic edu --catalog "$T/cat.json" --config "$T/cfg.json" --map "$T/edu.map" >/dev/null 2>&1; local neg=$?
+  local ro; ro=$(jq -r '.[0].resolved_ontology' "$T/eng.map" 2>/dev/null)
+  if [ "$pos" = 0 ] && [ "$ro" = "engineering-base@0.1.0" ] && [ "$neg" != 0 ]; then
+    ok "transitive extends: a child topic resolves an ancestor-layer type; a non-engineering topic does NOT (engineering vocab stays out of the generic core)"
+  else
+    bad "spine boundary wrong (positive=$pos resolved=$ro negative=$neg — expect pos=0 ro=engineering-base@0.1.0 neg!=0)"
+  fi
+  rm -rf "$T"
+}
+
+gate_m22() {
+  info "Milestone 22 — entity-type subsumption (enforced substitutability)"
+  # `subtype_of` makes a finer type substitutable for its supertype at a relationship
+  # endpoint (Liskov). software-security `security-control` subtype_of engineering-base
+  # `control`; the cross-cutting `governs` edge (control/policy -> component/artifact)
+  # must therefore ACCEPT a security-control source and REJECT a non-subtype source.
+  # Also: every subtype_of parent across the registry must be a declared type.
+  local T; T="$(mktemp -d)"
+  cat > "$T/cat.json" <<'JSON'
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"engineering-base","version":"0.1.0","source":"schemas/ontologies/engineering-base/0.1.0.yaml","core":false},
+ {"id":"software-security","version":"0.2.0","source":"packs/ontologies/software-security/software-security.ontology.yaml","core":false}
+]}
+JSON
+  echo '{"topics":[{"id":"sec","namespace":"x/s","ontologies":["software-security"]}]}' > "$T/cfg.json"
+  # node n2 = component (resolves via engineering-base ancestor), n1 = security-control,
+  # n3 = malware (NOT a subtype of control). governs edge source varies.
+  local nodes='[{"id":"n1","entityType":"security-control","topics":["sec"],"kind":"concept","external":false,"verdict":"survived"},{"id":"n2","entityType":"component","topics":["sec"],"kind":"concept","external":false,"verdict":"survived"},{"id":"n3","entityType":"malware","topics":["sec"],"kind":"concept","external":false,"verdict":"survived"}]'
+  echo "{\"nodes\":$nodes,\"edges\":[{\"via\":\"relationship\",\"type\":\"governs\",\"source\":\"n1\",\"target\":\"n2\"}]}" > "$T/good.json"
+  echo "{\"nodes\":$nodes,\"edges\":[{\"via\":\"relationship\",\"type\":\"governs\",\"source\":\"n3\",\"target\":\"n2\"}]}" > "$T/bad.json"
+  vw22() { scripts/validate-concordance.sh "$1" --config "$T/cfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; }
+  vw22 "$T/good.json"; local g=$?
+  vw22 "$T/bad.json"; local b=$?
+  # subtype_of parent integrity across the whole registry.
+  local parents types orphan="" p
+  parents=$(for y in schemas/ontologies/*/*.yaml packs/ontologies/*/*.ontology.yaml; do
+    [ -f "$y" ] && yq -o=json '.' "$y" 2>/dev/null | jq -r '.entity_types[]?.subtype_of[]? // empty'
+  done | LC_ALL=C sort -u)
+  types=$(for y in schemas/ontologies/*/*.yaml packs/ontologies/*/*.ontology.yaml; do
+    [ -f "$y" ] && yq -o=json '.' "$y" 2>/dev/null | jq -r '.entity_types[]?.name // empty'
+  done | LC_ALL=C sort -u)
+  while IFS= read -r p; do [ -n "$p" ] || continue; printf '%s\n' "$types" | grep -Fxq -- "$p" || orphan="${orphan}${p} "; done <<< "$parents"
+  if [ "$g" = 0 ] && [ "$b" != 0 ] && [ -z "$orphan" ]; then
+    ok "subtype_of enforced: a security-control satisfies a control-typed edge; a non-subtype does not; every subtype_of parent is declared"
+  else
+    bad "subsumption wrong (substitutable-good=$g should=0; non-subtype-bad=$b should!=0; orphan-parents=[${orphan:-none}])"
+  fi
+  rm -rf "$T"
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22)
 
 for g in "${GATES[@]}"; do "$g"; done
 

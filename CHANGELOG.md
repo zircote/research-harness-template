@@ -7,7 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet. Changes land here before the next tagged release.
+### Added
+
+- A layered ontology spine. New MIF-compliant intermediate layer
+  `engineering-base` (`schemas/ontologies/engineering-base/0.1.0.yaml`, cataloged
+  `core=false`) declares the engineering supertypes shared across domains —
+  `component`, `architectural-decision`, `design-pattern`, `delivery-metric`,
+  `engineering-practice`, `process-discipline` — plus `depends_on`/`implements`.
+  The engineering domain packs `extends: engineering-base`, so resolution is
+  transitive: binding a domain pack resolves the supertypes its ancestor layers
+  declare. The layer is present-but-not-core, so non-engineering topics never
+  resolve these types — keeping the upstream-submittable generic core
+  domain-neutral. `gate_m21` proves the positive (descendant resolves an
+  ancestor-layer type) and the negative (a non-engineering topic does not).
+- Cross-cutting universals in `engineering-base` — `control`, `artifact`,
+  `policy`, `provenance` — with edges `governs` (control/policy →
+  component/artifact), `attests` (provenance → artifact), and `derived_from`
+  (artifact lineage). `data-engineering` adds `governed_by` (data-product/storage
+  → control/policy), realizing the data/security governance cross-cut.
+- Entity-type subsumption: a new first-class `subtype_of` field on entity types
+  (declared in `ontology.schema.json`). A subtype is substitutable for its
+  supertype at a relationship endpoint, enforced by `validate-concordance.sh` and
+  `gate_m22`. `software-security.security-control` is `subtype_of: [control]`, so it
+  satisfies the cross-cutting `governs` edge; a non-subtype is rejected.
+
+### Changed
+
+- `resolve-ontology.sh` and `validate-concordance.sh` now walk the `extends`
+  chain when building a topic's allowed ontology set (fail-closed if an
+  `extends` target is not cataloged). `sync-packs.sh` catalogs non-core layers
+  under `schemas/ontologies/` as `core=false` (only `mif-base`, `mif-generic`,
+  `shared-traits` are core).
+- Renamed the `security` ontology pack to `software-security` (extends
+  `engineering-base`); moved the SDLC-facing `security-threat`,
+  `security-framework`, and `security-incident` supertypes into it from
+  `software-engineering`, where the finer STIX/ATT&CK/CWE types refine them.
+  Renamed its `control` type to `security-control` (the security specialization of
+  the new generic `engineering-base` `control`).
+- Deduplicated the engineering domain packs: `software-engineering` (0.5.0) now
+  carries only SDLC-operational types (`incident-report`, `runbook`,
+  `deployment-procedure`, `migration-guide`); `data-engineering` (0.2.0) carries
+  only data-specific types. Both inherit the shared supertypes and the generic
+  `technology` (which is a MIF built-in in `mif-generic`) instead of copying them.
+- Nothing is vendor-locked. `VENDOR.lock` no longer marks any file `verbatim:true`
+  (the MIF contract `ontology.schema.json` + context are unlocked); `gate_m12` now
+  asserts the verbatim set is empty. `VENDOR.lock` is retained for provenance
+  (source/commit + seed checksums). The contract is first-class and evolves in-repo
+  on its way back to MIF — conformance stays fail-closed by validation, not by
+  freezing files.
+
+### Removed
+
+- `compliance-regulation` (modeled in `regulatory-legal` as `legal-act`/
+  `obligation`) and the deprecated `adoption-trend` (superseded by
+  `trend-analysis`'s `trend`) are dropped from the engineering packs. Pre-stable
+  clean break — no back-compat aliases.
 
 ## [0.1.2] - 2026-06-24
 

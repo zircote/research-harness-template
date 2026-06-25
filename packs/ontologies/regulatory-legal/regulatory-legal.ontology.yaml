@@ -484,7 +484,7 @@ entity_types:
       properties:
         obligation_ref:
           type: string
-        # cross-pack: control lives in security / compliance-regulation in software-engineering
+        # free-text ref: control lives in software-security; regulation modeled here as legal-act/obligation
         control_ref:
           type: string
         mapping_relation:

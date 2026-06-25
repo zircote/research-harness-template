@@ -38,7 +38,9 @@ labelled:
 
 - Every node `entityType` must be declared by an ontology **bound to that node's
   topic(s)** — the always-on core (`mif-generic`/`mif-base`) ∪ each topic's bound
-  ontologies. An undeclared type **fails**.
+  ontologies ∪ those bound ontologies' transitive `extends` ancestors (so an inherited
+  supertype like `engineering-base`'s `component` resolves under a topic that binds
+  `software-engineering`). An undeclared type **fails**.
 - Every relationship edge `type` must be declared by a bound ontology, and the edge's
   endpoints must satisfy that relationship's `from`/`to` **domains** (e.g. k12
   `belongs_to` only goes `title → program`). An undeclared type or a domain violation

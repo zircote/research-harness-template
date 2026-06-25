@@ -131,11 +131,12 @@ and under a broken ajv.
 
 ## Ontology — `schemas/mif/ontology.schema.json`
 
-The ontology definition contract (`schemas/mif/ontology.schema.json`), vendored
-verbatim from MIF and checksum-locked in `schemas/mif/VENDOR.lock` (the trust root;
-ontology *definitions* are unlocked/editable — only the contract is locked). An
-ontology declares `entity_types` (each `{name, base,
-schema:{required, properties}}`) and `relationships`. The **registry** is the set of
+The ontology definition contract (`schemas/mif/ontology.schema.json`), seeded from MIF
+with provenance recorded in `schemas/mif/VENDOR.lock` (nothing is locked — the contract
+is first-class and evolves in-repo on its way back to MIF). An ontology declares
+`entity_types` (each `{name, base, subtype_of?, schema:{required, properties}}`) and
+`relationships`. A type may declare `subtype_of` (parent types it specializes); a
+subtype is substitutable for its supertype at a relationship endpoint. The **registry** is the set of
 vendored ontology YAMLs — core under `schemas/ontologies/` (`mif-generic` built-in
 generic types + `mif-base` scaffolding, always enabled for every topic) and the six
 example **data packs** under `packs/ontologies/<id>/` (disabled by default). JSON is
@@ -156,7 +157,7 @@ catalog aborts) and is bash-3.2 portable. Classification — stamping a finding'
 `entity_type` — is an upstream agent step (`dimension-analyst`, topic onboarding in
 `/start`); the resolver and `gate_m12` are the deterministic floor. `gate_m12` asserts:
 the contract validates its sample; every registry ontology validates; id@version is
-unique; VENDOR.lock checksum-locks the contract only (ontology definitions unlocked);
+unique; VENDOR.lock locks nothing (the contract is first-class editable);
 the `ontology-manager` skill scaffolds a new valid ontology (registry extensible);
 the resolver pass/fail matrix; fail-safe; binding
 → catalog → registry integrity; and the pack-enable path end to end.

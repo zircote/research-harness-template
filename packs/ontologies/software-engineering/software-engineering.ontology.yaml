@@ -1,112 +1,38 @@
 ---
 # Software Engineering Ontology
 #
-# A comprehensive ontology for software development teams.
-# Extends the MIF base ontology with domain-specific entity types.
+# The SDLC-operational domain pack. Architecture vocabulary shared across engineering
+# domains (component, design-pattern, architectural-decision, delivery-metric,
+# engineering-practice, process-discipline) now lives in the engineering-base layer
+# this pack EXTENDS; the generic `technology` lives in mif-generic. Security types
+# (security-threat, security-framework, security-incident) moved to the software-security
+# pack; regulation moved to regulatory-legal. What remains here is genuinely
+# software-engineering-specific: incidents and operational procedures.
 #
-# Compatible with: mif-base v0.1.0 (cognitive triad hierarchy)
-#
-# Version: 0.4.0
+# Version: 0.5.0
 # Last Updated: 2026-06-24
 #
-# 0.4.0 (domain-ontology-pack-expansion): security-threat, security-framework, and
-# compliance-regulation EXTENDED with strict-superset fields for the new security
-# and regulatory-legal packs; security-incident added (specialization of
-# incident-report). adoption-trend DEPRECATED — its canonical successor `trend` is
-# extracted into the new trend-analysis pack; retained (not deleted) for back-compat.
+# 0.5.0 (ontology-spine-relayering): re-parented onto engineering-base; shed the shared
+# engineering supertypes (now inherited), the generic `technology` (mif-generic), the
+# security types (-> software-security), `compliance-regulation` (-> regulatory-legal,
+# subsumed by legal-act/obligation), and the deprecated `adoption-trend`
+# (-> trend-analysis `trend`). Clean break — no back-compat aliases (pre-stable).
 
 ontology:
   id: software-engineering
-  version: "0.4.0"
-  description: "Software engineering domain ontology"
+  version: "0.5.0"
+  description: "Software engineering domain ontology — incidents and SDLC operational procedures"
   extends:
-    - mif-base
-    - shared-traits
+    - engineering-base
 # Custom Namespaces
-# These extend the base cognitive triad hierarchy.
 namespaces:
-  semantic:
-    children:
-      architecture:
-        description: "System architecture and component designs"
-        type_hint: semantic
-      components:
-        description: "Software components, modules, services"
-        type_hint: semantic
-      dependencies:
-        description: "Third-party libraries, packages, integrations"
-        type_hint: semantic
   procedural:
     children:
       deployments:
         description: "Deployment procedures, release processes"
         type_hint: procedural
-# Entity Types
-# Structured entities with JSON Schema validation.
+# Entity Types — software-engineering-specific (shared supertypes are inherited from engineering-base).
 entity_types:
-  - name: component
-    description: "A software component, module, or service"
-    base: semantic
-    traits:
-      - versioned
-      - documented
-    schema:
-      required:
-        - name
-        - responsibility
-      properties:
-        name:
-          type: string
-          description: "Component name"
-        responsibility:
-          type: string
-          description: "Single responsibility description"
-        dependencies:
-          type: array
-          description: "List of component dependencies"
-          items:
-            type: string
-        interfaces:
-          type: array
-          description: "Public interfaces/APIs"
-          items:
-            type: string
-        owner:
-          type: string
-          description: "Team or person owning this component"
-  - name: architectural-decision
-    description: "An architectural decision with full context"
-    base: semantic
-    traits:
-      - dated
-      - cited
-    schema:
-      required:
-        - decision
-        - rationale
-      properties:
-        decision:
-          type: string
-          description: "The decision made"
-        rationale:
-          type: string
-          description: "Why this decision was made"
-        alternatives:
-          type: array
-          description: "Alternatives considered"
-          items:
-            type: object
-        consequences:
-          type: object
-          description: "Known consequences and trade-offs"
-        status:
-          type: string
-          description: "Decision status"
-          enum:
-            - proposed
-            - accepted
-            - deprecated
-            - superseded
   - name: incident-report
     description: "A production incident or outage report"
     base: episodic
@@ -144,102 +70,6 @@ entity_types:
         duration_minutes:
           type: integer
           description: "Incident duration in minutes"
-  # 0.4.0 ADD — a security breach specialization of incident-report (VERIS schema).
-  # An ops outage and a security breach share the episodic incident shape; a disjoint
-  # type would fork the incident graph (domain-ontology-pack-expansion, security-pack-spec).
-  - name: security-incident
-    description: "A security breach/incident — a specialization of incident-report carrying the VERIS four A's"
-    base: episodic
-    # VERIS — Incident (Actor + Action + Asset + Attribute)
-    traits:
-      - timeline
-      - stakeholders
-      - cited
-    schema:
-      required:
-        - severity
-        - impact
-        - resolution
-      properties:
-        severity:
-          type: string
-          enum:
-            - critical
-            - high
-            - medium
-            - low
-        impact:
-          type: string
-        resolution:
-          type: string
-        actor:
-          type: string
-          description: "VERIS Actor — external / internal / partner"
-        action:
-          type: string
-          description: "VERIS Action — malware / hacking / social / error / misuse"
-        asset:
-          type: string
-          description: "VERIS Asset — the device/data affected"
-        attribute:
-          type: string
-          description: "VERIS Attribute — how affected (CIA)"
-  - name: technology
-    description: "A technology, framework, or tool"
-    base: semantic
-    traits:
-      - versioned
-      - documented
-    schema:
-      required:
-        - name
-        - category
-      properties:
-        name:
-          type: string
-        category:
-          type: string
-          enum:
-            - database
-            - framework
-            - language
-            - infrastructure
-            - tool
-            - library
-        website:
-          type: string
-          format: uri
-        license:
-          type: string
-        use_case:
-          type: string
-          description: "Why/where we use this technology"
-  - name: design-pattern
-    description: "A design pattern or architectural pattern"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - pattern_name
-        - context
-        - solution
-      properties:
-        pattern_name:
-          type: string
-        context:
-          type: string
-          description: "When to use this pattern"
-        solution:
-          type: string
-          description: "How the pattern solves the problem"
-        consequences:
-          type: object
-          description: "Trade-offs and implications"
-        related_patterns:
-          type: array
-          items:
-            type: string
   - name: runbook
     description: "Operational runbook for handling scenarios"
     base: procedural
@@ -345,183 +175,7 @@ entity_types:
             type: object
         downtime_required:
           type: boolean
-  - name: security-threat
-    description: "A security threat, attack class, or vulnerability affecting the software lifecycle"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - threat_name
-        - attack_vector
-      properties:
-        threat_name:
-          type: string
-        attack_vector:
-          type: string
-          description: "How the threat is exploited"
-        impact:
-          type: string
-          description: "What an attacker gains or breaks"
-        mitigation_summary:
-          type: string
-          description: "Primary defenses against this threat"
-        references:
-          type: array
-          items:
-            type: string
-        # 0.4.0 EXTEND (MITRE ATT&CK / CAPEC) — strict superset, required set unchanged
-        attack_id:
-          type: string
-          description: "ATT&CK technique/sub-technique (e.g. T1566) or CAPEC ID"
-        tactic:
-          type: string
-          description: "ATT&CK tactic / kill-chain phase"
-        adversary:
-          type: string
-          description: "Intrusion set / ATT&CK Group"
-  - name: security-framework
-    description: "A security or assurance framework, taxonomy, or standard (e.g. OWASP Top 10, MITRE ATLAS, SLSA, NIST SSDF)"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - framework_name
-        - scope
-      properties:
-        framework_name:
-          type: string
-        scope:
-          type: string
-          description: "What the framework governs (e.g. application risk, supply-chain integrity, adversary TTPs)"
-        maintainer:
-          type: string
-          description: "Organization that maintains the framework"
-        relationship:
-          type: string
-          description: "How it relates to or composes with other frameworks"
-        # 0.4.0 EXTEND (NIST CSF / OWASP) — strict superset, required set unchanged
-        version:
-          type: string
-          description: "Framework version/edition (e.g. CSF 2.0, OWASP Top 10:2025)"
-        structure:
-          type: string
-          description: "Framework structure (e.g. CSF: 6 functions / 22 categories / 106 subcategories)"
-  - name: compliance-regulation
-    description: "A law, regulation, or government mandate bearing on secure software development"
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - regulation_name
-        - jurisdiction
-      properties:
-        regulation_name:
-          type: string
-        jurisdiction:
-          type: string
-          description: "Governing jurisdiction (e.g. EU, US federal)"
-        key_obligations:
-          type: string
-          description: "Core obligations the regulation imposes"
-        effective_dates:
-          type: string
-          description: "Relevant entry-into-force or compliance deadlines"
-        # 0.4.0 EXTEND (LKIF-Core / FIBO FBC) — strict superset, required set unchanged
-        legal_source_type:
-          type: string
-          description: "LKIF legal-source kind: statute, regulation, directive, customary law, case law"
-        citation_ref:
-          type: string
-          description: "Official citation (e.g. Regulation (EU) 2016/679)"
-  # DEPRECATED in 0.4.0: the canonical generic `trend` is extracted into the
-  # trend-analysis pack. adoption-trend is retained (not deleted) so existing
-  # typed instances do not dangle; prefer trend-analysis `trend` for new typing.
-  - name: adoption-trend
-    description: "DEPRECATED (0.4.0) — superseded by trend-analysis `trend`. A momentum, maturation, or standardization signal in the direction of travel."
-    deprecated: true
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - trend_name
-        - direction
-      properties:
-        trend_name:
-          type: string
-        direction:
-          type: string
-          description: "Where the trend is heading"
-        evidence:
-          type: string
-          description: "Signals supporting the trend"
-        maturity:
-          type: string
-          description: "How established the trend is (e.g. emerging, mainstream)"
-  - name: delivery-metric
-    description: A software-delivery or reliability metric (e.g. DORA four/five keys, SLO/SLI, MTTR)
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - metric_name
-      properties:
-        metric_name:
-          type: string
-        definition:
-          type: string
-          description: What the metric measures
-        benchmark:
-          type: string
-          description: Target or elite-tier value
-        source:
-          type: string
-          description: Originating framework or study
-  - name: engineering-practice
-    description: An organizational, cultural, or reliability practice (e.g. blameless postmortems, you-build-it-you-run-it, psychological safety)
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - practice_name
-      properties:
-        practice_name:
-          type: string
-        description:
-          type: string
-          description: What the practice is
-        evidence:
-          type: string
-          description: Empirical support or outcome
-        origin:
-          type: string
-          description: Originating model, study, or author
-  - name: process-discipline
-    description: A governance or production-readiness discipline (e.g. PRR, ORR, ITIL change enablement, CAB, acceptance criteria)
-    base: semantic
-    traits:
-      - cited
-    schema:
-      required:
-        - discipline_name
-      properties:
-        discipline_name:
-          type: string
-        purpose:
-          type: string
-          description: What the discipline governs
-        criteria:
-          type: string
-          description: Acceptance or gating criteria
-        stage:
-          type: string
-          description: SDLC stage where it applies
-# Traits (Mixins)
+# Traits (Mixins) used by the operational types.
 traits:
   versioned:
     description: "Adds version tracking fields"
@@ -533,14 +187,6 @@ traits:
         type: array
         items:
           type: object
-  documented:
-    description: "Adds documentation reference"
-    fields:
-      documentation_url:
-        type: string
-        format: uri
-      readme_path:
-        type: string
   dated:
     description: "Adds decision/event date"
     fields:
@@ -550,10 +196,6 @@ traits:
       review_date:
         type: string
         format: date
-  cited:
-    description: "Requires citations/sources"
-    requires:
-      - citations
   timeline:
     description: "Adds incident timeline"
     fields:
@@ -583,24 +225,10 @@ traits:
               type: string
             contact:
               type: string
-# Relationships
+# Relationships — software-engineering edges. Endpoints that name an inherited supertype
+# (component, architectural-decision) or the generic `technology` resolve across the
+# registry (gate_m20) and via the extends chain at concordance time.
 relationships:
-  depends_on:
-    description: "Component dependency relationship"
-    from:
-      - component
-    to:
-      - component
-      - technology
-    symmetric: false
-  implements:
-    description: "Component implements a pattern or decision"
-    from:
-      - component
-    to:
-      - design-pattern
-      - architectural-decision
-    symmetric: false
   caused_by:
     description: "Incident causality"
     from:
@@ -646,46 +274,14 @@ relationships:
     to:
       - runbook
     symmetric: false
-# Discovery Configuration
+# Discovery Configuration — software-engineering-specific types only.
 discovery:
   enabled: true
   confidence_threshold: 0.8
   patterns:
-    # Technology patterns - suggest _semantic/knowledge namespace
-    - content_pattern: "\\b(PostgreSQL|MySQL|MongoDB|Redis)\\b"
-      suggest_entity: technology
-      suggest_namespace: _semantic/entities
-    - content_pattern: "\\b(React|Vue|Angular|Next\\.js|Django)\\b"
-      suggest_entity: technology
-      suggest_namespace: _semantic/entities
-    - content_pattern: "\\b(FastAPI|Express|Flask|Spring)\\b"
-      suggest_entity: technology
-      suggest_namespace: _semantic/entities
-    - content_pattern: "\\b(Docker|Kubernetes|Terraform|AWS)\\b"
-      suggest_entity: technology
-      suggest_namespace: _semantic/entities
-    # Pattern patterns - suggest _procedural/patterns
-    - content_pattern: "\\b(Factory|Singleton|Observer)\\s+Pattern\\b"
-      suggest_entity: design-pattern
-      suggest_namespace: _procedural/patterns
-    - content_pattern: "\\b(Repository|Strategy|Decorator)\\s+Pattern\\b"
-      suggest_entity: design-pattern
-      suggest_namespace: _procedural/patterns
-    - content_pattern: "\\b(CQRS|Event\\s+Sourcing|Saga)\\b"
-      suggest_entity: design-pattern
-      suggest_namespace: _procedural/patterns
-    # Component patterns from file paths
-    - file_pattern: "**/services/**/*.py"
-      suggest_entity: component
-      suggest_namespace: _semantic/components
-    - file_pattern: "**/components/**/*.tsx"
-      suggest_entity: component
-      suggest_namespace: _semantic/components
-    # Incident patterns - suggest _episodic/incidents
     - content_pattern: "\\b(outage|incident|postmortem|RCA)\\b"
       suggest_entity: incident-report
       suggest_namespace: _episodic/incidents
-    # Procedural patterns
     - content_pattern: "\\b(runbook|playbook|SOP|procedure)\\b"
       suggest_entity: runbook
       suggest_namespace: _procedural/runbooks
