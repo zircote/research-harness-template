@@ -66,15 +66,18 @@ SH
 # $BIN). Only git/gh/copier are stubbed.
 chmod +x "$BIN"/*
 
-mk_clone() { # -> a clean clone dir with .copier-answers.yml
-  local c="$ROOT/clone"; rm -rf "$c"; mkdir -p "$c"
+mk_clone() { # -> a clean clone dir with .copier-answers.yml and update.sh copied in
+  local c="$ROOT/clone"; rm -rf "$c"; mkdir -p "$c/scripts"
+  cp "$UPDATE_SH" "$c/scripts/update.sh"   # update.sh runs from within the clone (it cd's to its own ../)
   git -C "$c" init -q; git -C "$c" config user.email t@t.t; git -C "$c" config user.name t
   printf '_src_path: gh:modeled-information-format/research-harness-template\n_commit: v0.1.0\n' > "$c/.copier-answers.yml"
   git -C "$c" add -A; git -C "$c" commit -q -m init
   echo "$c"
 }
 
-run() { ( cd "$1" && PATH="$BIN:$PATH" GH_VERIFY="$2" bash "$UPDATE_SH" ); }
+# Invoke the clone's own copy from an unrelated CWD — proves update.sh cd's to its clone
+# root regardless of where it's called from.
+run() { ( cd "$ROOT" && PATH="$BIN:$PATH" GH_VERIFY="$2" bash "$1/scripts/update.sh" ); }
 
 # 1. verification MISS -> non-zero, copier never invoked
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"

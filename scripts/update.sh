@@ -40,6 +40,10 @@
 
 set -euo pipefail
 
+# Run from the clone root regardless of the caller's CWD (mirrors scripts/verify.sh), so
+# `bash /path/to/scripts/update.sh` works and .copier-answers.yml resolves from anywhere.
+cd "$(dirname "$0")/.." || { echo "update.sh: cannot locate clone root" >&2; exit 2; }
+
 ANSWERS=".copier-answers.yml"
 TARGET_TAG=""        # explicit override; default = latest tag (Copier's default)
 COPIER_ARGS=()
