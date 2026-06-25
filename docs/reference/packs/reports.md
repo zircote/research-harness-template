@@ -142,12 +142,16 @@ scripts/pack-toggle.sh engineering on
 
 ## exec-summary
 
-**Version:** 0.2.0 | **Kind:** genre
+**Version:** 0.3.0 | **Kind:** genre
 
 ### Purpose
 
-Produces a 1-2 page decision-oriented executive summary. Section order is fixed and
-enforced:
+Produces a 1-2 page decision-oriented executive summary. It can also be **composed into** a
+larger report as the leadership-summary section: an ESOMAR-style market-research management
+summary, or a PTES-style penetration-test Executive/Leadership Summary expanded with the
+PTES sub-elements **Posture**, **Risk Profile**, and **Roadmap**. (ESOMAR is an ethics code,
+not a report format — that caveat is carried.) These composable modes are additive and off
+by default; standalone behavior is unchanged. Section order is fixed and enforced:
 
 1. **BLUF (Bottom Line Up Front)** — the heading must literally contain the acronym
    "BLUF" for automated checks to locate it. States the answer and recommended action
@@ -159,9 +163,11 @@ enforced:
 4. **Risks & Caveats** — 1 to 3 conditions under which the recommendation fails, plus
    the confidence basis.
 
-The length ceiling is hard: 1-2 pages. Falsified findings leave zero trace — they are not
-mentioned, cited, hedged against, or alluded to anywhere. Internal MIF finding `@id`
-handles and `urn:mif:` URNs never appear in the rendered output.
+The length ceiling is hard: 1-2 pages. It applies to the exec/leadership summary section
+itself — standalone, and when that section is embedded in a larger ESOMAR/PTES report — not
+to the full composed report a host pack assembles around it. Falsified findings leave zero
+trace — they are not mentioned, cited, hedged against, or alluded to anywhere. Internal MIF
+finding `@id` handles and `urn:mif:` URNs never appear in the rendered output.
 
 ### When to use
 
@@ -175,7 +181,9 @@ who need the conclusion and recommended action and will not read past page two.
 - Single actionable Recommendation (What / Why / How / Risk)
 - Risks & Caveats section covering failure conditions
 - Inline numeric citation markers resolving to a compact footnote list
-- Hard 1-2 page ceiling
+- Hard 1-2 page ceiling on the summary section (standalone or embedded)
+- Optional composable modes: ESOMAR management summary, or PTES Executive/Leadership Summary
+  with Posture / Risk Profile / Roadmap sub-elements (additive, off by default)
 
 ### Dependencies
 

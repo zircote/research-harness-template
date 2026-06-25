@@ -1,7 +1,7 @@
 ---
 name: exec-summary
-description: Genre template for a 1-2 page decision-oriented executive summary (BLUF, key findings, recommendation, risks). Use when the deliverable is a short brief for decision-makers who will act without reading a full report.
-version: 1.0.1
+description: Genre template for a 1-2 page decision-oriented executive summary (BLUF, key findings, recommendation, risks). Composable as the leadership-summary section of a full ESOMAR- or PTES-style report, with optional PTES Posture / Risk Profile / Roadmap sub-elements. Use when the deliverable is a short brief for decision-makers who will act without reading a full report.
+version: 0.3.0
 ---
 
 # Genre Template: Executive Summary
@@ -33,6 +33,28 @@ explore alternatives, or expose intermediate analysis.
 4. **Risks & Caveats** — the 1 to 3 conditions under which the recommendation fails, plus
    the confidence basis (note any finding whose verdict is `weakened` or `inconclusive`).
 
+### Composable mode (additive — off by default; render when requested)
+
+The exec-summary is normally standalone, but it maps to the *leadership-summary section* of
+larger standard reports. When requested, **render this pack's leadership-summary section so it
+embeds into** a full ESOMAR- or PTES-style report — still emit the summary section, shaped for
+embedding, NOT the whole multi-section report:
+
+- **ESOMAR-style market-research report** — render the exec-summary as the report's
+  management summary that introduces the fuller study. Emit only that management-summary
+  section, sized for embedding; do not generate the full study's body sections. (ESOMAR is an
+  **ethics code**, not a report *format* — carry that caveat; do not claim ESOMAR format
+  conformance.)
+- **PTES-style penetration-test report** — render the exec-summary as the PTES
+  **Executive / Leadership Summary**, expanded with its sub-elements: **Posture** (overall
+  security posture), **Risk Profile** (business risk from the findings), and **Roadmap**
+  (prioritized remediation direction). Emit only that leadership-summary section, not the
+  full PTES technical report.
+
+Standalone behavior is unchanged when composable mode is not requested. The full ESOMAR/PTES
+reports are built from scratch by separate packs; this pack always emits the leadership-summary
+section (standalone, or shaped for embedding), and any overlap is reconciled later.
+
 ## Citation Style
 
 Inline numeric markers `[1]`, `[2]` resolving to a compact footnote list. Each footnote MUST
@@ -50,7 +72,10 @@ URNs in the output. No bibliography — footnotes only.
 
 ## Rules
 
-- Length is a hard ceiling: 1-2 pages. If it grows, cut — do not continue.
+- **Composable, with the ESOMAR caveat.** When composed into a larger report, ESOMAR is an
+  *ethics code*, not a report *format* — do not market output as ESOMAR-format conformant.
+  The PTES Posture / Risk Profile / Roadmap sub-elements apply only in PTES composable mode.
+- Length is a hard ceiling: 1-2 pages (standalone mode). If it grows, cut — do not continue.
 - The summary must stand alone: a reader who reads only this document can act correctly.
 - Quantify at least one finding. Never fabricate a number; present a range when sources
   disagree and hedge ("estimated", "data suggests") for uncertain claims.

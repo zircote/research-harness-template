@@ -202,6 +202,119 @@
         "The BLUF paragraph recommends a clear action regarding the two-department pilot without hedging into an extended methods discussion.",
         "The document is 1-2 pages in length \u2014 not a multi-section research report with method sections, alternatives analysis, or appendices."
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Produce a PTES-style penetration-test report leadership summary by composing the exec-summary genre into PTES mode. Write it to ptes-report.md. Render the executive/leadership summary expanded with the PTES sub-elements Posture, Risk Profile, and Roadmap, in addition to BLUF and Key Findings. Findings:\n- id: urn:mif:f_pt_1 | title: External attack surface exposed an unauthenticated admin panel | dimension: security | verdict: survived | citation: https://example.com/admin-panel\n- id: urn:mif:f_pt_2 | title: Password policy permits credential stuffing at scale | dimension: security | verdict: survived | citation: https://example.com/cred-stuffing\n- id: urn:mif:f_pt_3 | title: Network segmentation limits lateral movement from the DMZ | dimension: security | verdict: survived | citation: https://example.com/segmentation",
+      "expected_output": "A PTES leadership summary with BLUF and Key Findings PLUS the PTES sub-elements Posture, Risk Profile, and Roadmap. No urn:mif: leakage.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "ptes-report.md",
+          "description": "Output file created"
+        },
+        {
+          "type": "file_contains",
+          "file": "ptes-report.md",
+          "literal": "BLUF",
+          "description": "BLUF still present in PTES composable mode (additive)"
+        },
+        {
+          "type": "regex_match",
+          "file": "ptes-report.md",
+          "pattern": "(?i)posture",
+          "description": "PTES leadership sub-element Posture rendered"
+        },
+        {
+          "type": "regex_match",
+          "file": "ptes-report.md",
+          "pattern": "(?i)risk profile",
+          "description": "PTES leadership sub-element Risk Profile rendered"
+        },
+        {
+          "type": "regex_match",
+          "file": "ptes-report.md",
+          "pattern": "(?i)roadmap",
+          "description": "PTES leadership sub-element Roadmap rendered"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "ptes-report.md",
+          "literal": "urn:mif:",
+          "description": "No raw urn:mif: identifiers leak"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "ptes-report.md",
+          "literal": "f_pt_",
+          "description": "No internal MIF finding IDs leak"
+        }
+      ],
+      "expectations": [
+        "The PTES leadership summary contains a security Posture statement, a business Risk Profile derived from the findings, and a prioritized remediation Roadmap, each distinct and composed on top of the standard BLUF/Key Findings rather than replacing them.",
+        "The output does not claim strict ESOMAR-format conformance (ESOMAR is an ethics code); the PTES Posture/Risk Profile/Roadmap sub-elements appear only because PTES mode was requested."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Produce an ESOMAR-style market-research management summary by composing the exec-summary genre into ESOMAR mode. Write it to esomar-report.md. Render the exec-summary as the management summary that introduces a fuller market-research study (the leadership-summary section only, sized for embedding, not the whole study). Carry the ESOMAR ethics-code-not-format caveat explicitly. Findings:\n- id: urn:mif:f_market_1 | title: SEA logistics market valued at $51B, growing 9% CAGR through 2028 | dimension: market | verdict: survived | citation: https://statista.com/sea-logistics-2024\n- id: urn:mif:f_market_2 | title: Three incumbents control 58% of last-mile volume | dimension: market | verdict: survived | citation: https://pitchbook.com/sea-logistics-players\n- id: urn:mif:f_market_3 | title: Regulatory clearance averages 18 months across 6 ASEAN markets | dimension: market | verdict: survived | citation: https://aseansec.org/logistics-regs",
+      "expected_output": "An ESOMAR-style management summary (BLUF, Key Findings, Recommendation, Risks & Caveats) that explicitly carries the caveat that ESOMAR is an ethics code and not a report format, and that does NOT claim ESOMAR-format conformance. No urn:mif: leakage.",
+      "files": [],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "esomar-report.md",
+          "description": "Output file created"
+        },
+        {
+          "type": "file_contains",
+          "file": "esomar-report.md",
+          "literal": "BLUF",
+          "description": "BLUF still present in ESOMAR composable mode (additive)"
+        },
+        {
+          "type": "regex_match",
+          "file": "esomar-report.md",
+          "pattern": "(?is)esomar.{0,200}?ethics code.{0,200}?not.{0,80}?(a )?(report )?format",
+          "description": "ESOMAR ethics-code-not-format caveat is carried"
+        },
+        {
+          "type": "regex_match",
+          "file": "esomar-report.md",
+          "pattern": "(?i)recommendation",
+          "description": "Recommendation section rendered"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "esomar-report.md",
+          "literal": "ESOMAR-format compliant",
+          "description": "Output does not claim ESOMAR-format conformance (compliant phrasing)"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "esomar-report.md",
+          "literal": "ESOMAR-format conformant",
+          "description": "Output does not claim ESOMAR-format conformance (conformant phrasing)"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "esomar-report.md",
+          "literal": "urn:mif:",
+          "description": "No raw urn:mif: identifiers leak"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "esomar-report.md",
+          "literal": "f_market_",
+          "description": "No internal MIF finding IDs leak"
+        }
+      ],
+      "expectations": [
+        "The management summary explicitly states that ESOMAR is an ethics code, not a report format, and does not market the output as ESOMAR-format conformant.",
+        "The summary is the leadership/management-summary section only (BLUF, Key Findings, Recommendation, Risks & Caveats), sized for embedding into a fuller study, not the full multi-section market-research report.",
+        "No PTES sub-elements (Posture / Risk Profile / Roadmap) appear, because ESOMAR mode — not PTES mode — was requested."
+      ]
     }
   ]
 }
