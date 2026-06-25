@@ -41,11 +41,13 @@ It will:
 2. Reproduce the release artifact from that tree and verify its SLSA
    build-provenance attestation, pinned to the repository **and** the release
    workflow identity (`gh attestation verify … --signer-workflow …`).
-3. On success only: normalize `_src_path` in `.copier-answers.yml` to the pinned
-   upstream (so Copier applies from exactly the verified repo, and a clone whose
-   recorded origin lags an org move is healed — this **rewrites** that line of the
-   answers file), then run `copier update --vcs-ref <verified-sha>` — so Copier
-   applies exactly the bytes that were verified.
+3. On success only: run `copier update --vcs-ref <verified-sha>` — so Copier applies
+   exactly the bytes that were verified (a git SHA is content-addressed, so the applied
+   content is the verified content regardless of which path `_src_path` names). Then, if
+   your clone's recorded `_src_path` lags an org move, **heal it** to the pinned upstream
+   in `.copier-answers.yml` so future runs target it directly rather than relying on the
+   redirect — that one-line rewrite lands in the same update diff you review and commit.
+   (The heal must run *after* `copier update`, which refuses a dirty work tree.)
 
 To update to a specific tag, or to pass extra Copier flags:
 

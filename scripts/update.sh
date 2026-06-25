@@ -49,7 +49,10 @@ TARGET_TAG=""        # explicit override; default = latest tag (Copier's default
 COPIER_ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in
-    --target) [ $# -ge 2 ] || { echo "update.sh: --target requires a tag" >&2; exit 2; }; TARGET_TAG="$2"; shift 2 ;;
+    --target)
+      [ $# -ge 2 ] || { echo "update.sh: --target requires a tag" >&2; exit 2; }
+      case "$2" in ""|*[!A-Za-z0-9._+-]*) echo "update.sh: invalid --target tag '$2'" >&2; exit 2 ;; esac
+      TARGET_TAG="$2"; shift 2 ;;
     --) shift; COPIER_ARGS=("$@"); break ;;
     *) echo "update.sh: unknown argument '$1'" >&2; exit 2 ;;
   esac
@@ -68,6 +71,12 @@ fi
 
 for t in git gh copier gzip yq awk; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: '$t' is required" >&2; exit 2; }; done
 [ -f "$ANSWERS" ] || { echo "update.sh: $ANSWERS not found — run from a clone instantiated by copier" >&2; exit 2; }
+
+# A copier update needs a git clone (it diffs against the recorded base). Check this
+# explicitly so a non-git copy gets a clear error instead of the dirty-tree message below
+# (`git diff` in a non-repo exits non-zero and would be misreported as "uncommitted changes").
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+  || { echo "update.sh: not a git repository — copier update needs a git clone (see docs/how-to/instantiate-the-harness.md)" >&2; exit 2; }
 
 # A copier update requires a clean work tree (it computes and re-applies a diff).
 # Hard-fail on a dirty tree rather than silently stashing user work.
@@ -136,11 +145,27 @@ if ! gh attestation verify "$ARTIFACT" \
 fi
 echo "update.sh: provenance verified — applying update pinned to ${SHA}"
 
-# `copier update` has no source override — it applies from `_src_path` in the answers
-# file. Normalize it to the PINNED upstream so the update applies from exactly the repo
-# whose provenance we just verified (not a mutable/drifted _src_path), and so a clone
-# whose recorded origin lags an org move (e.g. the zircote -> modeled-information-format
-# transfer) is healed. Surgical single-line rewrite preserves the rest of the file.
+# Apply, pinned to the verified SHA (TOCTOU-closed). --trust is now earned. Pass the
+# extra args fully quoted (length-guarded for bash 3.2 + set -u) so an arg with spaces or
+# glob characters reaches Copier intact.
+#
+# Copier applies from `_src_path` (it has no source override) and hard-refuses a dirty
+# destination, so we do NOT rewrite the answers file first. We don't need to: `--vcs-ref`
+# is a git SHA — content-addressed — so Copier applies exactly the bytes we verified no
+# matter which path `_src_path` names; and a clone whose `_src_path` lags an org move (the
+# zircote -> modeled-information-format transfer) still resolves, because GitHub redirects
+# the old path to the new repo, which contains that SHA. The `_src_path` heal happens
+# AFTER, below.
+if [ "${#COPIER_ARGS[@]}" -gt 0 ]; then
+  copier update --vcs-ref "$SHA" --trust "${COPIER_ARGS[@]}"
+else
+  copier update --vcs-ref "$SHA" --trust
+fi
+
+# Heal a drifted `_src_path` AFTER the update so future runs target the pinned upstream
+# directly instead of leaning on the org-move redirect. This must come after `copier
+# update` (which hard-refuses a dirty tree); the rewrite lands in the same diff the user
+# reviews and commits alongside the update. Skipped when already pinned (the steady state).
 if [ "$src_path" != "$PINNED_SRC" ]; then
   # Surgical single-line rewrite via awk (already required) — preserves the file's header
   # comment and other answers; avoids a perl dependency and yq's reformatting.
@@ -150,15 +175,6 @@ if [ "$src_path" != "$PINNED_SRC" ]; then
   # Confirm the rewrite actually landed — never claim a pin we didn't make (e.g. if there
   # was no top-level `_src_path:` line for awk to replace).
   grep -qx "_src_path: ${PINNED_SRC}" "$ANSWERS" \
-    || { echo "update.sh: could not pin _src_path in $ANSWERS (no top-level _src_path line) — refusing to update" >&2; exit 2; }
+    || { echo "update.sh: could not pin _src_path in $ANSWERS (no top-level _src_path line)" >&2; exit 2; }
   echo "update.sh: pinned _src_path -> ${PINNED_SRC} (was '${src_path}')"
-fi
-
-# Apply, pinned to the verified SHA (TOCTOU-closed). --trust is now earned. Pass the
-# extra args fully quoted (length-guarded for bash 3.2 + set -u) so an arg with spaces or
-# glob characters reaches Copier intact.
-if [ "${#COPIER_ARGS[@]}" -gt 0 ]; then
-  copier update --vcs-ref "$SHA" --trust "${COPIER_ARGS[@]}"
-else
-  copier update --vcs-ref "$SHA" --trust
 fi

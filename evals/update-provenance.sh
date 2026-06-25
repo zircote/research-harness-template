@@ -61,6 +61,13 @@ SH
 cat > "$BIN/copier" <<SH
 #!/usr/bin/env bash
 echo "copier \$*" > "$ROOT/copier_invoked"
+# Simulate real copier update: it rewrites .copier-answers.yml with the new _commit and
+# PRESERVES _src_path. This exercises update.sh's heal-AFTER ordering — the _src_path heal
+# must run after copier has touched the file and must still find the top-level line.
+if [ -f .copier-answers.yml ]; then
+  awk '/^_commit:/{print "_commit: v9.9.9"; next} {print}' .copier-answers.yml > .copier-answers.yml.t \
+    && mv .copier-answers.yml.t .copier-answers.yml
+fi
 SH
 # Note: we do NOT stub yq/sort/awk — update.sh uses the real ones (found on PATH after
 # $BIN). Only git/gh/copier are stubbed.
@@ -91,8 +98,9 @@ run "$C" fail >/dev/null 2>&1; rc=$?
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"
 run "$C" pass >/dev/null 2>&1; rc=$?
 if [ "$rc" = 0 ] && grep -q -- "--vcs-ref $SHA" "$ROOT/copier_invoked" 2>/dev/null \
-   && grep -q '^_src_path: gh:modeled-information-format/research-harness-template$' "$C/.copier-answers.yml"; then
-  ok "verification pass -> copier pinned to verified SHA; drifted _src_path healed to pinned root"
+   && grep -q '^_src_path: gh:modeled-information-format/research-harness-template$' "$C/.copier-answers.yml" \
+   && grep -q '^_commit: v9.9.9$' "$C/.copier-answers.yml"; then
+  ok "verification pass -> copier pinned to verified SHA; heal-after preserved copier's _commit AND healed drifted _src_path"
 else
   no "verification pass path wrong (rc=$rc, invoked='$(cat "$ROOT/copier_invoked" 2>/dev/null)', src_path='$(grep _src_path "$C/.copier-answers.yml" 2>/dev/null)')"
 fi
