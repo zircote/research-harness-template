@@ -16,7 +16,7 @@ pass=0; fail=0
 ok()  { echo "PASS: $1"; pass=$((pass+1)); }
 no()  { echo "FAIL: $1"; fail=$((fail+1)); }
 
-ROOT=$(mktemp -d); trap 'rm -rf "$ROOT"' EXIT
+ROOT=$(mktemp -d "${TMPDIR:-/tmp}/update-eval.XXXXXX"); trap 'rm -rf "$ROOT"' EXIT
 
 # --- hermetic upstream: a repo with a tagged commit, served from a bare clone ---
 UP_SRC="$ROOT/upstream"; mkdir -p "$UP_SRC"

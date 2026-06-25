@@ -77,7 +77,8 @@ NAME="${PINNED_REPO##*/}"
 
 # Read _src_path only to sanity-check the clone's recorded origin against the pinned root
 # (informational — trust does not depend on it).
-src_path=$(yq -r '._src_path // ""' "$ANSWERS" 2>/dev/null | head -1)
+src_path=$(yq -r '._src_path // ""' "$ANSWERS" 2>/dev/null) \
+  || { echo "update.sh: could not parse $ANSWERS (invalid YAML?) — fix the answers file before updating" >&2; exit 2; }
 case "${src_path#gh:}" in
   "$PINNED_REPO"|"$PINNED_REPO".git|https://github.com/"$PINNED_REPO"*|"") : ;;
   *) echo "update.sh: WARNING: clone _src_path ('$src_path') differs from the pinned trust root '$PINNED_REPO'; verifying against the pinned root regardless." >&2 ;;
@@ -103,7 +104,7 @@ SHA=$(git ls-remote "$REMOTE" "refs/tags/${TARGET_TAG}^{}" | awk '{print $1}' | 
 echo "update.sh: target ${PINNED_REPO}@${TARGET_TAG} -> ${SHA}"
 
 # Fetch the target tree so we can reproduce the release artifact locally.
-WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/update.XXXXXX"); trap 'rm -rf "$WORK"' EXIT
 git -C "$WORK" init -q
 # Fetch by TAG REF (not the raw SHA): SHA1-in-want / fetching unadvertised objects is
 # disabled on many remotes. The tag ref brings its commit; we then archive the peeled SHA.
