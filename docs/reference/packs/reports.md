@@ -198,6 +198,63 @@ scripts/pack-toggle.sh exec-summary on
 
 ---
 
+## compliance-audit
+
+**Version:** 0.2.0 | **Kind:** genre | **Disabled by default (opt-in).**
+
+### Purpose
+
+Drafts and models a SOC 2 Type II-shaped controls report so a service organization can
+prepare and self-assess its controls narrative ahead of (or independent of) a formal
+audit. It reproduces the report **structure** and a tests-of-controls matrix only — it is
+**not an attestation, assurance, certification, or audit opinion**, and no licensed CPA
+firm is involved. Use it to draft or model a controls report, never to issue one.
+
+Section order:
+
+1. **Independent Service Auditor's Report** — draft placeholder framing scope and period;
+   expresses no opinion
+2. **Management's Assertion** — the organization's own statement of system and controls,
+   tied to finding `@id`s
+3. **System Description** — infrastructure, software, people, data, and processes
+4. **Trust Services Criteria** — Security always; Availability, Processing Integrity,
+   Confidentiality, Privacy when the findings cover them
+5. **Tests of Controls & Results** — the matrix: control, test performed, result/exception
+6. **Other Information** — supplementary material outside the scope of testing
+
+### When to use
+
+Use `compliance-audit` when the deliverable models a service organization's controls
+against the Trust Services Criteria for internal readiness or self-assessment. Do **not**
+use it to produce or represent an issued SOC 2 report — that is an attestation engagement
+performed by a licensed CPA firm under AICPA standards (SSAE 18), which this harness does
+not and cannot perform.
+
+### What it provides
+
+- Six-section SOC 2 Type II-shaped structure
+- A required controls / test-results matrix (Control · Test Performed · Result / Exception)
+- Explicit in-scope / excluded Trust Services Criteria
+- A strongly-stated no-attestation / no-assurance / no-opinion caveat throughout
+- Exception reporting (failed or partially-met controls are surfaced, never hidden)
+
+### Dependencies
+
+None beyond the core engine.
+
+### Benefits
+
+- Reproduces a familiar report shape teams can use to drive internal readiness work
+- The required matrix forces each control to trace to cited evidence rather than prose
+- The no-attestation caveat is load-bearing — it prevents the draft from being mistaken
+  for an issued, CPA-attested SOC 2 report
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh compliance-audit on
+```
+
 ## trend-analysis
 
 **Version:** 0.2.0 | **Kind:** genre

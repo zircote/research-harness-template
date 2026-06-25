@@ -147,6 +147,11 @@
       "source": "bundled"
     },
     {
+      "name": "compliance-audit",
+      "enabled": false,
+      "source": "bundled"
+    },
+    {
       "name": "trend-modeling",
       "enabled": false,
       "source": "bundled"
