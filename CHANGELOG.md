@@ -43,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   supertype at a relationship endpoint, enforced by `validate-concordance.sh` and
   `gate_m22`. `software-security.security-control` is `subtype_of: [control]`, so it
   satisfies the cross-cutting `governs` edge; a non-subtype is rejected.
+- A root `CLAUDE.md` orienting Claude Code to the harness (gates, contracts, the
+  goal-driven engine, pack control plane, and the conventions that bite). It is
+  template-managed and re-applied on update; the new
+  `docs/how-to/instantiate-the-harness.md` section recommends instance owners put
+  their own clone-specific guidance in a `CLAUDE.local.md` (loaded automatically,
+  never touched by `copier update`).
 
 ### Changed
 

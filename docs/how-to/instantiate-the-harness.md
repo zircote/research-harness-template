@@ -95,7 +95,39 @@ This writes the `.copier-answers.yml` your instance was missing; subsequent
 scaffolding and with no `.copier-answers.yml`. Treat it like Option B: strip the
 template-only files and, if you want update propagation, adopt copier as above.
 
+## Add instance-specific guidance in `CLAUDE.local.md`
+
+The template ships a `CLAUDE.md` that orients Claude Code to the harness *itself* —
+its quality gates, contracts, and conventions. That file is **template-managed**:
+it is copied verbatim and re-applied by `bash scripts/update.sh`, so edits you make
+to it will conflict on the next update.
+
+Put **your instance's** guidance — active research topics, house style, local
+paths, team conventions — in a separate `CLAUDE.local.md` at the repo root. Claude
+Code loads it automatically alongside `CLAUDE.md`, and the template never ships or
+manages it, so `copier update` will never touch or clobber it.
+
+```bash
+cat > CLAUDE.local.md <<'EOF'
+# Instance guidance
+
+- Active topics: <your topic ids>
+- House style: <conventions Claude should follow in this harness>
+- Local paths / services: <anything specific to this clone>
+EOF
+```
+
+Optional but recommended: keep `CLAUDE.local.md` out of version control so the
+local guidance stays personal and never collides with template updates. Skip this
+step if you instead want to commit it as shared, team-wide instance guidance.
+
+```bash
+echo 'CLAUDE.local.md' >> .gitignore
+```
+
 ## Next
 
 - [Declare and verify your harness](../tutorials/getting-started.md)
 - [Import an existing corpus](import-a-corpus.md)
+- [Update your harness safely](update-your-harness.md) — why `CLAUDE.md` and other
+  template-managed files are re-applied on update (and `CLAUDE.local.md` is not)
