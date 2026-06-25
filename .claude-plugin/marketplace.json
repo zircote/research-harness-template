@@ -84,6 +84,11 @@
       "description": "[reports/genre] Genre template for a 1-2 page decision-oriented executive summary (BLUF, key findings, recommendation, risks)"
     },
     {
+      "name": "security-pentest",
+      "source": "./packs/reports/security-pentest",
+      "description": "[reports/genre] Genre template for a dual-audience PTES penetration-test report: an Executive Summary (posture, risk profile, recommendations, strategic roadmap) plus a Technical Report (information gathering, vulnerability assessment, exploitation, post-exploitation, risk/remediation per finding)"
+    },
+    {
       "name": "trend-analysis",
       "source": "./packs/reports/trend-analysis",
       "description": "[reports/genre] Genre template for a trajectory report (trajectory, signals, scenarios over time)"
