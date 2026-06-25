@@ -70,7 +70,8 @@ mk_clone() { # -> a clean clone dir with .copier-answers.yml and update.sh copie
   local c="$ROOT/clone"; rm -rf "$c"; mkdir -p "$c/scripts"
   cp "$UPDATE_SH" "$c/scripts/update.sh"   # update.sh runs from within the clone (it cd's to its own ../)
   git -C "$c" init -q; git -C "$c" config user.email t@t.t; git -C "$c" config user.name t
-  printf '_src_path: gh:modeled-information-format/research-harness-template\n_commit: v0.1.0\n' > "$c/.copier-answers.yml"
+  # Drifted origin (pre-org-move): a successful update must heal _src_path to the pinned root.
+  printf '_src_path: gh:zircote/research-harness-template\n_commit: v0.1.0\n' > "$c/.copier-answers.yml"
   git -C "$c" add -A; git -C "$c" commit -q -m init
   echo "$c"
 }
@@ -86,13 +87,14 @@ run "$C" fail >/dev/null 2>&1; rc=$?
   && ok "verification miss -> exit $rc, copier NOT invoked (fail-closed)" \
   || no "verification miss not fail-closed (rc=$rc, copier_invoked=$( [ -f "$ROOT/copier_invoked" ] && echo yes || echo no ))"
 
-# 2. verification PASS -> copier invoked, pinned to the SHA
+# 2. verification PASS -> copier invoked pinned to the SHA, AND _src_path healed to pinned root
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"
 run "$C" pass >/dev/null 2>&1; rc=$?
-if [ "$rc" = 0 ] && grep -q -- "--vcs-ref $SHA" "$ROOT/copier_invoked" 2>/dev/null; then
-  ok "verification pass -> copier invoked pinned to verified SHA"
+if [ "$rc" = 0 ] && grep -q -- "--vcs-ref $SHA" "$ROOT/copier_invoked" 2>/dev/null \
+   && grep -q '^_src_path: gh:modeled-information-format/research-harness-template$' "$C/.copier-answers.yml"; then
+  ok "verification pass -> copier pinned to verified SHA; drifted _src_path healed to pinned root"
 else
-  no "verification pass path wrong (rc=$rc, invoked='$(cat "$ROOT/copier_invoked" 2>/dev/null)')"
+  no "verification pass path wrong (rc=$rc, invoked='$(cat "$ROOT/copier_invoked" 2>/dev/null)', src_path='$(grep _src_path "$C/.copier-answers.yml" 2>/dev/null)')"
 fi
 
 # 3. dirty work tree (tracked, uncommitted change) -> refused before verification

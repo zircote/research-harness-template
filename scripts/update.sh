@@ -75,14 +75,10 @@ SIGNER_WORKFLOW="${PINNED_REPO}/.github/workflows/release.yml"
 REMOTE="https://github.com/${PINNED_REPO}.git"
 NAME="${PINNED_REPO##*/}"
 
-# Read _src_path only to sanity-check the clone's recorded origin against the pinned root
-# (informational — trust does not depend on it).
+# Read the clone's recorded source (to detect/heal drift from the pinned root).
 src_path=$(yq -r '._src_path // ""' "$ANSWERS" 2>/dev/null) \
   || { echo "update.sh: could not parse $ANSWERS (invalid YAML?) — fix the answers file before updating" >&2; exit 2; }
-case "${src_path#gh:}" in
-  "$PINNED_REPO"|"$PINNED_REPO".git|https://github.com/"$PINNED_REPO"*|"") : ;;
-  *) echo "update.sh: WARNING: clone _src_path ('$src_path') differs from the pinned trust root '$PINNED_REPO'; verifying against the pinned root regardless." >&2 ;;
-esac
+PINNED_SRC="gh:${PINNED_REPO}"
 
 # Resolve the target tag (default: latest by version) and pin it to a COMMIT SHA.
 if [ -z "$TARGET_TAG" ]; then
@@ -126,6 +122,17 @@ if ! gh attestation verify "$ARTIFACT" \
   exit 1
 fi
 echo "update.sh: provenance verified — applying update pinned to ${SHA}"
+
+# `copier update` has no source override — it applies from `_src_path` in the answers
+# file. Normalize it to the PINNED upstream so the update applies from exactly the repo
+# whose provenance we just verified (not a mutable/drifted _src_path), and so a clone
+# whose recorded origin lags an org move (e.g. the zircote -> modeled-information-format
+# transfer) is healed. Surgical single-line rewrite preserves the rest of the file.
+if [ "$src_path" != "$PINNED_SRC" ]; then
+  perl -i -pe "s{^_src_path:.*}{_src_path: ${PINNED_SRC}}" "$ANSWERS" \
+    || { echo "update.sh: failed to normalize _src_path in $ANSWERS" >&2; exit 2; }
+  echo "update.sh: pinned _src_path -> ${PINNED_SRC} (was '${src_path:-<none>}')"
+fi
 
 # Apply, pinned to the verified SHA (TOCTOU-closed). --trust is now earned.
 # (bash 3.2-safe expansion of a possibly-empty array under `set -u`.)
