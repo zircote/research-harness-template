@@ -302,6 +302,51 @@ scripts/pack-toggle.sh regulatory-disclosure on
 
 ---
 
+## clinical-submission
+
+**Version:** 0.2.0 | **Kind:** genre
+
+### Purpose
+
+Produces a clinical study report from the surviving findings corpus on the ICH E3 CSR
+skeleton — Synopsis, Ethics, Investigators/Structure, Objectives, Investigational Plan,
+Methods (efficacy & safety), Results, Discussion & Conclusions, Tables/Figures/Appendices —
+situated in the CTD five-module frame (M1–M5), where an E3 CSR lives in Module 5.
+
+### When to use
+
+Use `clinical-submission` when the deliverable must present a study in the order a
+clinical, regulatory-affairs, or medical reviewer expects. It does not assert clinical
+validity, statistical adequacy, or regulatory acceptance — the genre reproduces the
+submission structure, not a submittable CSR.
+
+### What it provides
+
+- Nine-section ICH E3 CSR structure with efficacy and safety kept distinct
+- CTD five-module framing (E3 CSR placed in Module 5)
+- Scientific/regulatory references, each resolving to a MIF finding `@id` + URL
+- Verdict-aware handling (weakened annotated, falsified excluded)
+
+### Dependencies
+
+None beyond the core engine.
+
+### Benefits
+
+- ICH E3 ordering and the efficacy/safety split match how clinical reviewers read a CSR
+- CTD framing places the report correctly in a submission's module structure
+- FDA eCTD v4.0 electronic packaging is deliberately out of scope — it is an orthogonal
+  serialization that ships as a separate `ectd` channel pack, keeping this genre focused on
+  narrative structure
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh clinical-submission on
+```
+
+---
+
 ## trend-analysis
 
 **Version:** 0.2.0 | **Kind:** genre

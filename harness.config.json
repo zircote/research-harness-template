@@ -160,6 +160,11 @@
       "name": "regulatory-disclosure",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "clinical-submission",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [

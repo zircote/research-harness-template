@@ -29,6 +29,7 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | academic | reports | genre | Peer-review-style academic paper | none |
 | briefing | reports | genre | One-page decision brief | none |
 | engineering | reports | genre | Technical engineering report with comparison tables | @mermaid-js/mermaid-cli (optional) |
+| clinical-submission | reports | genre | Clinical study report (ICH E3 CSR within the CTD module frame) | none |
 | exec-summary | reports | genre | 1-2 page BLUF executive summary | none |
 | legal-memo | reports | genre | Predictive legal memorandum (IRAC, Bluebook citations) | none |
 | trend-analysis | reports | genre | Trajectory report with scenario diagrams | @mermaid-js/mermaid-cli (optional) |

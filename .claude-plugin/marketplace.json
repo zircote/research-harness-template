@@ -102,6 +102,11 @@
       "name": "regulatory-disclosure",
       "source": "./packs/reports/regulatory-disclosure",
       "description": "[reports/genre] Genre template for an SEC-style annual disclosure report in Regulation S-K / Form 10-K item order (Business, Risk Factors, MD&A, Financial Statements, Controls & Procedures)"
+    },
+    {
+      "name": "clinical-submission",
+      "source": "./packs/reports/clinical-submission",
+      "description": "[reports/genre] Genre template for a clinical study report on the ICH E3 CSR skeleton (Synopsis, Objectives, Methods, Results, Discussion) situated in the CTD five-module frame"
     }
   ]
 }
