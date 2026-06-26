@@ -112,6 +112,11 @@
       "name": "clinical-submission",
       "source": "./packs/reports/clinical-submission",
       "description": "[reports/genre] Genre template for a clinical study report on the ICH E3 CSR skeleton (Synopsis, Objectives, Methods, Results, Discussion) situated in the CTD five-module frame"
+    },
+    {
+      "name": "humanities-chicago",
+      "source": "./packs/reports/humanities-chicago",
+      "description": "[reports/genre] Genre template for an argumentative humanities essay in Chicago Notes-Bibliography style (thesis introduction, thematic argument sections, conclusion, numbered footnotes, Bibliography)"
     }
   ]
 }

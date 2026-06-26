@@ -170,6 +170,11 @@
       "name": "clinical-submission",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "humanities-chicago",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [

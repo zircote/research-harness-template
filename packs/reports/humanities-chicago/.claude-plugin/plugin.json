@@ -1,0 +1,18 @@
+{
+  "name": "humanities-chicago",
+  "version": "0.2.0",
+  "kind": "genre",
+  "description": "Genre template for an argumentative humanities essay in Chicago Notes-Bibliography style (introduction with thesis, thematic argument sections, conclusion, numbered footnotes, and a full Bibliography)",
+  "license": "MIT",
+  "author": {
+    "name": "zircote"
+  },
+  "provides": {
+    "skills": [
+      "humanities-chicago"
+    ],
+    "genres": [
+      "humanities-chicago"
+    ]
+  }
+}
