@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.40.0",
@@ -13,7 +14,11 @@
     "astro-mermaid": "^2.0.2",
     "astro-rehype-relative-markdown-links": "^0.19.0"
   },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
+  },
   "overrides": {
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.1",
+    "js-yaml": "4.2.0"
   }
 }
