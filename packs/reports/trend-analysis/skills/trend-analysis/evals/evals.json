@@ -360,6 +360,73 @@
           "criteria": "Trajectory section mentions the COVID-era peak (2020 or ~60%) and the current stabilization level (2026 or ~28%), providing time-anchored trajectory claims"
         }
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "Generate a trend-analysis report from the findings in /reports/foresight-demo/findings/ about urban micromobility adoption. The audience explicitly requested a STEEP/PESTLE environmental scan and a methodology appendix documenting how signals were sourced, in addition to the standard trajectory report. Horizon: 5 years, as-of 2026-Q2.",
+      "expected_output": "A trend-analysis report with the five required sections PLUS an explicit STEEP or PESTLE environmental scan and a Methodology Appendix documenting signal sourcing. The convention-not-standard disclosure is present. Inline citations; no MIF URNs leaked.",
+      "files": [
+        {
+          "path": "reports/foresight-demo/findings/f_traj_1.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:foresight-demo:f_traj_1\",\"namespace\":\"foresight-demo\",\"title\":\"Shared micromobility trips rising in dense metros\",\"content\":\"Shared e-scooter and e-bike trips per capita rose ~30% across surveyed metros between 2024 and 2026.\",\"summary\":\"Micromobility trips per capita rising.\",\"created\":\"2026-04-01T00:00:00Z\",\"tags\":[\"micromobility\"],\"provenance\":{\"@type\":\"Provenance\",\"sourceType\":\"empirical\",\"confidence\":0.8,\"trustLevel\":\"high_confidence\"},\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"report\",\"citationRole\":\"primary\",\"title\":\"Urban Mobility 2026\",\"url\":\"https://example.com/urban-mobility-2026\",\"accessed\":\"2026-04-05\"}],\"extensions\":{\"harness\":{\"dimension\":\"trajectory\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Corroborated by multiple metro datasets.\"}}}}"
+        },
+        {
+          "path": "reports/foresight-demo/findings/f_sig_1.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:foresight-demo:f_sig_1\",\"namespace\":\"foresight-demo\",\"title\":\"New municipal low-emission zones as a political signal\",\"content\":\"A growing number of cities announced low-emission zones, a leading political/regulatory signal favoring micromobility.\",\"summary\":\"Low-emission zones expanding.\",\"created\":\"2026-03-01T00:00:00Z\",\"tags\":[\"policy\"],\"provenance\":{\"@type\":\"Provenance\",\"sourceType\":\"empirical\",\"confidence\":0.75,\"trustLevel\":\"high_confidence\"},\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"news\",\"citationRole\":\"primary\",\"title\":\"Low Emission Zones Tracker\",\"url\":\"https://example.com/lez-tracker\",\"accessed\":\"2026-03-10\"}],\"extensions\":{\"harness\":{\"dimension\":\"signals\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Multiple municipal announcements on record.\"}}}}"
+        }
+      ],
+      "deterministic_checks": [
+        {
+          "type": "file_contains",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "literal": "## Trajectory",
+          "description": "Default Trajectory section still present (additive, non-breaking)"
+        },
+        {
+          "type": "file_contains",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "literal": "## Scenarios",
+          "description": "Default Scenarios section still present"
+        },
+        {
+          "type": "regex_match",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "pattern": "\\b(STEEP|PESTLE)\\b",
+          "description": "Optional STEEP/PESTLE environmental scan rendered when requested (uppercase acronym, not the adjective 'steep')"
+        },
+        {
+          "type": "regex_match",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "pattern": "(?i)methodology appendix",
+          "description": "Optional Methodology Appendix rendered when requested"
+        },
+        {
+          "type": "regex_match",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "pattern": "(?i)(\\bconvention\\b[\\s\\S]{0,80}standard|standard[\\s\\S]{0,80}\\bconvention\\b)",
+          "description": "Convention-not-standard disclosure present (the word 'convention' near 'standard' in either order, not merely 'conventional')"
+        },
+        {
+          "type": "file_not_contains",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "literal": "urn:mif:",
+          "description": "No raw urn:mif: identifiers leak into the narrative"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "STEEP/PESTLE scan organizes factors by named dimensions",
+          "check": "output_file_content",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "criteria": "The environmental scan is organized by STEEP or PESTLE dimensions (e.g., Political, Economic, Social, Technological), each factor tied to a finding, rather than an unstructured list."
+        },
+        {
+          "description": "Methodology Appendix documents signal sourcing",
+          "check": "output_file_content",
+          "file": "reports/foresight-demo/trend-analysis.md",
+          "criteria": "The Methodology Appendix states how signals and any scan/survey inputs were sourced, scoped, and weighted."
+        }
+      ]
     }
   ]
 }

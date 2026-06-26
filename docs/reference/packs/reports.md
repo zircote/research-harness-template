@@ -513,7 +513,7 @@ scripts/pack-toggle.sh humanities-mla on
 
 ## trend-analysis
 
-**Version:** 0.2.0 | **Kind:** genre
+**Version:** 0.3.0 | **Kind:** genre
 
 ### Purpose
 
@@ -521,6 +521,12 @@ Produces a trajectory report tracking how something is changing and projecting f
 under uncertainty. A trajectory or scenario diagram is required — a time-series chart of
 the trend and / or a Mermaid state or branch diagram of the scenarios. Every trajectory
 claim must be anchored in time; undated trend assertions are not admissible.
+
+This genre is anchored to a **foresight convention, not a codified standard** — no
+standards body (ISO/NISO/ANSI) has codified a foresight report format — so the SKILL
+discloses the convention rather than claiming standard conformance. An optional **STEEP /
+PESTLE environmental scan** and a **Methodology Appendix** (signal/survey sourcing) can be
+rendered on request, mirroring IFTF/WEF practice; they are additive and off by default.
 
 Section order:
 

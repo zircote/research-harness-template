@@ -1,7 +1,7 @@
 ---
 name: trend-analysis
-description: Genre template for a trajectory report (trajectory, signals, scenarios over time). Use when the deliverable tracks how something is changing and projects forward under uncertainty.
-version: 0.1.2
+description: Genre template for a trajectory report (trajectory, signals, scenarios over time), with an optional STEEP/PESTLE environmental scan and a methodology appendix. Use when the deliverable tracks how something is changing and projects forward under uncertainty. Anchored to a foresight convention, not a codified standard.
+version: 0.3.0
 ---
 
 # Genre Template: Trend Analysis
@@ -33,6 +33,20 @@ evidence for it, and the branches the future could take. Be explicit about confi
 5. **Implications & Watch-list** — what to monitor and the early indicators that would
    confirm or break each scenario.
 
+### Optional sub-structure (additive — off by default; render when requested)
+
+- **STEEP / PESTLE environmental scan** — when an explicit environmental scan is requested,
+  precede or fold into Drivers & Inhibitors a scan organized by the STEEP (Social,
+  Technological, Economic, Environmental, Political) or PESTLE (Political, Economic, Social,
+  Technological, Legal, Environmental) dimensions, mirroring IFTF/WEF practice. Each factor
+  still ties to a MIF finding `@id`.
+- **Methodology Appendix** — when requested, add a back-matter appendix documenting how
+  signals and any survey/scan inputs were sourced, scoped, and weighted, so the foresight
+  basis is auditable.
+
+These are opt-in; the five-section default and existing behavior are unchanged when they
+are not requested.
+
 ## Citation Style
 
 Inline numeric markers `[1]`, `[2]` resolving to a references list. Each signal and data
@@ -49,6 +63,10 @@ observation's date so trajectory claims are time-anchored.
 
 ## Rules
 
+- **Convention, not a codified standard.** No standards body (ISO/NISO/ANSI) has codified a
+  foresight/trend-report format; this genre follows a *convention* (IFTF/WEF/APF practice).
+  Do not mis-sell output as conforming to a named standard — disclose that the anchor is a
+  convention.
 - Anchor every trajectory claim in time — undated trend assertions are not admissible.
 - Separate observed signal from projected scenario; never present a forecast as a fact.
 - State confidence per scenario; surface findings whose verdict is `weakened` or
