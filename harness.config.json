@@ -155,6 +155,11 @@
       "name": "trend-modeling",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "regulatory-disclosure",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [
