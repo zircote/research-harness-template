@@ -42,6 +42,7 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | market-research-report | reports | genre | Full ESOMAR/ISO 20252-style market research report (convention, not a codified standard) | none |
 | systematic-review | reports | genre | PRISMA 2020 systematic review with required flow diagram | @mermaid-js/mermaid-cli (optional) |
 | compliance-audit | reports | genre | SOC 2 Type II-shaped controls report draft with a tests-of-controls matrix (not an attestation); disabled by default (opt-in) | none |
+| competitive-quadrant | reports | genre | Two-axis competitive quadrant (Vision x Execution, four quadrants) | @mermaid-js/mermaid-cli (optional) |
 | trend-modeling | trend-modeling | methodology | Three-valued logic (INC/DEC/CONST) scenario modeling | @mermaid-js/mermaid-cli (optional) |
 | biology-research-lab | ontologies | ontology | Full research lab lifecycle entity vocabulary | none |
 | data-engineering | ontologies | ontology | Data engineering domain entity vocabulary | none |

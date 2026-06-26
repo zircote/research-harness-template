@@ -205,6 +205,11 @@
       "name": "compliance-audit",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "competitive-quadrant",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [

@@ -147,6 +147,11 @@
       "name": "compliance-audit",
       "source": "./packs/reports/compliance-audit",
       "description": "[reports/genre] Genre template for drafting/modeling a SOC 2 Type II-shaped controls report (auditor's report, management's assertion, system description, Trust Services Criteria, tests of controls & results) — never an attestation"
+    },
+    {
+      "name": "competitive-quadrant",
+      "source": "./packs/reports/competitive-quadrant",
+      "description": "[reports/genre] Genre template for a two-axis competitive-quadrant report (Completeness of Vision x Ability to Execute, four quadrants, per-vendor strengths/cautions)"
     }
   ]
 }
