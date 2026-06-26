@@ -45,6 +45,7 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 | compliance-audit | reports | genre | SOC 2 Type II-shaped controls report draft with a tests-of-controls matrix (not an attestation); disabled by default (opt-in) | none |
 | competitive-quadrant | reports | genre | Two-axis competitive quadrant (Vision x Execution, four quadrants) | @mermaid-js/mermaid-cli (optional) |
 | nist-sp | reports | genre | NIST Special Publication (SP 800-series) standards/guidance report | none |
+| xbrl | channels | channel | Renders surviving findings into an inline XBRL (iXBRL) regulatory disclosure | jq |
 | trend-modeling | trend-modeling | methodology | Three-valued logic (INC/DEC/CONST) scenario modeling | @mermaid-js/mermaid-cli (optional) |
 | biology-research-lab | ontologies | ontology | Full research lab lifecycle entity vocabulary | none |
 | data-engineering | ontologies | ontology | Data engineering domain entity vocabulary | none |
@@ -59,7 +60,7 @@ For control-plane mechanics — enabling, disabling, and listing packs — see
 
 ## Family pages
 
-- [Channel packs](channels.md) — output delivery channels (book, diataxis, github-discuss, github-issues, jats, notebooklm, pdf)
+- [Channel packs](channels.md) — output delivery channels (book, diataxis, github-discuss, github-issues, jats, notebooklm, pdf, xbrl)
 - [Market-research packs](market-research.md) — research methodology dimensions
 - [Report packs](reports.md) — deliverable genre templates
 - [Trend-modeling pack](trend-modeling.md) — three-valued logic scenario framework

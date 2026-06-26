@@ -220,6 +220,11 @@
       "name": "nist-sp",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "xbrl",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [
