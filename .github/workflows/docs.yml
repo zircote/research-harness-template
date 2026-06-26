@@ -1,9 +1,9 @@
 name: docs
 
 # Build-only gate for the research-harness documentation site (Astro/Starlight,
-# base "/research-harness"). This repo does NOT deploy itself: the org Pages shell
+# base "/research-harness-template"). This repo does NOT deploy itself: the org Pages shell
 # (modeled-information-format.github.io / .github/workflows/deploy.yml) checks this
-# repo out, runs `npm run build`, and mounts dist/ under /research-harness — exactly
+# repo out, runs `npm run build`, and mounts dist/ under /research-harness-template — exactly
 # how doc-site is served under /docs. A green build here is the local success gate.
 
 on:

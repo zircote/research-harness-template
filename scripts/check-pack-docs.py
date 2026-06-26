@@ -27,7 +27,7 @@ PACKS = REPO / "packs"
 PACK_DOCS = REPO / "docs" / "reference" / "packs"
 INDEX = PACK_DOCS / "index.md"
 FAMILIES = ["channels", "market-research", "ontologies", "reports", "trend-modeling"]
-DOC_URL_SUBSTR = "modeled-information-format.github.io/research-harness/reference/packs"
+DOC_URL_SUBSTR = "modeled-information-format.github.io/research-harness-template/reference/packs"
 
 
 def components() -> dict[str, list[str]]:
