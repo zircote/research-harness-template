@@ -5,10 +5,10 @@ import rehypeRelativeMarkdownLinks from "astro-rehype-relative-markdown-links";
 
 // The research-harness docs are mounted as a sub-site of the MIF org Pages root,
 // the same way doc-site serves /docs. The org Pages shell (…github.io deploy.yml)
-// checks this repo out, runs `npm run build`, and mounts dist/ under /research-harness.
+// checks this repo out, runs `npm run build`, and mounts dist/ under /research-harness-template.
 export default defineConfig({
   site: "https://modeled-information-format.github.io",
-  base: "/research-harness",
+  base: "/research-harness-template",
   // The harness docs cross-link each other with relative *.md paths (so they render
   // on GitHub too). Rewrite those to the built routes at build time. `collectionBase:
   // false` because the `docs` collection is served at the site root, not under /docs.
@@ -16,7 +16,7 @@ export default defineConfig({
     rehypePlugins: [
       [
         rehypeRelativeMarkdownLinks,
-        { collectionBase: false, base: "/research-harness", trailingSlash: "always" },
+        { collectionBase: false, base: "/research-harness-template", trailingSlash: "always" },
       ],
     ],
   },
