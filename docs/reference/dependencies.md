@@ -82,7 +82,7 @@ will not work until you adopt Copier.
 `gh attestation verify` is the supported way to confirm a downloaded release
 artifact. See the procedure in
 [How to verify a release](../how-to/verify-a-release.md) and the policy in
-[`SECURITY.md`](../../SECURITY.md).
+[`SECURITY.md`](https://github.com/modeled-information-format/research-harness-template/blob/main/SECURITY.md).
 
 ## Optional channel packs
 

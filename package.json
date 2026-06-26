@@ -8,8 +8,9 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^6.4.6",
     "@astrojs/starlight": "^0.40.0",
-    "astro-mermaid": "^2.0.2"
+    "astro": "^6.4.6",
+    "astro-mermaid": "^2.0.2",
+    "astro-rehype-relative-markdown-links": "^0.19.0"
   }
 }

@@ -1,6 +1,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import astroMermaid from "astro-mermaid";
+import rehypeRelativeMarkdownLinks from "astro-rehype-relative-markdown-links";
 
 // The research-harness docs are mounted as a sub-site of the MIF org Pages root,
 // the same way doc-site serves /docs. The org Pages shell (…github.io deploy.yml)
@@ -8,6 +9,17 @@ import astroMermaid from "astro-mermaid";
 export default defineConfig({
   site: "https://modeled-information-format.github.io",
   base: "/research-harness",
+  // The harness docs cross-link each other with relative *.md paths (so they render
+  // on GitHub too). Rewrite those to the built routes at build time. `collectionBase:
+  // false` because the `docs` collection is served at the site root, not under /docs.
+  markdown: {
+    rehypePlugins: [
+      [
+        rehypeRelativeMarkdownLinks,
+        { collectionBase: false, base: "/research-harness", trailingSlash: "always" },
+      ],
+    ],
+  },
   integrations: [
     astroMermaid(),
     starlight({

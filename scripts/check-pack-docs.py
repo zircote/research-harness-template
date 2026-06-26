@@ -126,10 +126,14 @@ def main() -> int:
             readme = PACKS / fam / n / "README.md"
             if not readme.is_file():
                 errors.append(f"[{fam}] component '{n}' has no README.md back-link")
-            elif DOC_URL_SUBSTR not in readme.read_text(encoding="utf-8"):
-                errors.append(f"[{fam}] component '{n}' README.md missing doc back-link")
             else:
-                inbound_total += 1
+                body = readme.read_text(encoding="utf-8")
+                if DOC_URL_SUBSTR not in body:
+                    errors.append(f"[{fam}] component '{n}' README.md missing doc back-link")
+                elif "**Dependencies:**" not in body:
+                    errors.append(f"[{fam}] component '{n}' README.md missing explicit Dependencies")
+                else:
+                    inbound_total += 1
 
     print("\n=== Cross-link tallies ===")
     print(f"Documented components (section present): {documented_total}/{total}")
