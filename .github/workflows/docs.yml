@@ -12,18 +12,22 @@ on:
     paths:
       - "docs/**"
       - "src/**"
+      - "packs/**"
       - "astro.config.mjs"
       - "package.json"
       - "package-lock.json"
+      - "scripts/check-pack-docs.py"
       - ".github/workflows/docs.yml"
   pull_request:
     branches: [main]
     paths:
       - "docs/**"
       - "src/**"
+      - "packs/**"
       - "astro.config.mjs"
       - "package.json"
       - "package-lock.json"
+      - "scripts/check-pack-docs.py"
       - ".github/workflows/docs.yml"
 
 permissions:
@@ -52,3 +56,6 @@ jobs:
 
       - name: Build (validates the Starlight site + all internal links)
         run: npm run build
+
+      - name: Pack docs coverage (bidirectional docs <-> packs cross-links)
+        run: python3 scripts/check-pack-docs.py

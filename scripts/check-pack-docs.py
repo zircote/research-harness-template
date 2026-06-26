@@ -31,11 +31,19 @@ DOC_URL_SUBSTR = "modeled-information-format.github.io/research-harness/referenc
 
 
 def components() -> dict[str, list[str]]:
-    """Map each family to its sorted list of component directory names."""
+    """Map each family to its sorted list of component directory names.
+
+    A missing family directory yields an empty list rather than raising, so the
+    caller can report it as a normal validation error and still print the rest.
+    """
     out: dict[str, list[str]] = {}
     for fam in FAMILIES:
         fam_dir = PACKS / fam
-        out[fam] = sorted(p.name for p in fam_dir.iterdir() if p.is_dir())
+        out[fam] = (
+            sorted(p.name for p in fam_dir.iterdir() if p.is_dir())
+            if fam_dir.is_dir()
+            else []
+        )
     return out
 
 
@@ -69,6 +77,11 @@ def main() -> int:
     print(f"Components on disk: {total}")
     for fam, names in comps.items():
         print(f"  {fam}: {len(names)}")
+
+    # A missing family directory is a real error, not a crash.
+    for fam in FAMILIES:
+        if not (PACKS / fam).is_dir():
+            errors.append(f"missing pack family directory: packs/{fam}")
 
     documented_total = 0
     outbound_total = 0
@@ -106,18 +119,23 @@ def main() -> int:
 
     # index.md inventory table must not name a non-existent component.
     all_names = {n for names in comps.values() for n in names}
-    idx_phantom = [
-        h
-        for h in headings(INDEX)
-        if is_component_shaped(h) and h not in all_names and h not in layers
-    ]
-    # The inventory lives in a table, not headings; scan table rows too.
-    for line in INDEX.read_text(encoding="utf-8").splitlines():
-        m = re.match(r"\|\s*([a-z0-9][a-z0-9-]*)\s*\|", line)
-        if m and m.group(1) not in all_names and m.group(1) not in layers:
-            idx_phantom.append(m.group(1))
-    if idx_phantom:
-        errors.append(f"[index.md] inventory names non-existent components: {sorted(set(idx_phantom))}")
+    if not INDEX.is_file():
+        errors.append(f"missing inventory page: {INDEX.relative_to(REPO)}")
+    else:
+        idx_phantom = [
+            h
+            for h in headings(INDEX)
+            if is_component_shaped(h) and h not in all_names and h not in layers
+        ]
+        # The inventory lives in a table, not headings; scan table rows too.
+        for line in INDEX.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"\|\s*([a-z0-9][a-z0-9-]*)\s*\|", line)
+            if m and m.group(1) not in all_names and m.group(1) not in layers:
+                idx_phantom.append(m.group(1))
+        if idx_phantom:
+            errors.append(
+                f"[index.md] inventory names non-existent components: {sorted(set(idx_phantom))}"
+            )
 
     # Inbound: each component dir has a README.md linking to the doc site.
     inbound_total = 0
