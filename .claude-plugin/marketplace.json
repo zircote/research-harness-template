@@ -152,6 +152,11 @@
       "name": "competitive-quadrant",
       "source": "./packs/reports/competitive-quadrant",
       "description": "[reports/genre] Genre template for a two-axis competitive-quadrant report (Completeness of Vision x Ability to Execute, four quadrants, per-vendor strengths/cautions)"
+    },
+    {
+      "name": "nist-sp",
+      "source": "./packs/reports/nist-sp",
+      "description": "[reports/genre] Genre template for a NIST Special Publication (SP 800-series) standards/guidance report (authority, abstract, keywords, numbered normative sections, definitions, references, appendices)"
     }
   ]
 }
