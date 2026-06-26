@@ -6,9 +6,11 @@
 # stubbed. Asserts:
 #   1. local+release verification MISS -> update.sh exits non-zero AND copier is never invoked.
 #   2. local verification PASS         -> copier is invoked, pinned to the verified SHA.
-#   3. local MISS + release PASS + content match -> fallback succeeds, copier invoked.
-#   4. local MISS + release PASS + content mismatch -> fallback refused.
-#   5. a dirty work tree -> refused before any verification.
+#   3. local MISS + release PASS + metadata+content match -> fallback succeeds, copier invoked.
+#   4. local MISS + release PASS + metadata mismatch -> fallback refused.
+#   5. local MISS + release PASS + content mismatch -> fallback refused.
+#   6. a dirty work tree -> refused before any verification.
+# And every attestation/download call remains pinned to the expected repo/workflow/asset.
 #
 # Run: bash evals/update-provenance.sh   (exit 0 = all assertions hold)
 
@@ -60,8 +62,20 @@ cat > "$BIN/gh" <<SH
 #!/usr/bin/env bash
 # GH_LOCAL_VERIFY / GH_RELEASE_VERIFY control attestation outcomes independently.
 ROOT="$ROOT"; ASSET="$ASSET"
+PINNED_REPO="modeled-information-format/research-harness-template"
+SIGNER_WORKFLOW="\${PINNED_REPO}/.github/workflows/release.yml"
 if [ "\$1" = "attestation" ] && [ "\$2" = "verify" ]; then
   f="\$3"
+  repo=""; workflow=""
+  for ((i=4;i<=\$#;i++)); do
+    a="\${!i}"
+    case "\$a" in
+      --repo) j=\$((i+1)); repo="\${!j}" ;;
+      --signer-workflow) j=\$((i+1)); workflow="\${!j}" ;;
+    esac
+  done
+  [ "\$repo" = "\$PINNED_REPO" ] || { echo "stub: wrong --repo '\$repo'" >&2; exit 1; }
+  [ "\$workflow" = "\$SIGNER_WORKFLOW" ] || { echo "stub: wrong --signer-workflow '\$workflow'" >&2; exit 1; }
   case "\$f" in
     *.local.tar.gz) mode="\${GH_LOCAL_VERIFY:-fail}" ;;
     *"/\$ASSET"|"\$ASSET") mode="\${GH_RELEASE_VERIFY:-fail}" ;;
@@ -72,10 +86,16 @@ if [ "\$1" = "attestation" ] && [ "\$2" = "verify" ]; then
 fi
 if [ "\$1" = "release" ] && [ "\$2" = "download" ]; then
   dir="."
+  repo=""; pattern=""
   for ((i=1;i<=\$#;i++)); do
     a="\${!i}"
     if [ "\$a" = "--dir" ]; then j=\$((i+1)); dir="\${!j}"; fi
+    if [ "\$a" = "--repo" ]; then j=\$((i+1)); repo="\${!j}"; fi
+    if [ "\$a" = "--pattern" ]; then j=\$((i+1)); pattern="\${!j}"; fi
   done
+  [ "\$3" = "v9.9.9" ] || { echo "stub: wrong release tag '\$3'" >&2; exit 1; }
+  [ "\$repo" = "\$PINNED_REPO" ] || { echo "stub: wrong download --repo '\$repo'" >&2; exit 1; }
+  [ "\$pattern" = "\$ASSET" ] || { echo "stub: wrong download --pattern '\$pattern'" >&2; exit 1; }
   mkdir -p "\$dir"
   cp "\$ROOT/release/\$ASSET" "\$dir/\$ASSET"
   exit 0
@@ -84,12 +104,18 @@ exit 1
 SH
 cat > "$BIN/copier" <<SH
 #!/usr/bin/env bash
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "stub: copier refuses dirty work tree" >&2
+  exit 1
+fi
 echo "copier \$*" > "$ROOT/copier_invoked"
-# Simulate real copier update: it rewrites .copier-answers.yml with the new _commit and
-# PRESERVES _src_path. This exercises update.sh's heal-AFTER ordering — the _src_path heal
-# must run after copier has touched the file and must still find the top-level line.
+# Simulate real copier update: it rewrites .copier-answers.yml itself, including the
+# current _src_path line. This plus the clean-tree refusal makes the eval sensitive to
+# update.sh moving the _src_path heal before copier update.
 if [ -f .copier-answers.yml ]; then
-  awk '/^_commit:/{print "_commit: v9.9.9"; next} {print}' .copier-answers.yml > .copier-answers.yml.t \
+  awk '/^_src_path:/{print "_src_path: gh:zircote/research-harness-template"; next}
+       /^_commit:/{print "_commit: v9.9.9"; next}
+       {print}' .copier-answers.yml > .copier-answers.yml.t \
     && mv .copier-answers.yml.t .copier-answers.yml
 fi
 SH
@@ -119,50 +145,69 @@ run() {
 
 # 1. local+release verification MISS -> non-zero, copier never invoked
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"
-run "$C" fail fail >/dev/null 2>&1; rc=$?
-{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ]; } \
+ERR="$ROOT/test1.err"
+run "$C" fail fail >/dev/null 2>"$ERR"; rc=$?
+{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ] && grep -q "provenance verification FAILED" "$ERR"; } \
   && ok "verification miss -> exit $rc, copier NOT invoked (fail-closed)" \
-  || no "verification miss not fail-closed (rc=$rc, copier_invoked=$( [ -f "$ROOT/copier_invoked" ] && echo yes || echo no ))"
+  || no "verification miss not fail-closed (rc=$rc, copier_invoked=$( [ -f "$ROOT/copier_invoked" ] && echo yes || echo no ), err='$(cat "$ERR" 2>/dev/null)')"
 
 # 2. local verification PASS -> copier invoked pinned to the SHA, AND _src_path healed
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"
-run "$C" pass fail >/dev/null 2>&1; rc=$?
+run "$C" pass fail >/dev/null 2>"$ROOT/test2.err"; rc=$?
 if [ "$rc" = 0 ] && grep -q -- "--vcs-ref $SHA" "$ROOT/copier_invoked" 2>/dev/null \
    && grep -q '^_src_path: gh:modeled-information-format/research-harness-template$' "$C/.copier-answers.yml" \
    && grep -q '^_commit: v9.9.9$' "$C/.copier-answers.yml"; then
-  ok "verification pass -> copier pinned to verified SHA; heal-after preserved copier's _commit AND healed drifted _src_path"
+  ok "verification pass -> copier pinned to verified SHA; copier rewrote answers and update.sh healed drifted _src_path after the clean update"
 else
   no "verification pass path wrong (rc=$rc, invoked='$(cat "$ROOT/copier_invoked" 2>/dev/null)', src_path='$(grep _src_path "$C/.copier-answers.yml" 2>/dev/null)')"
 fi
 
-# 3. local MISS + release PASS + content match -> fallback succeeds
+# 3. local MISS + release PASS + metadata+content match -> fallback succeeds
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"
 run "$C" fail pass >/dev/null 2>&1; rc=$?
 if [ "$rc" = 0 ] && grep -q -- "--vcs-ref $SHA" "$ROOT/copier_invoked" 2>/dev/null; then
-  ok "fallback path: release attestation + content match -> copier pinned to verified SHA"
+  ok "fallback path: release attestation + metadata+content match -> copier pinned to verified SHA"
 else
   no "fallback path failed unexpectedly (rc=$rc, invoked='$(cat "$ROOT/copier_invoked" 2>/dev/null)')"
 fi
 
-# 4. local MISS + release PASS + content mismatch -> refused
+# 4. local MISS + release PASS + metadata mismatch -> refused
+C=$(mk_clone); rm -f "$ROOT/copier_invoked"
+MISMATCH="$ROOT/mismatch"; rm -rf "$MISMATCH"; mkdir -p "$MISMATCH/research-harness-template-v9.9.9"
+printf "template content v9\n" > "$MISMATCH/research-harness-template-v9.9.9/file.txt"
+chmod 755 "$MISMATCH/research-harness-template-v9.9.9/file.txt"
+tar -C "$MISMATCH" -cf - research-harness-template-v9.9.9 | gzip > "$ROOT/release/$ASSET"
+ERR="$ROOT/test4.err"
+run "$C" fail pass >/dev/null 2>"$ERR"; rc=$?
+{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ] && grep -q "release asset metadata does not match pinned commit" "$ERR"; } \
+  && ok "fallback metadata mismatch refused (exit $rc, copier NOT invoked)" \
+  || no "fallback metadata mismatch not refused (rc=$rc, copier_invoked=$( [ -f "$ROOT/copier_invoked" ] && echo yes || echo no ), err='$(cat "$ERR" 2>/dev/null)')"
+
+# restore valid release artifact for the next test
+git -C "$UP_SRC" archive --format=tar --prefix="research-harness-template-v9.9.9/" "$SHA" \
+  | gzip > "$ROOT/release/$ASSET"
+
+# 5. local MISS + release PASS + content mismatch -> refused
 C=$(mk_clone); rm -f "$ROOT/copier_invoked"
 MISMATCH="$ROOT/mismatch"; rm -rf "$MISMATCH"; mkdir -p "$MISMATCH/research-harness-template-v9.9.9"
 echo "tampered content" > "$MISMATCH/research-harness-template-v9.9.9/file.txt"
 tar -C "$MISMATCH" -cf - research-harness-template-v9.9.9 | gzip > "$ROOT/release/$ASSET"
-run "$C" fail pass >/dev/null 2>&1; rc=$?
-{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ]; } \
+ERR="$ROOT/test5.err"
+run "$C" fail pass >/dev/null 2>"$ERR"; rc=$?
+{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ] && grep -q "release asset content does not match pinned commit" "$ERR"; } \
   && ok "fallback content mismatch refused (exit $rc, copier NOT invoked)" \
-  || no "fallback content mismatch not refused (rc=$rc, copier_invoked=$( [ -f "$ROOT/copier_invoked" ] && echo yes || echo no ))"
+  || no "fallback content mismatch not refused (rc=$rc, copier_invoked=$( [ -f "$ROOT/copier_invoked" ] && echo yes || echo no ), err='$(cat "$ERR" 2>/dev/null)')"
 # restore valid release artifact for the remaining test
 git -C "$UP_SRC" archive --format=tar --prefix="research-harness-template-v9.9.9/" "$SHA" \
   | gzip > "$ROOT/release/$ASSET"
 
-# 5. dirty work tree (tracked, uncommitted change) -> refused before verification
+# 6. dirty work tree (tracked, uncommitted change) -> refused before verification
 C=$(mk_clone); echo "edited" >> "$C/.copier-answers.yml"; rm -f "$ROOT/copier_invoked"
-run "$C" pass fail >/dev/null 2>&1; rc=$?
-{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ]; } \
+ERR="$ROOT/test6.err"
+run "$C" pass fail >/dev/null 2>"$ERR"; rc=$?
+{ [ "$rc" != 0 ] && [ ! -f "$ROOT/copier_invoked" ] && grep -q "working tree has uncommitted changes" "$ERR"; } \
   && ok "dirty work tree refused (exit $rc, copier NOT invoked)" \
-  || no "dirty work tree not refused (rc=$rc)"
+  || no "dirty work tree not refused (rc=$rc, err='$(cat "$ERR" 2>/dev/null)')"
 
 echo "update-provenance: $pass passed, $fail failed"
 [ "$fail" = 0 ]

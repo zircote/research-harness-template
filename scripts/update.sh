@@ -34,7 +34,8 @@
 # version + platform, but tar header format and the gzip OS byte can differ across
 # platforms (release.yml documents the same caveat). To avoid blocking legitimate
 # updates on that byte mismatch, a local verify miss falls back to verifying the
-# signed release asset, then content-checking it against the pinned commit.
+# signed release asset, then metadata- and content-checking it against the pinned
+# commit.
 #
 # Usage:  bash scripts/update.sh [--target <tag>] [-- <extra copier args>]
 #   exit 0 = verified and applied; non-zero = verification miss / precondition
@@ -71,7 +72,7 @@ if [ "${#COPIER_ARGS[@]}" -gt 0 ]; then
   done
 fi
 
-for t in git gh copier gzip yq awk; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: '$t' is required" >&2; exit 2; }; done
+for t in git gh copier gzip yq awk tar diff; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: '$t' is required" >&2; exit 2; }; done
 [ -f "$ANSWERS" ] || { echo "update.sh: $ANSWERS not found — run from a clone instantiated by copier" >&2; exit 2; }
 
 # A copier update needs a git clone (it diffs against the recorded base). Check this
@@ -96,6 +97,16 @@ PINNED_REPO="modeled-information-format/research-harness-template"
 SIGNER_WORKFLOW="${PINNED_REPO}/.github/workflows/release.yml"
 REMOTE="https://github.com/${PINNED_REPO}.git"
 NAME="${PINNED_REPO##*/}"
+
+verify_attestation() {
+  gh attestation verify "$1" \
+    --repo "$PINNED_REPO" \
+    --signer-workflow "$SIGNER_WORKFLOW"
+}
+
+path_mode() {
+  LC_ALL=C ls -ld "$1" | awk '{print $1}'
+}
 
 # Read the clone's recorded source (to detect/heal drift from the pinned root).
 src_path=$(yq -r '._src_path // ""' "$ANSWERS" 2>/dev/null) \
@@ -141,28 +152,42 @@ git -C "$WORK" archive --format=tar --prefix="${NAME}-${TARGET_TAG}/" "$SHA" | g
 
 # THE GATE: verify SLSA provenance, pinned to this repo AND the release workflow.
 echo "update.sh: verifying build-provenance attestation (fail-closed)…"
-if ! gh attestation verify "$LOCAL_ARTIFACT" \
-      --repo "$PINNED_REPO" \
-      --signer-workflow "$SIGNER_WORKFLOW"; then
+if ! verify_attestation "$LOCAL_ARTIFACT"; then
   echo "update.sh: local reproduction did not verify; trying signed release asset fallback…"
-  for t in tar diff; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: fallback verification requires '$t' (not found)" >&2; exit 1; }; done
   rm -f "$RELEASE_ARTIFACT"
   gh release download "$TARGET_TAG" \
     --repo "$PINNED_REPO" \
     --pattern "$ASSET_NAME" \
     --dir "$WORK" \
-    --clobber >/dev/null
+    --clobber >/dev/null \
+    || { echo "update.sh: could not download release asset '$ASSET_NAME' for ${PINNED_REPO}@${TARGET_TAG}" >&2; exit 1; }
   [ -f "$RELEASE_ARTIFACT" ] || { echo "update.sh: release asset '$ASSET_NAME' not found for ${PINNED_REPO}@${TARGET_TAG}" >&2; exit 1; }
-  gh attestation verify "$RELEASE_ARTIFACT" \
-    --repo "$PINNED_REPO" \
-    --signer-workflow "$SIGNER_WORKFLOW" >/dev/null \
+  verify_attestation "$RELEASE_ARTIFACT" >/dev/null \
     || { echo "update.sh: provenance verification FAILED for ${PINNED_REPO}@${TARGET_TAG} — refusing to update (nothing applied)" >&2; exit 1; }
 
   RELEASE_TREE="${WORK}/release-tree"
   PINNED_TREE="${WORK}/pinned-tree"
+  RELEASE_PATHS="${WORK}/release.paths"
+  PINNED_PATHS="${WORK}/pinned.paths"
   mkdir -p "$RELEASE_TREE" "$PINNED_TREE"
   tar -xzf "$RELEASE_ARTIFACT" -C "$RELEASE_TREE"
-  git -C "$WORK" archive --format=tar --prefix="${NAME}-${TARGET_TAG}/" "$SHA" | tar -xf - -C "$PINNED_TREE"
+  tar -xzf "$LOCAL_ARTIFACT" -C "$PINNED_TREE"
+  (
+    cd "${RELEASE_TREE}/${NAME}-${TARGET_TAG}" &&
+      find . -mindepth 1 -print | LC_ALL=C sort
+  ) > "$RELEASE_PATHS"
+  (
+    cd "${PINNED_TREE}/${NAME}-${TARGET_TAG}" &&
+      find . -mindepth 1 -print | LC_ALL=C sort
+  ) > "$PINNED_PATHS"
+  diff -u "$RELEASE_PATHS" "$PINNED_PATHS" >/dev/null \
+    || { echo "update.sh: release asset metadata does not match pinned commit ${SHA} — refusing to update (nothing applied)" >&2; exit 1; }
+  while IFS= read -r rel; do
+    release_path="${RELEASE_TREE}/${NAME}-${TARGET_TAG}/${rel#./}"
+    pinned_path="${PINNED_TREE}/${NAME}-${TARGET_TAG}/${rel#./}"
+    [ "$(path_mode "$release_path")" = "$(path_mode "$pinned_path")" ] \
+      || { echo "update.sh: release asset metadata does not match pinned commit ${SHA} — refusing to update (nothing applied)" >&2; exit 1; }
+  done < "$RELEASE_PATHS"
   diff -qr "${RELEASE_TREE}/${NAME}-${TARGET_TAG}" "${PINNED_TREE}/${NAME}-${TARGET_TAG}" >/dev/null \
     || { echo "update.sh: release asset content does not match pinned commit ${SHA} — refusing to update (nothing applied)" >&2; exit 1; }
 fi
