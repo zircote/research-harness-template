@@ -117,6 +117,11 @@
       "name": "humanities-chicago",
       "source": "./packs/reports/humanities-chicago",
       "description": "[reports/genre] Genre template for an argumentative humanities essay in Chicago Notes-Bibliography style (thesis introduction, thematic argument sections, conclusion, numbered footnotes, Bibliography)"
+    },
+    {
+      "name": "humanities-mla",
+      "source": "./packs/reports/humanities-mla",
+      "description": "[reports/genre] Genre template for an argumentative humanities essay in MLA style (thesis introduction, body argument sections, conclusion, author-page in-text citations, Works Cited)"
     }
   ]
 }

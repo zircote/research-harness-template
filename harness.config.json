@@ -175,6 +175,11 @@
       "name": "humanities-chicago",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "humanities-mla",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [
