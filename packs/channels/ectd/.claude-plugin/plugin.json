@@ -1,0 +1,22 @@
+{
+  "name": "ectd",
+  "version": "0.2.0",
+  "kind": "channel",
+  "mif": {
+    "exempt": true,
+    "reason": "eCTD (FDA electronic Common Technical Document) is an electronic submission packaging/transport format orthogonal to MIF Level-3 markdown structure. It packages a clinical-submission artifact into the regulatory module/backbone structure (M1-M5 + the XML backbone), built directly from the SOURCES — the findings corpus and its primary-source citations — never from a rendered report. The citation-leak gate still applies; the canonical MIF Level-3 source of truth lives in the generic report channel."
+  },
+  "description": "Package a clinical-submission artifact into the FDA eCTD module structure (M1 regional admin, M2 summaries, M3 quality, M4 nonclinical, M5 clinical study reports) plus the XML backbone, built directly from the SOURCES — a topic's surviving findings and their primary-source citations. Never built from a rendered report. Verify-live eCTD v4.0.",
+  "license": "MIT",
+  "author": {
+    "name": "zircote"
+  },
+  "provides": {
+    "skills": [
+      "ectd"
+    ],
+    "channels": [
+      "ectd"
+    ]
+  }
+}

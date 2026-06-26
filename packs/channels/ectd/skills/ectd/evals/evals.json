@@ -1,0 +1,178 @@
+{
+  "skill_name": "ectd",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Package the research findings in ./findings into an FDA eCTD submission under ./ectd. Build it from the findings and their cited primary sources — never from a rendered report. Create the eCTD sequence directory 0000 with the five module folders (m1, m2, m3, m4, m5), write a module summary leaf into each, and write the eCTD XML backbone (ectd-backbone.xml) that references all five module leaves and declares the resolved eCTD version. Compose the m3 quality summary leaf, grounded in the findings + their primary-source citations, to ./composed-m3.md (no internal-research identity). After running, write an execution log to result.txt recording: the submission sequence written, the five module folders created (m1 m2 m3 m4 m5), that ectd-backbone.xml was written, and the resolved eCTD version.",
+      "expected_output": "The skill loads the surviving findings, lays out the eCTD module tree (sequence 0000 with m1-m5 folders + a summary leaf per module), composes each leaf from the findings + their primary-source citations (NOT a rendered report), and writes the eCTD XML backbone referencing all five module leaves with the resolved eCTD version (v4.0). result.txt records the sequence, the five modules, the backbone, and the version. composed-m3.md is grounded in the findings' primary sources with no internal-research identity.",
+      "files": [
+        {
+          "path": "findings/finding-cmc.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f_technical_1\",\"conceptType\":\"semantic\",\"title\":\"Drug substance manufacturing controls are documented in module 3\",\"content\":\"Chemistry, manufacturing, and controls (CMC) information belongs in eCTD module 3 (quality).\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"FDA — eCTD technical specifications\",\"url\":\"https://www.fda.gov/drugs/electronic-regulatory-submission-and-review/electronic-common-technical-document-ectd\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        },
+        {
+          "path": "findings/finding-clinical.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f_landscape_2\",\"conceptType\":\"semantic\",\"title\":\"Clinical study reports are submitted in module 5\",\"content\":\"Clinical efficacy and safety study reports are organized under eCTD module 5.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"ICH — CTD organization\",\"url\":\"https://www.ich.org/page/ctd\"}],\"extensions\":{\"harness\":{\"dimension\":\"landscape\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        }
+      ],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "result.txt",
+          "description": "An execution log was written"
+        },
+        {
+          "type": "regex_match",
+          "file": "result.txt",
+          "pattern": "(?is)m1.*m2.*m3.*m4.*m5",
+          "description": "The log reports all five eCTD module folders (m1-m5)"
+        },
+        {
+          "type": "regex_match",
+          "file": "result.txt",
+          "pattern": "(?i)ectd-backbone\\.xml",
+          "description": "The log reports the eCTD XML backbone was written"
+        },
+        {
+          "type": "regex_match",
+          "file": "result.txt",
+          "pattern": "4\\.0",
+          "description": "The log records the resolved eCTD version (v4.0)"
+        },
+        {
+          "type": "file_exists",
+          "file": "ectd/0000/ectd-backbone.xml",
+          "description": "The eCTD XML backbone was written at the sequence root"
+        },
+        {
+          "type": "regex_match",
+          "file": "ectd/0000/ectd-backbone.xml",
+          "pattern": "(?s)m1.*m2.*m3.*m4.*m5",
+          "description": "The backbone references all five module leaves"
+        },
+        {
+          "type": "regex_match",
+          "file": "ectd/0000/ectd-backbone.xml",
+          "pattern": "(?i)ectd[-:]?version[\"= ]*4\\.0",
+          "description": "The backbone declares the resolved eCTD version 4.0"
+        },
+        {
+          "type": "file_exists",
+          "file": "composed-m3.md",
+          "description": "The composed source-grounded module-3 leaf was written"
+        },
+        {
+          "type": "regex_match",
+          "file": "composed-m3.md",
+          "pattern": "(fda\\.gov|ich\\.org)",
+          "description": "The composed leaf cites the findings' primary sources"
+        },
+        {
+          "type": "regex_not_match",
+          "file": "composed-m3.md",
+          "pattern": "urn:mif:",
+          "description": "No internal finding/concept identity leaks into the composed leaf (full urn:mif: stem — no MIF identifier of any type leaks into a composed module leaf)"
+        },
+        {
+          "type": "regex_not_match",
+          "file": "composed-m3.md",
+          "pattern": "\\bf_[a-z]+_[0-9]+\\b",
+          "description": "No internal f_<dimension>_<n> finding handles leak into the composed leaf"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "The eCTD package is built from the findings and their primary sources, not from a rendered report",
+          "check": "transcript",
+          "criteria": "The response/transcript shows the skill reading the findings JSON and packaging the module tree from them + their citation URLs — it does not read or render a pre-rendered report.md"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Package the findings in ./findings into an eCTD submission under ./ectd. Write the eCTD XML backbone to ./ectd/0000/ectd-backbone.xml and a one-line outcome to result.txt naming the eCTD version you packaged to.",
+      "expected_output": "The skill verifies the eCTD version live (anchor v4.0), lays out the m1-m5 module tree under sequence 0000, and writes the backbone declaring that version. result.txt names the eCTD version.",
+      "files": [
+        {
+          "path": "findings/finding-1.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f-1\",\"conceptType\":\"semantic\",\"title\":\"Finding one\",\"content\":\"A verified claim grounded in a primary source.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"website\",\"citationRole\":\"supports\",\"title\":\"Source\",\"url\":\"https://example.com/source\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        }
+      ],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "ectd/0000/ectd-backbone.xml",
+          "description": "The eCTD XML backbone was written"
+        },
+        {
+          "type": "regex_match",
+          "file": "ectd/0000/ectd-backbone.xml",
+          "pattern": "(?i)ectd[-:]backbone",
+          "description": "The backbone is a well-formed eCTD backbone element"
+        },
+        {
+          "type": "regex_match",
+          "file": "result.txt",
+          "pattern": "4\\.0",
+          "description": "The outcome names the eCTD version (anchor v4.0)"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "The skill anchors to a verified eCTD edition rather than assuming from memory",
+          "check": "transcript",
+          "criteria": "The response anchors to eCTD v4.0 and reflects a live edition-currency check, not a guessed version"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Package the findings in ./findings into an eCTD submission under ./ectd, composing the module-2 summary leaf to ./ectd/0000/m2/m2-summary.md grounded in the findings and their cited primary sources. Write result.txt naming the modules created.",
+      "expected_output": "The skill composes the m2 summary leaf from the findings + their primary-source citations with no internal-research identity, and lays out the full m1-m5 module tree.",
+      "files": [
+        {
+          "path": "findings/finding-summary.json",
+          "content": "{\"@context\":\"https://mif-spec.dev/schema/context.jsonld\",\"@type\":\"Concept\",\"@id\":\"urn:mif:concept:harness:f_clinical_3\",\"conceptType\":\"semantic\",\"title\":\"CTD module 2 holds the overviews and summaries\",\"content\":\"Module 2 of the CTD contains the quality overall summary and the nonclinical and clinical overviews and summaries.\",\"created\":\"2026-06-22T00:00:00Z\",\"namespace\":\"harness/eval\",\"citations\":[{\"@type\":\"Citation\",\"citationType\":\"documentation\",\"citationRole\":\"supports\",\"title\":\"ICH — CTD organization\",\"url\":\"https://www.ich.org/page/ctd\"}],\"extensions\":{\"harness\":{\"dimension\":\"technical\",\"verification\":{\"verdict\":\"survived\",\"verdict_basis\":\"Disconfirming search found no credible refutation.\"}}}}\n"
+        }
+      ],
+      "deterministic_checks": [
+        {
+          "type": "file_exists",
+          "file": "ectd/0000/m2/m2-summary.md",
+          "description": "The module-2 summary leaf was composed"
+        },
+        {
+          "type": "regex_match",
+          "file": "ectd/0000/m2/m2-summary.md",
+          "pattern": "ich\\.org",
+          "description": "The composed leaf cites the findings' primary sources"
+        },
+        {
+          "type": "regex_not_match",
+          "file": "ectd/0000/m2/m2-summary.md",
+          "pattern": "urn:mif:",
+          "description": "No internal finding/concept identity leaks into the composed leaf (full urn:mif: stem — no MIF identifier of any type leaks into a composed module leaf)"
+        },
+        {
+          "type": "regex_not_match",
+          "file": "ectd/0000/m2/m2-summary.md",
+          "pattern": "\\bf_[a-z]+_[0-9]+\\b",
+          "description": "No internal f_<dimension>_<n> finding handles leak into the composed leaf"
+        },
+        {
+          "type": "regex_match",
+          "file": "result.txt",
+          "pattern": "(?is)m1.*m2.*m3.*m4.*m5",
+          "description": "The log reports all five eCTD module folders (m1-m5)"
+        }
+      ],
+      "expectations": [
+        {
+          "description": "The module leaves are composed from the sources, not a rendered report",
+          "check": "transcript",
+          "criteria": "The response shows the skill composing the m2 summary from the findings JSON and their citation URLs, not from a pre-rendered report"
+        }
+      ]
+    }
+  ]
+}

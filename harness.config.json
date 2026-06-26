@@ -225,6 +225,11 @@
       "name": "xbrl",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "ectd",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [
