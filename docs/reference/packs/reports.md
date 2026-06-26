@@ -12,8 +12,8 @@ renders through any channel.
 The core report packs — `academic`, `briefing`, `engineering`, `exec-summary`, and
 `trend-analysis` — are enabled by default and require no enable command unless explicitly
 disabled. The additional domain and specialized genres below are **opt-in**: disabled by
-default and enabled per pack with `scripts/pack-toggle.sh <name> on`. Each pack's header
-states its default.
+default and enabled per pack with `scripts/pack-toggle.sh <name> on`. Each opt-in pack's
+header carries this marker.
 
 For control-plane mechanics see [Packs and Plugins](../packs-and-plugins.md).
 
