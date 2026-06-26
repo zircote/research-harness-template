@@ -32,10 +32,12 @@ already used by `release.yml`, CI, and `SECURITY.md`:
   --prefix=<name>-<tag>/ <sha> | gzip -n` — from the tagged tree and attests it with
   SLSA build provenance (`actions/attest-build-provenance`, Sigstore/cosign under
   the hood; the signer identity is the release workflow).
-- `update.sh` reproduces that same artifact locally from the target tree and runs
-  `gh attestation verify <artifact> --repo <owner/repo> --signer-workflow
-  <owner/repo>/.github/workflows/release.yml`. `--repo` scopes trust to the
-  repository; `--signer-workflow` pins it to the certificate identity of the
+- `update.sh` first reproduces that same artifact locally from the target tree and
+  runs `gh attestation verify <artifact> --repo <owner/repo> --signer-workflow
+  <owner/repo>/.github/workflows/release.yml`. If that misses, it verifies the
+  downloaded signed release asset with the same command and then compares its
+  extracted tree to a `git archive` of the pinned commit. `--repo` scopes trust to
+  the repository; `--signer-workflow` pins it to the certificate identity of the
   release workflow, so an attestation from any other workflow is rejected.
 
 A miss exits non-zero and Copier is never invoked.
@@ -59,11 +61,11 @@ at clone (TOFU); an update cannot silently weaken it without first passing a che
 it cannot pass. For fleets, additionally run the same gate in org-controlled CI so
 a locally tampered `update.sh` cannot bypass org policy.
 
-## The one trade-off: reproducibility
+## Reproducibility mismatch handling
 
-Verifying by reproducing `git archive | gzip -n` requires the consumer's git/tar/
-gzip to produce the same bytes as the runner. `release.yml` documents the same
-caveat (tar header format, gzip OS byte). The upside is parity: the updater, CI,
-and a human all run the identical `gh attestation verify` command. The failure mode
-is benign and detectable — a legitimate tag fails *closed* on a byte mismatch
-rather than passing something unverified.
+Reproducing `git archive | gzip -n` can still diverge by platform (tar header
+format, gzip OS byte). `update.sh` treats that local verify miss as a fallback
+trigger, not an implicit trust grant: it verifies the signed release asset and
+then requires extracted-content equality with the pinned commit SHA before
+applying. So mismatched packaging bytes no longer block legitimate updates, while
+the gate remains fail-closed.

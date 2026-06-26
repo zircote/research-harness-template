@@ -41,7 +41,9 @@ It will:
    is baked into `update.sh`, not taken from `.copier-answers.yml`.)
 2. Reproduce the release artifact from that tree and verify its SLSA
    build-provenance attestation, pinned to the repository **and** the release
-   workflow identity (`gh attestation verify … --signer-workflow …`).
+   workflow identity (`gh attestation verify … --signer-workflow …`). If the
+   local reproduction misses verification, it falls back to the signed release
+   asset and verifies that the extracted content matches the pinned commit.
 3. On success only: run `copier update --vcs-ref <verified-sha>` — so Copier applies
    exactly the bytes that were verified (a git SHA is content-addressed, so the applied
    content is the verified content regardless of which path `_src_path` names). Then, if
@@ -58,13 +60,12 @@ bash scripts/update.sh --target v1.2.3 -- --defaults
 
 ## When verification fails
 
-A non-zero exit means **nothing was applied**. Either the target release is not
-attested by the trusted release workflow (refuse to trust it), or — less
-commonly — your local toolchain produced different archive bytes than the runner
-did. The release artifact is a reproducible `git archive | gzip -n`, but tar
-header format and the gzip OS byte can vary across git versions / platforms; if
-the only signal is a digest mismatch on an otherwise-legitimate tag, that is a
-reproducibility mismatch, not a provenance failure. See
+A non-zero exit means **nothing was applied**. `update.sh` already handles the
+reproducibility-mismatch case by verifying the downloaded signed release asset
+and content-checking it against the pinned commit. So if it still exits non-zero,
+the release either is not attested by the trusted release workflow, the expected
+asset was missing, or the release asset's extracted content did not match the
+pinned commit. See
 [update-channel provenance model](../explanation/update-channel-provenance.md).
 
 ## Why this is the only supported path

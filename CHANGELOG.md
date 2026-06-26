@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/update.sh` now handles cross-platform reproducibility misses
+  (macOS/BSD vs Linux `git archive | gzip -n` bytes) with a sanctioned fail-closed
+  fallback: verify the downloaded release asset's attestation, then require
+  extracted-content equality with the pinned commit SHA before applying
+  `copier update --vcs-ref <sha>` (issue #151).
+
 ## [0.3.0] - 2026-06-26
 
 ### Added

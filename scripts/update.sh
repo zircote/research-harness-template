@@ -16,6 +16,8 @@
 #      release workflow identity:
 #        gh attestation verify <artifact> --repo <owner/repo> \
 #          --signer-workflow <owner/repo>/.github/workflows/release.yml
+#      If local reproduction misses, verify the downloaded release asset with the
+#      same command and require extracted-content equality with the pinned commit.
 #      Any miss -> non-zero exit, Copier is NEVER invoked.
 #   4. On success: `copier update --vcs-ref <verified-sha>` — Copier checks out
 #      exactly the verified SHA (closes the TOCTOU gap; a git SHA is a content
@@ -30,9 +32,9 @@
 #
 # Reproducibility note: `git archive | gzip -n` is deterministic for a given git
 # version + platform, but tar header format and the gzip OS byte can differ across
-# platforms (release.yml documents the same caveat). If verification fails ONLY
-# because your local toolchain produces different bytes, that is a reproducibility
-# mismatch, not a provenance failure — see docs/how-to/update-your-harness.md.
+# platforms (release.yml documents the same caveat). To avoid blocking legitimate
+# updates on that byte mismatch, a local verify miss falls back to verifying the
+# signed release asset, then content-checking it against the pinned commit.
 #
 # Usage:  bash scripts/update.sh [--target <tag>] [-- <extra copier args>]
 #   exit 0 = verified and applied; non-zero = verification miss / precondition
@@ -132,16 +134,37 @@ git -C "$WORK" init -q
 git -C "$WORK" fetch -q --depth 1 "$REMOTE" "refs/tags/${TARGET_TAG}"
 
 # Reproduce the artifact EXACTLY as .github/workflows/release.yml does.
-ARTIFACT="${WORK}/${NAME}-${TARGET_TAG}.tar.gz"
-git -C "$WORK" archive --format=tar --prefix="${NAME}-${TARGET_TAG}/" "$SHA" | gzip -n > "$ARTIFACT"
+LOCAL_ARTIFACT="${WORK}/${NAME}-${TARGET_TAG}.local.tar.gz"
+ASSET_NAME="${NAME}-${TARGET_TAG}.tar.gz"
+RELEASE_ARTIFACT="${WORK}/${ASSET_NAME}"
+git -C "$WORK" archive --format=tar --prefix="${NAME}-${TARGET_TAG}/" "$SHA" | gzip -n > "$LOCAL_ARTIFACT"
 
 # THE GATE: verify SLSA provenance, pinned to this repo AND the release workflow.
 echo "update.sh: verifying build-provenance attestation (fail-closed)…"
-if ! gh attestation verify "$ARTIFACT" \
+if ! gh attestation verify "$LOCAL_ARTIFACT" \
       --repo "$PINNED_REPO" \
       --signer-workflow "$SIGNER_WORKFLOW"; then
-  echo "update.sh: provenance verification FAILED for ${PINNED_REPO}@${TARGET_TAG} — refusing to update (nothing applied)" >&2
-  exit 1
+  echo "update.sh: local reproduction did not verify; trying signed release asset fallback…"
+  for t in tar diff; do command -v "$t" >/dev/null 2>&1 || { echo "update.sh: fallback verification requires '$t' (not found)" >&2; exit 1; }; done
+  rm -f "$RELEASE_ARTIFACT"
+  gh release download "$TARGET_TAG" \
+    --repo "$PINNED_REPO" \
+    --pattern "$ASSET_NAME" \
+    --dir "$WORK" \
+    --clobber >/dev/null
+  [ -f "$RELEASE_ARTIFACT" ] || { echo "update.sh: release asset '$ASSET_NAME' not found for ${PINNED_REPO}@${TARGET_TAG}" >&2; exit 1; }
+  gh attestation verify "$RELEASE_ARTIFACT" \
+    --repo "$PINNED_REPO" \
+    --signer-workflow "$SIGNER_WORKFLOW" >/dev/null \
+    || { echo "update.sh: provenance verification FAILED for ${PINNED_REPO}@${TARGET_TAG} — refusing to update (nothing applied)" >&2; exit 1; }
+
+  RELEASE_TREE="${WORK}/release-tree"
+  PINNED_TREE="${WORK}/pinned-tree"
+  mkdir -p "$RELEASE_TREE" "$PINNED_TREE"
+  tar -xzf "$RELEASE_ARTIFACT" -C "$RELEASE_TREE"
+  git -C "$WORK" archive --format=tar --prefix="${NAME}-${TARGET_TAG}/" "$SHA" | tar -xf - -C "$PINNED_TREE"
+  diff -qr "${RELEASE_TREE}/${NAME}-${TARGET_TAG}" "${PINNED_TREE}/${NAME}-${TARGET_TAG}" >/dev/null \
+    || { echo "update.sh: release asset content does not match pinned commit ${SHA} — refusing to update (nothing applied)" >&2; exit 1; }
 fi
 echo "update.sh: provenance verified — applying update pinned to ${SHA}"
 
