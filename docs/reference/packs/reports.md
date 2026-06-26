@@ -109,6 +109,52 @@ scripts/pack-toggle.sh briefing on
 
 ---
 
+## computing-paper
+
+**Version:** 0.2.0 | **Kind:** genre
+
+### Purpose
+
+Produces an ACM/IEEE computing conference or journal paper from the surviving findings
+corpus. The genre follows ACM/IEEE conventions: abstract, introduction, related work,
+approach / system design, an explicit evaluation (experimental setup and results),
+discussion, conclusion & future work, and a numbered reference list.
+
+### When to use
+
+Use `computing-paper` when the deliverable is a computing or engineering systems paper
+targeting an ACM or IEEE venue. This is distinct from `academic` (APA/IMRaD): choose
+`computing-paper` when the work calls for Related Work, a System Design / Approach
+section, an explicit Evaluation, and IEEE numbered citations. Disabled by default —
+opt in per project.
+
+### What it provides
+
+- ACM/IEEE section structure: Abstract, Introduction, Related Work, Approach / System
+  Design / Method, Evaluation, Discussion, Conclusion & Future Work, References
+- IEEE numbered bracket citations (`[1]`) resolving to a numbered reference list
+- CCS Concepts (ACM Computing Classification System) and keywords / index terms front
+  matter
+
+### Dependencies
+
+None beyond the core engine.
+
+### Benefits
+
+- Enforces the section taxonomy an ACM/IEEE program committee expects, kept separate
+  from the academic APA/IMRaD genre
+- IEEE numbered citations resolve every claim to a traceable, URL-bearing reference
+- Explicit Evaluation section keeps experimental setup and results legible to reviewers
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh computing-paper on
+```
+
+---
+
 ## engineering
 
 **Version:** 0.3.0 | **Kind:** genre

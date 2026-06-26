@@ -1,0 +1,18 @@
+{
+  "name": "computing-paper",
+  "version": "0.2.0",
+  "kind": "genre",
+  "description": "Genre template for an ACM/IEEE computing conference or journal paper (Related Work, Approach/System Design, Evaluation, Conclusion & Future Work) with IEEE numbered citations",
+  "license": "MIT",
+  "author": {
+    "name": "zircote"
+  },
+  "provides": {
+    "skills": [
+      "computing-paper"
+    ],
+    "genres": [
+      "computing-paper"
+    ]
+  }
+}

@@ -74,6 +74,11 @@
       "description": "[reports/genre] Genre template for a one-page briefing or standup update (what's new, why it matters, what's next)"
     },
     {
+      "name": "computing-paper",
+      "source": "./packs/reports/computing-paper",
+      "description": "[reports/genre] Genre template for an ACM/IEEE computing conference or journal paper (related work, approach/system design, evaluation, conclusion & future work) with IEEE numbered citations"
+    },
+    {
       "name": "engineering",
       "source": "./packs/reports/engineering",
       "description": "[reports/genre] Genre template for a design / evaluation report (problem, options, decision, trade-offs, implementation notes)"
