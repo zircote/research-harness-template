@@ -635,6 +635,70 @@ scripts/pack-toggle.sh market-research-report on
 
 ---
 
+## systematic-review
+
+**Version:** 0.2.0 | **Kind:** genre
+
+### Purpose
+
+Produces a PRISMA 2020 systematic review that makes the evidence-selection process legible
+and reproducible end to end. A **PRISMA flow diagram is required** — it reports the count of
+records at each stage (identified → screened → excluded with reasons → included) and must
+reconcile, so identified minus excluded equals included. The harness's own pipeline maps
+onto the PRISMA stages: dimension fan-out is identification, candidate gathering is
+screening, the single adversarial falsification gate is eligibility, and synthesis of the
+surviving corpus is inclusion; a `falsified` unit is an excluded record carrying its
+falsification reason.
+
+Section order:
+
+1. **Title / Abstract (structured)** — background, objectives, eligibility, sources,
+   synthesis methods, results, conclusions
+2. **Introduction** — rationale and explicit objectives (review question)
+3. **Methods** — eligibility criteria, information sources, search strategy, selection
+   process, data items, risk-of-bias assessment
+4. **Results** — study selection with the PRISMA flow diagram and synthesis of results
+5. **Discussion** — limitations and conclusions
+6. **Registration & Protocol** — registration record and protocol availability
+7. **References** — numbered (Vancouver-style) reference list
+
+### When to use
+
+Use `systematic-review` when the deliverable must document a reproducible evidence-synthesis
+process — the eligibility criteria, search, and selection — precisely enough that another
+reviewer could repeat it, with every inclusion and exclusion decision auditable.
+
+### What it provides
+
+- Seven-section PRISMA 2020 structure with a structured abstract
+- Required PRISMA flow diagram with reconciling stage counts (identified / screened /
+  excluded / included)
+- A reproducible Methods protocol (eligibility, sources, search, selection, data items,
+  risk-of-bias)
+- Falsified findings recorded as excluded records with their exclusion reasons
+- Numbered (Vancouver-style) citations resolving to a references list
+
+### Dependencies
+
+None beyond the core engine. Mermaid rendering of the flow diagram is optional.
+
+### Benefits
+
+- The required, reconciling flow diagram makes the selection process auditable rather than
+  narrated
+- Mapping the harness pipeline onto PRISMA stages turns falsification verdicts into
+  documented exclusion reasons
+- The reproducible Methods protocol forces the eligibility and search to be stated precisely
+  enough to repeat
+
+### Enable
+
+```sh
+scripts/pack-toggle.sh systematic-review on
+```
+
+---
+
 ## trend-analysis
 
 **Version:** 0.3.0 | **Kind:** genre

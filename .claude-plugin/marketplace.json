@@ -132,6 +132,11 @@
       "name": "market-research-report",
       "source": "./packs/reports/market-research-report",
       "description": "[reports/genre] Genre template for a full ESOMAR/ISO 20252-style market research report (background, methodology, findings, conclusions/recommendations, technical appendix); the ESOMAR/ICC structure is conventional practice, not a codified format standard"
+    },
+    {
+      "name": "systematic-review",
+      "source": "./packs/reports/systematic-review",
+      "description": "[reports/genre] Genre template for a PRISMA 2020 systematic review (structured abstract, methods, results with PRISMA flow diagram, discussion, registration)"
     }
   ]
 }
