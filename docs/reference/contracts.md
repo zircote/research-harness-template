@@ -1,4 +1,5 @@
 ---
+title: "Reference: contracts"
 diataxis_type: reference
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: "Reference: dependencies and requirements"
 diataxis_type: reference
 ---
 

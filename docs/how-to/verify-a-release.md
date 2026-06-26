@@ -1,4 +1,5 @@
 ---
+title: "How to verify a release artifact"
 diataxis_type: how-to
 ---
 
