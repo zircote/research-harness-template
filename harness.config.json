@@ -200,6 +200,11 @@
       "name": "systematic-review",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "compliance-audit",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [
