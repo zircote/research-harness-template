@@ -47,7 +47,7 @@ if ! jq -s --arg genre "$GENRE" '
       } ],
       sources: ( [ $surv[] | (.citations // [])[]
                    | { title: .title, url: .url, citationType: (.citationType // "website"), citationRole: (.citationRole // "supports") } + (if .note then {note: .note} else {} end) ]
-                 | unique_by(.url) )
+                 | group_by(.url) | map(max_by((.note // "") | length)) )
     }
 ' $FILES > "$OUT.tmp" 2>"$OUT.err"; then
   echo "synthesize: failed —" >&2; cat "$OUT.err" >&2
