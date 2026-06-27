@@ -40,13 +40,13 @@ if ! jq -s --arg genre "$GENRE" '
         body: (.content // .summary // .title),
         supports: [ .["@id"] ],
         sources: [ (.citations // [])[]
-                   | { title: .title, url: .url, citationType: (.citationType // "website"), citationRole: (.citationRole // "supports") } ],
+                   | { title: .title, url: .url, citationType: (.citationType // "website"), citationRole: (.citationRole // "supports") } + (if .note then {note: .note} else {} end) ],
         entities: [ (.entities // [])[] | { name: .name, entityType: (.entityType // "entity") } ],
         dimension: (.extensions.harness.dimension // "general"),
         verdict: (.extensions.harness.verification.verdict // "inconclusive")
       } ],
       sources: ( [ $surv[] | (.citations // [])[]
-                   | { title: .title, url: .url, citationType: (.citationType // "website"), citationRole: (.citationRole // "supports") } ]
+                   | { title: .title, url: .url, citationType: (.citationType // "website"), citationRole: (.citationRole // "supports") } + (if .note then {note: .note} else {} end) ]
                  | unique_by(.url) )
     }
 ' $FILES > "$OUT.tmp" 2>"$OUT.err"; then

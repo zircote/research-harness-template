@@ -42,21 +42,33 @@ CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 DEF='
   # Wrap bare emails / http(s) URLs in angle-bracket autolinks so the rendered body
   # is markdownlint-clean (MD034). Skips anything already inside a markdown link
-  # "](...)" or an existing <...> autolink via lookbehind, so links are not double-wrapped:
-  # the email lookbehind also excludes "(" and ":" so an email in a link destination
-  # ("](mailto:a@b.com)") is left intact. The URL terminal char class excludes trailing
-  # sentence punctuation so "see https://x.com." does not absorb the "." into the link.
+  # "](...)" or an existing <...> autolink via lookbehind, so links are not double-wrapped.
   def autolink:
-    gsub("(?<![\\w.<(:])(?<e>[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,})(?![\\w>])"; "<\(.e)>")
-    | gsub("(?<![(<\"])(?<u>https?://[^\\s)<>\"]*[^\\s)<>\".,;:!?])"; "<\(.u)>");
+    gsub("(?<![\\w.<])(?<e>[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,})(?![\\w>])"; "<\(.e)>")
+    | gsub("(?<!\\]\\()(?<![<\"])(?<u>https?://[^\\s)<>\"]+)"; "<\(.u)>");
+  # Disambiguate repeated section headings (two findings can share a title) so the
+  # rendered body has no duplicate H2s (markdownlint MD024). Appends " (N)" on repeats.
+  def dedupe_sections:
+    reduce .[] as $s ({seen:{},out:[]};
+      ((.seen[$s.heading] // 0) + 1) as $n
+      | .seen[$s.heading] = $n
+      | .out += [ $s + {heading: (if $n>1 then ($s.heading + " (" + ($n|tostring) + ")") else $s.heading end)} ] )
+    | .out;
+  # Escape every literal "*" in body prose. Research bodies carry math operators
+  # (beta * epsilon), glob/wildcard tokens (llm.token_count.*) and the occasional stray
+  # asterisk, none of which are intended emphasis; escaping all of them keeps markdownlint
+  # quiet (MD037 spaces-in-emphasis, MD049/MD050) without guessing which "*" is emphasis.
+  def deglob: gsub("\\*"; "\\*") | gsub("(?<=\\s)_"; "\\_") | gsub("_(?=\\s)"; "\\_");
+  # Strip trailing whitespace on every line (MD009).
+  def detrail: gsub("[ \t]+(?=\n)"; "") | gsub("[ \t]+$"; "");
   def secblock($s; $meta; $ev):
-    [ "", "## " + $s.heading, "", ($s.body | autolink) ]
+    [ "", "## " + ($s.heading | deglob | detrail), "", ($s.body | autolink | deglob | detrail) ]
     + (if (($s.entities // []) | length) > 0
        then [ "", ("Key entities: " + ([ $s.entities[] | .name + " (" + (.entityType // "entity") + ")" ] | join(", ")) + ".") ] else [] end)
     + (if $meta and ($s.dimension != null)
        then [ "", ("_Dimension: " + $s.dimension + " · verification: " + ($s.verdict // "n/a") + "._") ] else [] end)
     + (if $ev and (($s.sources // []) | length) > 0
-       then [ "", "Evidence:", "" ] + [ $s.sources[] | "- [" + .title + "](" + .url + ")" ] else [] end);
+       then [ "", "Evidence:", "" ] + [ $s.sources[] | "- [" + (.title|gsub("^[ \\t]+|[ \\t]+$";"")) + "](<" + .url + ">)" ] else [] end);
 '
 
 case "$CHANNEL" in
@@ -67,9 +79,9 @@ case "$CHANNEL" in
     # carries no H1 (a body H1 plus the frontmatter title trips markdownlint MD025).
     BODY=$(jq -r "$DEF"'
       ( [ ("This " + (.genre // "general") + " synthesis covers " + ((.sections | length) | tostring) + " surviving finding(s) across the research.") ]
-        + ( reduce .sections[] as $s ([]; . + secblock($s; true; true)) )
+        + ( reduce (.sections|dedupe_sections)[] as $s ([]; . + secblock($s; true; true)) )
         + [ "", "## Sources", "" ]
-        + [ .sources[] | "- [" + .title + "](" + .url + ")" ]
+        + [ .sources[] | "- [" + (.title|gsub("^[ \\t]+|[ \\t]+$";"")) + "](<" + .url + ">)" ]
       ) | .[]
     ' "$ART")
     CONCEPT=$(jq --arg ns "$NS" --arg slug "$SLUG" --arg created "$CREATED" '
@@ -82,7 +94,7 @@ case "$CHANNEL" in
         title: .title,
         created: $created,
         provenance: { "@type": "Provenance", sourceType: "system_generated", confidence: 0.9, trustLevel: "moderate_confidence" },
-        citations: [ .sources[] | { "@type": "Citation", citationType: .citationType, citationRole: .citationRole, title: .title, url: .url } ],
+        citations: [ .sources[] | { "@type": "Citation", citationType: .citationType, citationRole: .citationRole, title: .title, url: .url } + (if .note then {note: .note} else {} end) ],
         extensions: { harness: { dimension: "synthesis" } }
       }' "$ART")
     if [ -n "$VERIF" ] && [ -f "$VERIF" ]; then
@@ -116,9 +128,9 @@ case "$CHANNEL" in
           "---",
           "",
           ("# " + .title) ]
-        + ( reduce .sections[] as $s ([]; . + secblock($s; false; true)) )
+        + ( reduce (.sections|dedupe_sections)[] as $s ([]; . + secblock($s; false; true)) )
         + [ "", "## Sources", "" ]
-        + [ .sources[] | "- [" + .title + "](" + .url + ")" ]
+        + [ .sources[] | "- [" + (.title|gsub("^[ \\t]+|[ \\t]+$";"")) + "](<" + .url + ">)" ]
       ) | .[]
     ' --arg ns "$NS" --arg slug "$SLUG" --arg created "$CREATED" "$ART" > "$OUT"
     ;;
@@ -139,7 +151,7 @@ case "$CHANNEL" in
           ("# Chapter: " + .title),
           "",
           ("> Genre: " + (.genre // "general") + " · audience: " + (.audience // "general")) ]
-        + ( reduce .sections[] as $s ([]; . + secblock($s; false; false)) )
+        + ( reduce (.sections|dedupe_sections)[] as $s ([]; . + secblock($s; false; false)) )
         + [ "", "## Endnotes", "" ]
         + [ .sources | to_entries[] | "[" + ((.key + 1) | tostring) + "] " + .value.title + " — <" + .value.url + ">" ]
       ) | .[]
