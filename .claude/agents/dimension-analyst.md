@@ -233,9 +233,9 @@ from harness_models import emit
 
 finding = {
     "@context": "https://mif-spec.dev/schema/context.jsonld",
-    "@type": "Concept",
+    "@type": "Memory",
     "@id": "urn:mif:concept:<topic>:<slug>",
-    "conceptType": "...",
+    "memoryType": "...",
     "content": "...",          # arbitrary prose — a Python string, never shell-quoted
     "created": "...",
     # Citation shape (closed): no @id; cite by live http(s) url. See finding.sample.json.
@@ -245,8 +245,8 @@ finding = {
     # Optional: typed links to sibling findings (see Step 5c). Encode the
     # derivations/agreements you ALREADY state in prose — this is what makes the
     # knowledge graph relationally linked, not just entity-mentions.
-    # "relationships": [{"type": "derived-from",
-    #                    "target": "urn:mif:concept:<topic>:<other-slug>",
+    # "relationships": [{"@type": "Relationship", "relationshipType": "DerivedFrom",
+    #                    "target": {"@id": "urn:mif:concept:<topic>:<other-slug>"},
     #                    "strength": 0.9}],
 }
 emit.write(finding, sys.argv[1])  # canonical: sorted keys, 2-space indent, valid JSON
@@ -326,7 +326,7 @@ such stated link** as a MIF `relationships[]` entry on the finding that asserts 
 
 ```jsonc
 "relationships": [
-  { "type": "derived-from", "target": "urn:mif:concept:<topic>:<sibling-slug>", "strength": 0.9 }
+  { "@type": "Relationship", "relationshipType": "DerivedFrom", "target": { "@id": "urn:mif:concept:<topic>:<sibling-slug>" }, "strength": 0.9 }
 ]
 ```
 

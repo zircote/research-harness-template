@@ -79,7 +79,7 @@ pass, exit 1 = violation (one diagnostic line per violation).
 
 The canonical MIF Level-3 output and source of truth (SPEC §10). A report **is** a
 MIF concept serialized as markdown: authoritative YAML frontmatter (the MIF fields
-— `@id`, `conceptType`, `created`, `citations`, `provenance`,
+— `@id`, `memoryType`, `created`, `citations`, `provenance`,
 `extensions.harness.{dimension,verification}`) over a Markdown body that becomes the
 MIF `content`. `scripts/mif-project.sh <report.md>` projects frontmatter+body to
 JSON and validates it against `findings.schema.json` (the **same bar as a finding**)

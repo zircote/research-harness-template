@@ -1,8 +1,7 @@
 {
   "@context": "https://mif-spec.dev/schema/context.jsonld",
-  "@type": "Concept",
+  "@type": "Memory",
   "@id": "urn:mif:source:harness/example-topic:bad",
-  "conceptType": "episodic",
   "content": "raw body",
   "created": "2026-06-19T12:00:00Z",
   "provenance": {
@@ -11,5 +10,6 @@
   },
   "extensions": {
     "harness": {}
-  }
+  },
+  "memoryType": "episodic"
 }

@@ -49,28 +49,28 @@
     {
       "source": "urn:mif:concept:sample:bandwidth-0002",
       "target": "urn:mif:concept:sample:gateway-0003",
-      "type": "supports",
+      "type": "harness:Supports",
       "strength": 0.7,
       "via": "relationship"
     },
     {
       "source": "urn:mif:concept:sample:edge-compute-0001",
       "target": "urn:mif:concept:sample:gateway-0003",
-      "type": "supports",
+      "type": "harness:Supports",
       "strength": 0.8,
       "via": "relationship"
     },
     {
       "source": "urn:mif:concept:sample:gateway-0003",
       "target": "urn:mif:concept:sample:edge-compute-0001",
-      "type": "derived-from",
+      "type": "DerivedFrom",
       "strength": 0.8,
       "via": "relationship"
     },
     {
       "source": "urn:mif:concept:sample:gateway-0003",
       "target": "urn:mif:concept:sample:bandwidth-0002",
-      "type": "derived-from",
+      "type": "DerivedFrom",
       "strength": 0.7,
       "via": "relationship"
     },

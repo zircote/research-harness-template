@@ -1,8 +1,8 @@
 ---
 "@context": https://mif-spec.dev/schema/context.jsonld
-"@type": Concept
+"@type": Memory
 "@id": urn:mif:report:harness/example-topic:report-bad
-conceptType: semantic
+memoryType: semantic
 namespace: harness/example-topic
 title: "Non-conformant report (no verification verdict)"
 created: "2026-06-19T12:00:00Z"

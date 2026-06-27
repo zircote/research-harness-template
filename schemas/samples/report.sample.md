@@ -1,8 +1,8 @@
 ---
 "@context": https://mif-spec.dev/schema/context.jsonld
-"@type": Concept
+"@type": Memory
 "@id": urn:mif:report:harness/example-topic:sample-report
-conceptType: semantic
+memoryType: semantic
 namespace: harness/example-topic
 title: "Sample synthesis report"
 created: "2026-06-19T12:00:00Z"

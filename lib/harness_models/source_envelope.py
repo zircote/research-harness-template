@@ -125,11 +125,35 @@ ProvenanceModel = TypedDict(
 )
 
 
-class Relationship(TypedDict):
-    type: str
-    target: str
-    strength: NotRequired[float]
-    metadata: NotRequired[dict[str, Any]]
+Target = TypedDict(
+    "Target",
+    {
+        "@id": str,
+    },
+)
+
+
+Relationship = TypedDict(
+    "Relationship",
+    {
+        "@type": Literal["Relationship"],
+        "relationshipType": Literal[
+            "RelatesTo",
+            "DerivedFrom",
+            "Supersedes",
+            "ConflictsWith",
+            "PartOf",
+            "Implements",
+            "Uses",
+            "Created",
+            "MentionedIn",
+        ]
+        | str,
+        "target": Target,
+        "strength": NotRequired[float],
+        "metadata": NotRequired[dict[str, Any]],
+    },
+)
 
 
 class Decay(TypedDict):
@@ -210,12 +234,9 @@ Mif = TypedDict(
     "Mif",
     {
         "@context": str | list[str | dict[str, Any]] | dict[str, Any],
-        "@type": Literal["Concept"] | Literal["Memory"] | list[Any],
+        "@type": Literal["Memory"] | list[Any],
         "@id": str,
-        "conceptType": Literal["semantic", "episodic", "procedural"],
-        "memoryType": NotRequired[Literal["semantic", "episodic", "procedural"]],
-        "timestamp": NotRequired[str],
-        "description": NotRequired[str],
+        "memoryType": Literal["semantic", "episodic", "procedural"],
         "content": str,
         "title": NotRequired[str],
         "created": str,

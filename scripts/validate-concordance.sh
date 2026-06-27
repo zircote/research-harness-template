@@ -113,16 +113,18 @@ fi
 # MIF core vocabulary, always valid: the built-in entity types (the entity-reference
 # enum, e.g. Concept/Person/Organization/Technology/File) and the MIF-native STRUCTURAL
 # relationship types — domain-agnostic links treated as structural (no from/to check).
-# These names are MIF spec vocabulary (schemas/mif/mif.schema.json names derived-from /
-# supersedes / relates-to; ontology.context.jsonld defines Supersedes). The set is owned
-# HERE by the harness, NOT injected into the vendored mif-generic ontology contract, and
-# is unioned with any relationship a CORE ontology itself declares (e.g. mif-base) so it
-# stays exactly what it was. Domain-ontology relationships are NOT in this set, so they
-# still get from/to-enforced.
+# These names are MIF spec vocabulary (schemas/mif/mif.schema.json relationshipType enum:
+# RelatesTo / DerivedFrom / Supersedes / ConflictsWith / PartOf / Implements / Uses /
+# Created / MentionedIn) plus the two harness-namespaced structural extensions
+# (harness:Supports, harness:Refines — claim-support links the MIF core does not name).
+# The set is owned HERE by the harness, NOT injected into the vendored mif-generic ontology
+# contract, and is unioned with any relationship a CORE ontology itself declares (e.g.
+# mif-base) so it stays exactly what it was. Domain-ontology relationships are NOT in this
+# set, so they still get from/to-enforced.
 BUILTIN=$(jq -c '[.. | .enum? | select(.) | .[]] | map(select(type=="string" and test("^[A-Z]"))) | unique' \
             "$ROOT/schemas/mif/definitions/entity-reference.schema.json" 2>/dev/null); [ -z "$BUILTIN" ] && BUILTIN='[]'
 core_arr=$(printf '%s\n' $core_ids | sed '/^$/d' | jq -R . | jq -cs .)
-STRUCTURAL_CORE='["supports","contradicts","derived-from","relates-to","supersedes","refines","part-of","depends-on","updates"]'
+STRUCTURAL_CORE='["RelatesTo","DerivedFrom","Supersedes","ConflictsWith","PartOf","Implements","Uses","Created","MentionedIn","harness:Supports","harness:Refines"]'
 STRUCTURAL=$(jq -cn --argjson base "$STRUCTURAL_CORE" --argjson onto "$ONTO" --argjson core "$core_arr" \
               '($base + [ $core[] | ($onto[.].rels // {} | keys[]) ]) | unique')
 

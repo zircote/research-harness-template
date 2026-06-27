@@ -1367,10 +1367,10 @@ JSON
   #      silently dropping a name would stop treating that link as structural (and start
   #      from/to-enforcing it, or reject it); adding one would over-broaden the skip.
   local expected_sc actual_sc
-  expected_sc='["contradicts","depends-on","derived-from","part-of","refines","relates-to","supersedes","supports","updates"]'
+  expected_sc='["ConflictsWith","Created","DerivedFrom","Implements","MentionedIn","PartOf","RelatesTo","Supersedes","Uses","harness:Refines","harness:Supports"]'
   actual_sc=$(grep -E "^STRUCTURAL_CORE=" scripts/validate-concordance.sh | sed "s/^STRUCTURAL_CORE=//; s/^'//; s/'$//" | jq -cS 'sort' 2>/dev/null)
   if [ "$actual_sc" = "$expected_sc" ]; then
-    ok "STRUCTURAL_CORE pinned to the 9 MIF-native structural relationships (harness-owned, not in the vendored contract)"
+    ok "STRUCTURAL_CORE pinned to the 9 MIF-native relationshipType enum + 2 harness-namespaced structural links (harness-owned, not in the vendored contract)"
   else
     bad "STRUCTURAL_CORE drifted from the pinned MIF-native set: $actual_sc"
   fi

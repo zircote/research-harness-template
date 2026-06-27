@@ -1,12 +1,12 @@
 {
-  "source": "github.com/modeled-information-format/MIF",
-  "commit": "031ad2a",
-  "note": "MIF ontology contract + definitions are vendored-as-seed and FULLY UNLOCKED (verbatim:false, nothing checksum-gated): the contract is first-class and evolves in-repo (e.g. subtype_of) on its way back to MIF. gate_m12 re-validates every ontology against the contract; checksums here are provenance seeds, not a lock.",
+  "source": "github.com/zircote/MIF",
+  "commit": "209aa4a",
+  "note": "Re-vendored to MIF develop/v1.0.0 (Memory Interchange Format vocab: @type Memory, memoryType, Relationship/relationshipType). The ontology contract carries the subtype_of subsumption extension, now MERGED UPSTREAM on develop/v1.0.0 and re-vendored verbatim here (no longer a harness-local fork). It stays verbatim:false because the harness still owns ontology-definition authoring; gate_m12 re-validates ontologies against the contract.",
   "files": [
     {
       "path": "schemas/mif/ontology.schema.json",
       "upstream": "schema/ontology/ontology.schema.json",
-      "sha256": "aac68c2572fe7583a0572172b285d1c215b3f4fbe0435f50b36bf908cff76c07",
+      "sha256": "b2f5e492381f62c1c14d06fb0e20a2978bc7c20b162dda86dbabde0c6b717bd5",
       "verbatim": false
     },
     {
@@ -81,5 +81,6 @@
       "sha256": "3ee2efa82d97dd6715fdee93e6162365ab9f82beb061828d4175d1b839d7301b",
       "verbatim": false
     }
-  ]
+  ],
+  "branch": "develop/v1.0.0"
 }

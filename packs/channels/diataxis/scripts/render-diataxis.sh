@@ -100,8 +100,8 @@ DEF='
         | .out += [ $f + { slug: ($f.base + (if $n>1 then "-"+($n|tostring) else "" end)) } ] ) | .out )
     | add | sort_by(.i);
   def fm($extra): [ "---",
-      "\"@context\": https://mif-spec.dev/schema/context.jsonld", "\"@type\": Concept",
-      ("\"@id\": " + $id), ("conceptType: " + $ctype), ("created: \"" + $created + "\""),
+      "\"@context\": https://mif-spec.dev/schema/context.jsonld", "\"@type\": Memory",
+      ("\"@id\": " + $id), ("memoryType: " + $ctype), ("created: \"" + $created + "\""),
       ("namespace: " + $ns), ("diataxis_type: " + $dtype) ] + $extra + [ "---", "" ];
   def h1($t): [ "# " + ($t|cleantitle) ];
   def h2($t): [ "", "## " + ($t|cleantitle) ];
@@ -117,7 +117,7 @@ DEF='
   def srclinks($f): [ $f[].citations[]? | srcplain ] | unique;
 '
 
-# emit <relpath> <conceptType> <diataxis_type> <jq-program> [jq args...]
+# emit <relpath> <memoryType> <diataxis_type> <jq-program> [jq args...]
 emit() {
   local rel="$1" ctype="$2" dtype="$3" prog="$4"; shift 4
   local out="$OUT/$rel" id idslug tmp
@@ -142,13 +142,13 @@ jq "$DEF"' manifest' "$ALL" > "$MAN" || { echo "render-diataxis: failed to build
 # ── jq programs ─────────────────────────────────────────────────────────────────
 REF='
   (. | titlemap) as $titles | .[$i] as $f
-  | ([ $f.relationships[]? | ($titles[.target] // empty) ]) as $rel
+  | ([ $f.relationships[]? | ($titles[(if (.target|type)=="object" then .target."@id" else .target end)] // empty) ]) as $rel
   | fm([])
     + h1($f.title) + para($f.content)
     + h2("Classification")
     + bullets([ "Dimension: " + (($f.extensions.harness.dimension // "general")|tostring),
                 "Verification: " + (($f.extensions.harness.verification.verdict // "n/a")|tostring),
-                "Concept type: " + (($f.conceptType // "semantic")|tostring) ])
+                "Memory type: " + (($f.memoryType // "semantic")|tostring) ])
     + ( if (($f.entities // []) | length) > 0
         then h2("Key entities") + bullets([ $f.entities[] | ((.name|scrub) + " (" + ((.entityType // "entity")|scrub) + ")") ]) else [] end )
     + ( if (($f.citations // []) | length) > 0
@@ -163,7 +163,7 @@ EXP='
     + para("This explanation connects the " + (($f|length)|tostring) + " " + $dim + " finding(s) and what they establish together.")
     + ( reduce $f[] as $x ([];
           . + h2($x.title) + para($x.content)
-            + ( ([ $x.relationships[]? | ($titles[.target] // empty) ]) as $r
+            + ( ([ $x.relationships[]? | ($titles[(if (.target|type)=="object" then .target."@id" else .target end)] // empty) ]) as $r
                 | if ($r|length) > 0 then para("Connects to: " + ($r | join("; ")) + ".") else [] end ) ) )
     + ( if ($src | length) > 0 then h2("Sources") + bullets($src) else [] end )
   | .[]'

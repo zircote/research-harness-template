@@ -61,9 +61,9 @@ if ! jq -n --arg ns "$NS" --arg slug "$SLUG" --arg title "$TITLE" --rawfile cont
           --arg created "$NOW" --arg url "$URL" --arg ct "$CT" --arg st "$STYPE" '
   {
     "@context": "https://mif-spec.dev/schema/context.jsonld",
-    "@type": "Concept",
+    "@type": "Memory",
     "@id": ("urn:mif:source:" + $ns + ":" + $slug),
-    conceptType: "episodic",
+    memoryType: "episodic",
     namespace: ($ns + "/sources"),
     title: $title,
     content: $content,

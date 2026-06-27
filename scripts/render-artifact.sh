@@ -10,7 +10,7 @@
 #            rendering — pass the resulting verdict as <verification.json>.
 #   blog — the first-class PUBLISHED channel; book + channel packs — optional PUBLISHED
 #            channels. blog and book now carry MIF **Level-1** frontmatter (a base
-#            concept: @context/@type/@id/conceptType/created) — the doc's own
+#            concept: @context/@type/@id/memoryType/created) — the doc's own
 #            identity — so every report output is at least L1 (the report channel is
 #            full L3). They remain exempt from the L3 I/O conformance gate (their
 #            FORMAT is orthogonal): prose is written from the artifact's synthesised
@@ -66,9 +66,9 @@ case "$CHANNEL" in
     CONCEPT=$(jq --arg ns "$NS" --arg slug "$SLUG" --arg created "$CREATED" '
       {
         "@context": "https://mif-spec.dev/schema/context.jsonld",
-        "@type": "Concept",
+        "@type": "Memory",
         "@id": ("urn:mif:report:" + $ns + ":" + $slug),
-        conceptType: "semantic",
+        memoryType: "semantic",
         namespace: $ns,
         title: .title,
         created: $created,
@@ -99,9 +99,9 @@ case "$CHANNEL" in
     jq -r "$DEF"'
       ( [ "---",
           "\"@context\": https://mif-spec.dev/schema/context.jsonld",
-          "\"@type\": Concept",
+          "\"@type\": Memory",
           ("\"@id\": urn:mif:blog:" + $ns + ":" + $slug),
-          "conceptType: semantic",
+          "memoryType: semantic",
           ("created: \"" + $created + "\""),
           ("namespace: " + $ns),
           "---",
@@ -120,9 +120,9 @@ case "$CHANNEL" in
     jq -r "$DEF"'
       ( [ "---",
           "\"@context\": https://mif-spec.dev/schema/context.jsonld",
-          "\"@type\": Concept",
+          "\"@type\": Memory",
           ("\"@id\": urn:mif:book:" + $ns + ":" + $slug),
-          "conceptType: semantic",
+          "memoryType: semantic",
           ("created: \"" + $created + "\""),
           ("namespace: " + $ns),
           "---",
