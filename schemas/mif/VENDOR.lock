@@ -16,27 +16,27 @@
       "verbatim": false
     },
     {
-      "path": "schemas/ontologies/mif-base/0.1.0.yaml",
+      "path": "schemas/ontologies/mif-base/1.0.0.yaml",
       "upstream": "ontologies/mif-base.ontology.yaml",
       "sha256": "5d514bbebd7f5e395463489ed50c213711e24284e50e41ff0cd2ba8662440774",
       "verbatim": false
     },
     {
-      "path": "schemas/ontologies/shared-traits/0.1.0.yaml",
+      "path": "schemas/ontologies/shared-traits/1.0.0.yaml",
       "upstream": "ontologies/shared-traits.ontology.yaml",
-      "sha256": "2bd695be879231c53c8256540c06079b77fda317dca8e178ca68b7ff97945fce",
+      "sha256": "7efdf229283b1961d4994767f836498b28d176ccbb52c659aec3f73da82501bb",
       "verbatim": false
     },
     {
       "path": "packs/ontologies/regenerative-agriculture/regenerative-agriculture.ontology.yaml",
       "upstream": "ontologies/examples/regenerative-agriculture.ontology.yaml",
-      "sha256": "0cea6c48ea778c48dfb3c4eff0fb1cf262345705ddea4ba6e4c9fbed4bd58e4c",
+      "sha256": "f5c507a213c96d7aaac706cd0632a5b968d0d507fc10d0a9467757fc4355391b",
       "verbatim": false
     },
     {
       "path": "packs/ontologies/biology-research-lab/biology-research-lab.ontology.yaml",
       "upstream": "ontologies/examples/biology-research-lab.ontology.yaml",
-      "sha256": "c10d8c14ba29d0f14a4bd5aab6f72938e0346bb5c248fe796b5d10233e5c7a50",
+      "sha256": "67b895be6d46c1ff60619cc77adcd08f57b6d7bb834fa5f1b92d15484b9233dd",
       "verbatim": false
     },
     {

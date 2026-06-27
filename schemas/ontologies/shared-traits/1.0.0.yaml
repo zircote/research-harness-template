@@ -4,10 +4,10 @@
 # Reusable traits for domain-specific ontologies.
 # These extend mif-base traits with industry-agnostic patterns.
 #
-# Compatible with: mif-base v0.1.0 (cognitive triad hierarchy)
+# Compatible with: mif-base v1.0.0 (knowledge triad hierarchy)
 #
-# Version: 0.1.0
-# Last Updated: 2026-01-26
+# Version: 1.0.0
+# Last Updated: 2026-06-18
 #
 # Sources:
 # - ISO 9001:2015 Quality Management Systems

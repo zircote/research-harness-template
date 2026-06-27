@@ -957,8 +957,8 @@ gate_m12() {
   cat > "$T/cat.json" <<'JSON'
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
- {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
- {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"mif-base","version":"1.0.0","source":"schemas/ontologies/mif-base/1.0.0.yaml","core":true},
+ {"id":"shared-traits","version":"1.0.0","source":"schemas/ontologies/shared-traits/1.0.0.yaml","core":true},
  {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false}
 ]}
 JSON
@@ -1057,7 +1057,7 @@ JSON
   cat > "$T/coll.cat" <<'JSON'
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
- {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
+ {"id":"mif-base","version":"1.0.0","source":"schemas/ontologies/mif-base/1.0.0.yaml","core":true},
  {"id":"collide-fixture","version":"0.1.0","source":"evals/fixtures/ontology/collide-fixture.ontology.yaml","core":false}
 ]}
 JSON
@@ -1095,7 +1095,7 @@ JSON
   local base found RT
   base=$(onto_registry_yaml | grep -c . || true)
   RT="$(mktemp -d)"; mkdir -p "$RT/packs/ontologies/demo-new"
-  if bash .claude/skills/ontology-manager/scripts/scaffold_ontology.sh demo-new 0.1.0 --extends mif-base \
+  if bash .claude/skills/ontology-manager/scripts/scaffold_ontology.sh demo-new 1.0.0 --extends mif-base \
        > "$RT/packs/ontologies/demo-new/demo-new.ontology.yaml" 2>/dev/null \
      && ajv_onto "$RT/packs/ontologies/demo-new/demo-new.ontology.yaml"; then
     found=$( cd "$RT" && onto_registry_yaml | grep -c . || true )
@@ -1137,8 +1137,8 @@ gate_m13() {
   cat > "$T/cat.json" <<JSON
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
- {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
- {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"mif-base","version":"1.0.0","source":"schemas/ontologies/mif-base/1.0.0.yaml","core":true},
+ {"id":"shared-traits","version":"1.0.0","source":"schemas/ontologies/shared-traits/1.0.0.yaml","core":true},
  {"id":"engineering-base","version":"0.1.0","source":"schemas/ontologies/engineering-base/0.1.0.yaml","core":false},
  {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false},
  {"id":"software-engineering","version":"0.5.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
@@ -1791,8 +1791,8 @@ gate_m21() {
   cat > "$T/cat.json" <<'JSON'
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
- {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
- {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"mif-base","version":"1.0.0","source":"schemas/ontologies/mif-base/1.0.0.yaml","core":true},
+ {"id":"shared-traits","version":"1.0.0","source":"schemas/ontologies/shared-traits/1.0.0.yaml","core":true},
  {"id":"engineering-base","version":"0.1.0","source":"schemas/ontologies/engineering-base/0.1.0.yaml","core":false},
  {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false},
  {"id":"software-engineering","version":"0.5.0","source":"packs/ontologies/software-engineering/software-engineering.ontology.yaml","core":false}
@@ -1822,8 +1822,8 @@ gate_m22() {
   cat > "$T/cat.json" <<'JSON'
 {"ontologies":[
  {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
- {"id":"mif-base","version":"0.1.0","source":"schemas/ontologies/mif-base/0.1.0.yaml","core":true},
- {"id":"shared-traits","version":"0.1.0","source":"schemas/ontologies/shared-traits/0.1.0.yaml","core":true},
+ {"id":"mif-base","version":"1.0.0","source":"schemas/ontologies/mif-base/1.0.0.yaml","core":true},
+ {"id":"shared-traits","version":"1.0.0","source":"schemas/ontologies/shared-traits/1.0.0.yaml","core":true},
  {"id":"engineering-base","version":"0.1.0","source":"schemas/ontologies/engineering-base/0.1.0.yaml","core":false},
  {"id":"software-security","version":"0.2.0","source":"packs/ontologies/software-security/software-security.ontology.yaml","core":false}
 ]}
