@@ -88,15 +88,15 @@ All documented in [commands.md](commands.md): `/falsify`, `/goal-writer`,
 All documented in [agents.md](agents.md): `orchestrator`, `dimension-analyst`,
 `falsification-analyst`, `report-synthesizer`, `source-chunker`.
 
-## Scripts (28)
+## Scripts (26)
 
 All documented in [scripts.md](scripts.md): `assert-graph-mif`,
 `build-concordance`, `build-graph-viz`, `build-graph`, `build-index`,
 `build-topic-readme`, `check-citation-integrity`, `codegen/bundle_schema.py`,
-`codegen/gen-models`, `convert-sigint-corpus`, `falsify`, `goal-version`,
+`codegen/gen-models`, `falsify`, `goal-version`,
 `import-corpus`, `mif-project`, `ontology-review`, `pack-toggle`,
 `reconcile-session`, `render-artifact`, `resolve-membership`,
-`resolve-ontology`, `run-lock`, `sigint-to-mif.jq`, `sync-packs`,
+`resolve-ontology`, `run-lock`, `sync-packs`,
 `synthesize-artifact`, `validate-concordance`, `verify`, `wrap-source`,
 `write-finding`.
 

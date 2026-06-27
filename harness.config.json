@@ -3,8 +3,7 @@
   "version": "0.3.0",
   "mifConformanceLevel": 3,
   "features": {
-    "internalCitations": false,
-    "sigintCorpusImport": false
+    "internalCitations": false
   },
   "voice": {
     "profile": "default",
