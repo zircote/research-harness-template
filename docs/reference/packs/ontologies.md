@@ -93,7 +93,7 @@ jq '(.ontologies[] | select(.id=="biology-research-lab") | .enabled) |= true' \
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — topics must explicitly enable and bind; never auto-applied to non-biology-lab topics.
-- Extends `mif-base v0.1.0` and `shared-traits v0.1.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the entire corpus if either `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0` and `shared-traits v1.0.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the entire corpus if either `extends` target is missing or mistyped.
 - Scoped to academic biology research labs; entity types do not apply to engineering, legal, or market-research topics.
 - Compliance sub-types (IRB / IACUC / IBC) are domain-specific and resolve only within bound biology-lab topics.
 
@@ -280,7 +280,7 @@ jq '(.ontologies[] | select(.id=="market-research") | .enabled) |= true' \
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — never auto-applied to non-market-research topics.
-- Extends `mif-base v0.1.0` (compatible with `shared-traits v0.1.0`); binding is fail-closed — `resolve-ontology.sh` aborts the corpus if the `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0` (compatible with `shared-traits v1.0.0`); binding is fail-closed — `resolve-ontology.sh` aborts the corpus if the `extends` target is missing or mistyped.
 - Scoped to market and competitive research; entity types do not apply to scientific, legal, or engineering topics.
 
 ### Goals
@@ -339,7 +339,7 @@ jq '(.ontologies[] | select(.id=="regenerative-agriculture") | .enabled) |= true
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — never auto-applied to non-agriculture topics.
-- Extends `mif-base v0.1.0` and `shared-traits v0.1.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the corpus if either `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0` and `shared-traits v1.0.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the corpus if either `extends` target is missing or mistyped.
 - Scoped strictly to farm business records, supply chain, carbon credits, and certification tracking — not research observations; for research-oriented findings use `regenerative-agriculture-research` instead.
 
 ### Goals
@@ -401,7 +401,7 @@ jq '(.ontologies[] | select(.id=="regenerative-agriculture-research") | .enabled
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — never auto-applied to non-agriculture topics.
-- Extends `mif-base v0.1.0`; binding is fail-closed — `resolve-ontology.sh` aborts the corpus if the `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0`; binding is fail-closed — `resolve-ontology.sh` aborts the corpus if the `extends` target is missing or mistyped.
 - Scoped to research observations about farming practices — not farm business records or supply chain tracking; for farm records use `regenerative-agriculture` instead.
 
 ### Goals
@@ -463,7 +463,7 @@ jq '(.ontologies[] | select(.id=="regulatory-legal") | .enabled) |= true' \
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — never auto-applied to non-legal topics.
-- Extends `mif-base v0.1.0` and `shared-traits v0.1.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the corpus if either `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0` and `shared-traits v1.0.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the corpus if either `extends` target is missing or mistyped.
 - Scoped to law, regulation, compliance, and governance; `control-mapping.control_ref` bridges cross-pack to `software-security`'s `security-control` type but the types are not interchangeable across packs.
 
 ### Goals
@@ -526,7 +526,7 @@ jq '(.ontologies[] | select(.id=="scientific") | .enabled) |= true' \
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — never auto-applied to non-scientific topics.
-- Extends `mif-base v0.1.0` and `shared-traits v0.1.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the corpus if either `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0` and `shared-traits v1.0.0`; binding is fail-closed — `resolve-ontology.sh` and `validate-concordance.sh` abort the corpus if either `extends` target is missing or mistyped.
 - Scoped to scientific studies, research data management, and data provenance; entity types do not apply to engineering operational, legal, or market-research topics.
 - OBO IRIs are OLS4/Ontobee-confirmed gate-corrected values; a finding whose `ontology.id` and resolved type do not align is a hard fail, not a fallback.
 
@@ -724,7 +724,7 @@ jq '(.ontologies[] | select(.id=="trend-analysis") | .enabled) |= true' \
 ### Constraints
 
 - Opt-in only; cataloged `core=false` — never auto-applied to non-foresight topics.
-- Extends `mif-base v0.1.0` (compatible with `shared-traits v0.1.0`); binding is fail-closed — `resolve-ontology.sh` aborts the corpus if the `extends` target is missing or mistyped.
+- Extends `mif-base v1.0.0` (compatible with `shared-traits v1.0.0`); binding is fail-closed — `resolve-ontology.sh` aborts the corpus if the `extends` target is missing or mistyped.
 - `trend` is the canonical generic trend type here; the former `adoption-trend` from `software-engineering` is removed and replaced by this pack's `trend` (no back-compat alias).
 - Six entity types (adoption-curve, forecast, horizon, implication, scenario, vision) are remapped to the `semantic` base under the `_semantic/foresight` namespace tree; the mif-base cognitive triad has no `_analytical` root.
 

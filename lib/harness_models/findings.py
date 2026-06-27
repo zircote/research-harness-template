@@ -210,6 +210,7 @@ Mif = TypedDict(
         "embedding": NotRequired[EmbeddingReference],
         "citations": NotRequired[list[Citation]],
         "summary": NotRequired[str],
+        "properties": NotRequired[dict[str, str | float | bool | None]],
         "compressedAt": NotRequired[str],
         "blocks": NotRequired[dict[str, str]],
         "extensions": NotRequired[dict[str, Any]],

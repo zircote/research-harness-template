@@ -55,8 +55,6 @@ manage the session run lock.
 | `scripts/check-citation-integrity.sh` | Citation-integrity gate: asserts at least one citation per finding; each citation traceable (well-formed `http(s)` URL *format* or an `internal:` source with a `note`) and carrying a `citationRole`; no `falsified` finding ships; and no citation URL is pre-marked dead via `extensions.harness.citationStatus.deadUrls[]`. It validates URL format and the marked-dead list — it does **not** probe URL liveness. | `jq` |
 | `scripts/build-topic-readme.sh` | Builds and validates the per-topic navigation README. Computes deterministic backbone (counts, dates, tables); preserves synthesis-grade Key Findings across rebuilds. | `jq` |
 | `scripts/import-corpus.sh` | Imports an existing MIF corpus into an instantiated harness: validates each unit, registers the topic, rebuilds the index and graph. | `jq`, `ajv` |
-| `scripts/convert-sigint-corpus.sh` | Converts legacy sigint `findings_<dim>.json` wrappers to individual MIF units for `import-corpus.sh`. Opt-in via `features.sigintCorpusImport`. | `jq`, `scripts/sigint-to-mif.jq` |
-| `scripts/sigint-to-mif.jq` | jq library that maps legacy sigint findings to MIF-backed units as NDJSON. Called by `convert-sigint-corpus.sh`. | `jq` |
 
 ---
 
