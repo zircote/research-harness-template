@@ -14,17 +14,17 @@ the **discovered** set equals the **documented** set.
 
 | Category | Discovered | Documented | Source of truth |
 | --- | --- | --- | --- |
-| Packs | 27 | 27 | `harness.config.json` `packs[]` (17) + `packs/ontologies/` (10) |
+| Packs | 29 | 29 | `harness.config.json` `packs[]` (17) + `packs/ontologies/` (12) |
 | Core skills | 10 | 10 | `.claude/skills/*/SKILL.md` |
 | Commands | 7 | 7 | `.claude/commands/*.md` |
 | Agents | 5 | 5 | `.claude/agents/*.md` |
 | Scripts | 28 | 28 | `scripts/**` (excludes `__pycache__`) |
-| **Total** | **77** | **77** | — |
+| **Total** | **79** | **79** | — |
 
 Reproduce the discovered counts:
 
 ```sh
-# packs: 17 plugin packs + 10 ontology packs = 27
+# packs: 17 plugin packs + 12 ontology packs = 29
 echo $(( $(jq '.packs | length' harness.config.json) + $(ls -d packs/ontologies/*/ | wc -l) ))
 ls .claude/skills | wc -l        # 10 core skills
 ls .claude/commands/*.md | wc -l # 7 commands
@@ -33,7 +33,7 @@ find scripts -type f \( -name '*.sh' -o -name '*.py' -o -name '*.jq' \) \
   | grep -v __pycache__ | wc -l  # 28 scripts
 ```
 
-## Packs (27)
+## Packs (29)
 
 Plugin packs (17, registered in `harness.config.json`):
 
@@ -57,13 +57,15 @@ Plugin packs (17, registered in `harness.config.json`):
 | trend-analysis | reports | [packs/reports.md](packs/reports.md#trend-analysis) |
 | trend-modeling | trend-modeling | [packs/trend-modeling.md](packs/trend-modeling.md#trend-modeling) |
 
-Ontology data packs (10, under `packs/ontologies/`):
+Ontology data packs (12, under `packs/ontologies/`):
 
 | Pack | Documented in |
 | --- | --- |
 | biology-research-lab | [packs/ontologies.md](packs/ontologies.md#biology-research-lab) |
 | data-engineering | [packs/ontologies.md](packs/ontologies.md#data-engineering) |
 | market-research | [packs/ontologies.md](packs/ontologies.md#market-research) |
+| observability | [packs/ontologies.md](packs/ontologies.md#observability) |
+| psycholinguistics | [packs/ontologies.md](packs/ontologies.md#psycholinguistics) |
 | regenerative-agriculture | [packs/ontologies.md](packs/ontologies.md#regenerative-agriculture) |
 | regenerative-agriculture-research | [packs/ontologies.md](packs/ontologies.md#regenerative-agriculture-research) |
 | regulatory-legal | [packs/ontologies.md](packs/ontologies.md#regulatory-legal) |

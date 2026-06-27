@@ -271,6 +271,14 @@
     {
       "id": "trend-analysis",
       "enabled": false
+    },
+    {
+      "id": "observability",
+      "enabled": false
+    },
+    {
+      "id": "psycholinguistics",
+      "enabled": false
     }
   ]
 }
