@@ -69,8 +69,8 @@ if [ "$units" -gt 0 ]; then
   for u in "$DEST"/*.json; do
     jq --argjson map "$map" '
       .relationships = ((.relationships // []) | map(
-        (.target | sub("^urn:mif:concept:[^:]+:"; "")) as $tslug
-        | if ($map[$tslug]) then .target = $map[$tslug] else . end
+        (.target["@id"] | sub("^urn:mif:concept:[^:]+:"; "")) as $tslug
+        | if ($map[$tslug]) then .target = {"@id": $map[$tslug]} else . end
       ))
       | if (.relationships | length) == 0 then del(.relationships) else . end
     ' "$u" > "$u.tmp" && mv "$u.tmp" "$u"
