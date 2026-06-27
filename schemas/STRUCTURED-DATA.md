@@ -40,7 +40,7 @@ Two validator families, chosen by artifact:
 
 ```bash
 # 1. Write the artifact (jq composes it; never hand-edit trusted JSON in place).
-jq -n '{ "@context": "...", "@type": "Memory", ... }' > reports/<topic>/finding.json
+jq -n '{ "@context": "...", "@type": "Concept", ... }' > reports/<topic>/finding.json
 
 # 2. Validate immediately. A non-zero exit means the write is not done.
 ajv validate --spec=draft2020 --strict=false -c ajv-formats \

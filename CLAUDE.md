@@ -17,7 +17,7 @@ engine (Claude Code agents/commands/skills), the MIF-backed contracts (`schemas/
 the shell tooling (`scripts/`), and the bundled packs — all shipped on clone.
 
 Everything in and out of the harness is [MIF](https://github.com/modeled-information-format/MIF)
-(Memory Interchange Format). A finding is a MIF memory unit; the knowledge graph
+(Modeled Information Format). A finding is a MIF memory unit; the knowledge graph
 is MIF EntityReferences + typed relationships; citations and provenance are MIF
 objects. Patterns MIF core lacks (falsification lifecycle, quarantine, session
 lineage) are closed **locally** under `extensions.harness` — never by forking MIF.

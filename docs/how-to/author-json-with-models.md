@@ -46,9 +46,9 @@ from harness_models import emit
 
 finding = {
     "@context": "https://mif-spec.dev/schema/context.jsonld",
-    "@type": "Memory",
+    "@type": "Concept",
     "@id": "urn:mif:concept:<topic>:<slug>",
-    "memoryType": "...",
+    "conceptType": "...",
     "content": "...",          # arbitrary prose — a Python string, never shell-quoted
     "created": "...",
     # Citation is a closed object: no @id; cite by live http(s) url (see finding.sample.json).

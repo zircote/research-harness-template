@@ -1,18 +1,15 @@
 {
   "@context": "https://mif-spec.dev/schema/context.jsonld",
-  "@type": "Memory",
+  "@type": "Concept",
   "@id": "urn:mif:concept:harness:sample-finding-0001",
+  "conceptType": "semantic",
   "namespace": "harness/findings",
   "title": "Copier supports update propagation to instantiated projects",
   "content": "Copier's `copier update` re-applies template changes to an already-instantiated project, reconciling local edits via a three-way merge. Snapshot template engines (Cookiecutter, bare GitHub template repos) provide no upstream path once a project is generated.",
   "summary": "Copier propagates later template changes to instantiated projects; snapshot engines do not.",
   "created": "2026-06-19T12:00:00Z",
   "modified": "2026-06-19T12:00:00Z",
-  "tags": [
-    "distribution",
-    "template-engine",
-    "update-propagation"
-  ],
+  "tags": ["distribution", "template-engine", "update-propagation"],
   "provenance": {
     "@type": "Provenance",
     "sourceType": "agent_inferred",
@@ -38,6 +35,5 @@
         "attempted_at": "2026-06-19T12:30:00Z"
       }
     }
-  },
-  "memoryType": "semantic"
+  }
 }

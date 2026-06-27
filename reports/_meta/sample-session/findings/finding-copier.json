@@ -1,68 +1,29 @@
 {
   "@context": "https://mif-spec.dev/schema/context.jsonld",
-  "@type": "Memory",
+  "@type": "Concept",
   "@id": "urn:mif:concept:harness:kg-copier-0001",
+  "conceptType": "semantic",
   "namespace": "harness/example-topic",
   "title": "Copier provides update propagation to instantiated projects",
   "content": "Copier's `copier update` re-applies later template changes to an already-instantiated project via a three-way merge. This is the capability a living template needs.",
   "summary": "Copier propagates upstream template changes to instantiated projects.",
   "created": "2026-06-19T12:00:00Z",
-  "tags": [
-    "distribution",
-    "template-engine"
-  ],
+  "tags": ["distribution", "template-engine"],
   "entities": [
-    {
-      "@type": "EntityReference",
-      "entity": {
-        "@id": "urn:mif:entity:technology:copier"
-      },
-      "entityType": "Technology",
-      "name": "Copier"
-    },
-    {
-      "@type": "EntityReference",
-      "entity": {
-        "@id": "urn:mif:entity:concept:update-propagation"
-      },
-      "entityType": "Concept",
-      "name": "update propagation"
-    }
+    { "@type": "EntityReference", "entity": { "@id": "urn:mif:entity:technology:copier" }, "entityType": "Technology", "name": "Copier" },
+    { "@type": "EntityReference", "entity": { "@id": "urn:mif:entity:concept:update-propagation" }, "entityType": "Concept", "name": "update propagation" }
   ],
   "relationships": [
-    {
-      "target": {
-        "@id": "urn:mif:concept:harness:kg-distribution-0003"
-      },
-      "strength": 0.9,
-      "relationshipType": "harness:Supports",
-      "@type": "Relationship"
-    }
+    { "type": "supports", "target": "urn:mif:concept:harness:kg-distribution-0003", "strength": 0.9 }
   ],
-  "provenance": {
-    "@type": "Provenance",
-    "sourceType": "agent_inferred",
-    "confidence": 0.9,
-    "trustLevel": "high_confidence"
-  },
+  "provenance": { "@type": "Provenance", "sourceType": "agent_inferred", "confidence": 0.9, "trustLevel": "high_confidence" },
   "citations": [
-    {
-      "@type": "Citation",
-      "citationType": "documentation",
-      "citationRole": "supports",
-      "title": "Copier — Updating a project",
-      "url": "https://copier.readthedocs.io/en/stable/updating/",
-      "accessed": "2026-06-19"
-    }
+    { "@type": "Citation", "citationType": "documentation", "citationRole": "supports", "title": "Copier — Updating a project", "url": "https://copier.readthedocs.io/en/stable/updating/", "accessed": "2026-06-19" }
   ],
   "extensions": {
     "harness": {
       "dimension": "technical",
-      "verification": {
-        "verdict": "survived",
-        "verdict_basis": "No disconfirming evidence for the update-propagation claim."
-      }
+      "verification": { "verdict": "survived", "verdict_basis": "No disconfirming evidence for the update-propagation claim." }
     }
-  },
-  "memoryType": "semantic"
+  }
 }

@@ -21,7 +21,7 @@ richness over one concept schema. Reading the vendored contract:
 
 - `schemas/mif/mif.schema.json` (`required`) defines the base concept — the
   Level-1 floor — as exactly six fields:
-  - `@context`, `@type`, `@id` (pattern `^urn:mif:`), `memoryType`
+  - `@context`, `@type`, `@id` (pattern `^urn:mif:`), `conceptType`
     (`semantic` | `episodic` | `procedural`), `content` (string),
     `created` (RFC 3339 `date-time`).
   - `title` is **not** required; `additionalProperties` is unset, so extra keys
@@ -61,9 +61,9 @@ not a frontmatter key.
 ```yaml
 ---
 "@context": https://mif-spec.dev/schema/context.jsonld
-"@type": Memory
+"@type": Concept
 "@id": urn:mif:doc:<namespace>:<path-slug>   # shipped: reference-<dim>-<finding-slug>
-memoryType: procedural   # tutorial/how-to -> procedural; reference/explanation -> semantic
+conceptType: procedural   # tutorial/how-to -> procedural; reference/explanation -> semantic
 created: "<RFC 3339 date-time>"
 namespace: <namespace>
 diataxis_type: tutorial    # the Diátaxis marker; an allowed extra property
@@ -73,7 +73,7 @@ audience: newcomers        # optional, tutorial only
 
 The quoted `@`-prefixed keys are required because `@` is a reserved YAML
 indicator; the `yq` toolchain already round-trips this form in the `report`
-channel's frontmatter. Per-quadrant the only differences are `@id`, `memoryType`,
+channel's frontmatter. Per-quadrant the only differences are `@id`, `conceptType`,
 and the `diataxis_type` value.
 
 ## 3. Proof
@@ -101,7 +101,7 @@ only — not Level 3. Level 3 would require provenance, citations, entities, and
 falsification verdict in the frontmatter, which is the role of the canonical
 `report` channel; pushing it into authored documentation would mix internal MIF
 identity into published prose. Level 1 adds stable, typed MIF identity
-(`@id`, `memoryType`, `created`) without that cost.
+(`@id`, `conceptType`, `created`) without that cost.
 
 ## Status
 

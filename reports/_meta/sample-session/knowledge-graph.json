@@ -49,28 +49,28 @@
     {
       "source": "urn:mif:concept:harness:kg-cookiecutter-0002",
       "target": "urn:mif:concept:harness:kg-copier-0001",
-      "type": "ConflictsWith",
+      "type": "contradicts",
       "strength": 0.7,
       "via": "relationship"
     },
     {
       "source": "urn:mif:concept:harness:kg-copier-0001",
       "target": "urn:mif:concept:harness:kg-distribution-0003",
-      "type": "harness:Supports",
+      "type": "supports",
       "strength": 0.9,
       "via": "relationship"
     },
     {
       "source": "urn:mif:concept:harness:kg-distribution-0003",
       "target": "urn:mif:concept:harness:kg-copier-0001",
-      "type": "DerivedFrom",
+      "type": "derived-from",
       "strength": 0.8,
       "via": "relationship"
     },
     {
       "source": "urn:mif:concept:harness:kg-distribution-0003",
       "target": "urn:mif:concept:harness:kg-cookiecutter-0002",
-      "type": "DerivedFrom",
+      "type": "derived-from",
       "strength": 0.6,
       "via": "relationship"
     },

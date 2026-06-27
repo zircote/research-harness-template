@@ -69,7 +69,7 @@ of the corpus, so change the findings, not the rendered Markdown in place.
 ## MIF Level-1 identity
 
 Every emitted page carries **MIF Level-1** YAML frontmatter — a base MIF v1.0
-concept (`schemas/mif/mif.schema.json`: `@context`, `@type`, `@id`, `memoryType`,
+concept (`schemas/mif/mif.schema.json`: `@context`, `@type`, `@id`, `conceptType`,
 `created`; `content` is the body) plus the `diataxis_type` marker — validated by
 `schemas/diataxis-doc.schema.json` and enforced by `verify.sh` gate_m16. The
 frontmatter holds the page's **own** `urn:mif:doc:` identity; the body resolves

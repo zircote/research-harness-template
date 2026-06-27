@@ -1,8 +1,8 @@
 ---
 "@context": https://mif-spec.dev/schema/context.jsonld
-"@type": Memory
+"@type": Concept
 "@id": urn:mif:report:harness/example-topic:report-falsified
-memoryType: semantic
+conceptType: semantic
 namespace: harness/example-topic
 title: "Falsified report (must not ship)"
 created: "2026-06-19T12:00:00Z"

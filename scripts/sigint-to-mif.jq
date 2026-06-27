@@ -75,9 +75,9 @@ def compact: with_entries(select(.value != null));
     out: ($uid + ".json"),
     doc: ({
       "@context": "https://mif-spec.dev/schema/context.jsonld",
-      "@type": "Memory",
+      "@type": "Concept",
       "@id": ("urn:mif:concept:" + $topic + ":" + $uid),
-      "memoryType": "semantic",
+      "conceptType": "semantic",
       "namespace": ("harness/" + $topic),
       "title": ($f.title // $f.claim // (($f.summary // "Untitled finding")[0:120])),
       "content": (($f.summary // $f.content // $f.title // $f.claim // "Imported finding (no content in source).") | if (. == "" or . == null) then "Imported finding (no content in source)." else . end),
@@ -86,10 +86,10 @@ def compact: with_entries(select(.value != null));
       "relationships": (
         [ ($f.updates_finding // empty)
           | select(type == "string" and . != "")
-          | { "@type": "Relationship", "relationshipType": "Supersedes", "target": {"@id": ("urn:mif:concept:" + $topic + ":" + (. | slug))}, "strength": 0.9 } ]
+          | { "type": "updates", "target": ("urn:mif:concept:" + $topic + ":" + (. | slug)), "strength": 0.9 } ]
         + [ ($f.updates_finding_id // empty)
           | select(type == "string" and . != "")
-          | { "@type": "Relationship", "relationshipType": "Supersedes", "target": {"@id": ("urn:mif:concept:" + $topic + ":" + (. | slug))}, "strength": 0.9 } ]
+          | { "type": "updates", "target": ("urn:mif:concept:" + $topic + ":" + (. | slug)), "strength": 0.9 } ]
       ),
       "tags": (($f.tags // []) | map(slug) | map(select(length > 0)) | unique),
       "entities": (($f.entities // [])

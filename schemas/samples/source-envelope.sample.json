@@ -1,7 +1,8 @@
 {
   "@context": "https://mif-spec.dev/schema/context.jsonld",
-  "@type": "Memory",
+  "@type": "Concept",
   "@id": "urn:mif:source:harness:sample-source-0001",
+  "conceptType": "episodic",
   "namespace": "harness/sources",
   "title": "Copier — Updating a project (fetched source)",
   "content": "Raw source captured at fetch time: Copier's `copier update` re-applies template changes to an already-instantiated project, reconciling local edits via a three-way merge. Captured verbatim so a finding's claim can be traced back to the primary text the analyst read.",
@@ -20,6 +21,5 @@
         "contentType": "text/html"
       }
     }
-  },
-  "memoryType": "episodic"
+  }
 }
