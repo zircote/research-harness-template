@@ -42,10 +42,13 @@ CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 DEF='
   # Wrap bare emails / http(s) URLs in angle-bracket autolinks so the rendered body
   # is markdownlint-clean (MD034). Skips anything already inside a markdown link
-  # "](...)" or an existing <...> autolink via lookbehind, so links are not double-wrapped.
+  # "](...)" or an existing <...> autolink via lookbehind, so links are not double-wrapped:
+  # the email lookbehind also excludes "(" and ":" so an email in a link destination
+  # ("](mailto:a@b.com)") is left intact. The URL terminal char class excludes trailing
+  # sentence punctuation so "see https://x.com." does not absorb the "." into the link.
   def autolink:
-    gsub("(?<![\\w.<])(?<e>[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,})(?![\\w>])"; "<\(.e)>")
-    | gsub("(?<![(<\"])(?<u>https?://[^\\s)<>\"]+)"; "<\(.u)>");
+    gsub("(?<![\\w.<(:])(?<e>[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,})(?![\\w>])"; "<\(.e)>")
+    | gsub("(?<![(<\"])(?<u>https?://[^\\s)<>\"]*[^\\s)<>\".,;:!?])"; "<\(.u)>");
   def secblock($s; $meta; $ev):
     [ "", "## " + $s.heading, "", ($s.body | autolink) ]
     + (if (($s.entities // []) | length) > 0
