@@ -64,6 +64,15 @@
       "podcast": 90
     }
   },
+  "site": {
+    "primarySurface": "docs",
+    "plugins": {
+      "llmsTxt": true,
+      "mermaid": true,
+      "imageZoom": false,
+      "linksValidator": false
+    }
+  },
   "packs": [
     {
       "name": "book",

@@ -1898,9 +1898,83 @@ JSON
 }
 
 # ---------------------------------------------------------------------------
+# Milestone 23 — site projection (reports as a first-class Starlight surface +
+# config-driven feature flags). The Astro/Starlight site renders reports/ for human
+# reading; harness.config.json `.site` is the control plane astro.config.mjs reads at
+# build time (so neither template nor clone hand-edits astro.config.mjs). The template
+# hosts the example-topic report (docs-primary) and a copier hook activates
+# reports-primary in a clone.
+# ---------------------------------------------------------------------------
+gate_m23() {
+  info "Milestone 23 — site projection (reports surface + feature flags)"
+
+  # 23a. The content loader binds BOTH docs/ and reports/ into the single Starlight
+  #      `docs` collection via a plain glob (not docsLoader): base '.' globs both real
+  #      trees directly (no symlink of reports/ into the docs tree), the report negations
+  #      docsLoader's fixed pattern cannot express exclude _meta/continuity/findings/README,
+  #      and generateId strips the docs/ prefix so docs keep their root routes. Regression
+  #      guard against a revert that re-leaks _meta or drops report README handling.
+  local cc=src/content.config.ts
+  if grep -qF "glob(" "$cc" \
+     && grep -qF "base: '.'" "$cc" \
+     && grep -qF "reports/**" "$cc" \
+     && grep -qF "!reports/_meta/**" "$cc" \
+     && grep -qF "!reports/**/research-progress.md" "$cc" \
+     && grep -qF "!reports/**/README.md" "$cc" \
+     && grep -qF "generateId" "$cc"; then
+    ok "content.config.ts binds reports via glob (base '.', report negations, docs/ generateId)"
+  else
+    bad "content.config.ts reports binding regressed (need glob base '.', reports/** + _meta/research-progress negations, generateId)"
+  fi
+
+  # 23b. astro.config.mjs reads harness.config.json and GATES each site enhancement on
+  #      .site.plugins / .site.primarySurface — integrations are config-driven, not hardcoded.
+  local ac=astro.config.mjs
+  if grep -qF "harness.config.json" "$ac" \
+     && grep -qF "primarySurface" "$ac" \
+     && grep -qF "plugins.mermaid" "$ac" \
+     && grep -qF "plugins.llmsTxt" "$ac" \
+     && grep -qF "plugins.imageZoom" "$ac" \
+     && grep -qF "plugins.linksValidator" "$ac"; then
+    ok "astro.config.mjs reads harness.config.json and gates llms-txt/mermaid/image-zoom/links-validator + primarySurface"
+  else
+    bad "astro.config.mjs must read harness.config.json and gate each site plugin + primarySurface (not hardcode them)"
+  fi
+
+  # 23c. The manifest (with the optional .site block) validates against the schema.
+  if ajv_plain harness.config.schema.json harness.config.json; then
+    ok "harness.config.json validates against its schema (incl. the site block)"
+  else
+    bad "harness.config.json does not validate against harness.config.schema.json"
+  fi
+
+  # 23d. Template-only invariants: the template hosts the example-topic report (so the
+  #      reports surface is demonstrated) yet stays docs-primary, and the copier hook
+  #      activates reports-primary in a clone. (The example topic is .md-only by design;
+  #      gate 8c already enforces reports/ ships JSON-clean.)
+  if [ "$IS_TEMPLATE" = 1 ]; then
+    if [ -f reports/example-topic/example-topic.md ] && [ -f reports/example-topic/README.md ]; then
+      ok "template hosts the example-topic report (example-topic.md + README.md)"
+    else
+      bad "template must host the example-topic report (reports/example-topic/{example-topic.md,README.md})"
+    fi
+    if [ "$(jq -r '.site.primarySurface // empty' harness.config.json)" = "docs" ]; then
+      ok "template pins site.primarySurface = docs (docs-primary despite shipping the example report)"
+    else
+      bad "template site.primarySurface must be 'docs' (the example report would otherwise auto-flip it to reports)"
+    fi
+    if grep -A3 '_tasks:' copier.yml | grep -qF "site-toggle.sh primary reports"; then
+      ok "copier _tasks activates reports-primary in a clone (site-toggle.sh primary reports)"
+    else
+      bad "copier.yml must run 'site-toggle.sh primary reports' in _tasks to activate the clone reports surface"
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23)
 
 for g in "${GATES[@]}"; do "$g"; done
 
