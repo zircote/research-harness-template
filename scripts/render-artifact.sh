@@ -70,16 +70,23 @@ DEF='
     | join("");
   # Strip trailing whitespace on every line (MD009).
   def detrail: gsub("[ \t]+(?=\n)"; "") | gsub("[ \t]+$"; "");
-  # Render a section body: autolink + deglob escape PROSE only. Fenced ``` code
-  # blocks (e.g. a Mermaid diagram) must pass through verbatim — escaping "*"/"_"
-  # or autolinking a URL inside a fence corrupts the diagram/code. Split the body
-  # on fenced blocks, transform prose segments, leave fences untouched (an unclosed
-  # fence is preserved to end-of-string so no content is dropped). detrail is safe
-  # everywhere (trailing whitespace is ignored inside fences and required out, MD009).
+  # Render a section body: autolink + deglob escape PROSE only. A fenced ``` code
+  # block (e.g. a Mermaid diagram) must pass through verbatim — escaping "*"/"_" or
+  # autolinking a URL inside a fence corrupts the diagram/code. Walk the body
+  # line-by-line: a fence opens/closes only on a line whose first non-space run is
+  # ``` (CommonMark), so a stray ``` MID-prose is just prose and never disables the
+  # escaping of the lines that follow. Fence lines and content between an opener and
+  # its closer pass through untouched; an unclosed fence keeps the rest verbatim (no
+  # content dropped). detrail then strips trailing whitespace (MD009).
   def render_body:
-    [ scan("(?ms)```[\\s\\S]*?\\n```|(?:(?!```)[\\s\\S])+|```[\\s\\S]*") ]
-    | map(if startswith("```") then . else (autolink | deglob) end)
-    | join("")
+    ( . / "\n" ) as $lines
+    | reduce range(0; $lines | length) as $i
+        ( {out: [], infence: false};
+          $lines[$i] as $ln
+          | if ($ln | test("^[ \t]*```")) then (.out += [$ln] | .infence = (.infence | not))
+            elif .infence then (.out += [$ln])
+            else (.out += [$ln | autolink | deglob]) end )
+    | .out | join("\n")
     | detrail;
   # Per-section knowledge graph: when a section carries entity/relationship data,
   # GENERATE a Mermaid `graph` of it (entities as nodes, the typed relationships
@@ -101,9 +108,9 @@ DEF='
                            then (($ents | map(select(.id == $id)) | .[0]) | (.name + " (" + (.entityType // "entity") + ")"))
                          else ($id | sub("^.*[:/]"; "")) end ) ) ) as $lbl
         | [ "", "```mermaid", "graph TD" ]
-          + [ $ids[] | "  " + $nid[.] + "[\"" + ($lbl[.] | gsub("\""; "\u0027")) + "\"]" ]
+          + [ $ids[] | "  " + $nid[.] + "[\"" + ($lbl[.] | gsub("\""; "\u0027") | gsub("[\n\r]"; " ")) + "\"]" ]
           + [ $rels[] | select(.target != null and $src != null)
-              | "  " + $nid[$src] + " -->|" + ((.type // "relates-to") | gsub("\"|\\|"; "\u0027")) + "| " + $nid[.target] ]
+              | "  " + $nid[$src] + " -->|" + ((.type // "relates-to") | gsub("\"|\\|"; "\u0027") | gsub("[\n\r]"; " ")) + "| " + $nid[.target] ]
           + [ "```" ]
       end;
   def secblock($s; $meta; $ev):

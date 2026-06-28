@@ -37,18 +37,24 @@ DIAGRAM_TYPES = {
 }
 
 FENCE = re.compile(r"^```mermaid[ \t]*$(.*?)^```[ \t]*$", re.MULTILINE | re.DOTALL)
-QUOTED = re.compile(r'"[^"]*"' + r"|'[^']*'")
+QUOTED = re.compile(r'"[^"]*"')
 CORRUPTION = re.compile(r"\\[*_<>]")
 
 
 def first_token(block: str) -> str | None:
-    for line in block.splitlines():
-        s = line.strip()
-        if not s or s.startswith("%%"):  # skip blanks and %% comments
-            continue
-        # the diagram type is the first whitespace/`:`-delimited token
-        return re.split(r"[\s:]", s, maxsplit=1)[0]
-    return None
+    # Non-blank, non-comment content lines, in order.
+    lines = [s for s in (ln.strip() for ln in block.splitlines())
+             if s and not s.startswith("%%")]
+    # Skip a leading YAML frontmatter config header (Mermaid v10+: ---\n…\n---).
+    if lines and lines[0] == "---":
+        try:
+            lines = lines[lines.index("---", 1) + 1:]
+        except ValueError:
+            lines = []
+    if not lines:
+        return None
+    # the diagram type is the first whitespace/`:`-delimited token
+    return re.split(r"[\s:]", lines[0], maxsplit=1)[0]
 
 
 def validate_block(block: str) -> list[str]:

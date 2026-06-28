@@ -68,7 +68,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string", "description": "The entity's MIF @id, carried so a per-section diagram can wire relationship edges to it." },
+                "id": { "type": "string", "description": "The entity's MIF @id, carried so a per-section diagram can render the entity as a labeled, de-duplicated node." },
                 "name": { "type": "string" },
                 "entityType": { "type": "string" }
               }
