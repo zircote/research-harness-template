@@ -45,8 +45,12 @@ references, footnotes, or body. Link specs and source material directly.
 ## Required Figures & Matter
 
 - **Front matter**: title, date, status (proposed / accepted / superseded), decision drivers.
-- **Figures**: an options-vs-criteria **comparison table** is required. Add an architecture
-  or sequence diagram (Mermaid) when structure or flow is load-bearing to the decision.
+- **Figures**: an options-vs-criteria **comparison table** is required and stays a Markdown
+  table. Add an architecture or flow figure — a Mermaid `flowchart` or `sequenceDiagram` —
+  when structure or flow is load-bearing to the decision. Any figure, chart, or diagram is
+  rendered as a fenced `mermaid` code block (never ASCII art, an image link, or Graphviz/DOT), and
+  a required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: references list; optional appendix for benchmark data or alternatives
   rejected early.
 

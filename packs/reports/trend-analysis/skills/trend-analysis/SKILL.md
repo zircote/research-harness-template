@@ -56,8 +56,12 @@ observation's date so trajectory claims are time-anchored.
 ## Required Figures & Matter
 
 - **Front matter**: title, date, the time horizon and the as-of date of the data.
-- **Figures**: a **trajectory or scenario diagram is required** — a time-series chart of the
-  trend and/or a Mermaid state/branch diagram of the scenarios. Both when the data supports it.
+- **Figures**: a **trajectory or scenario diagram is required** — a time-series trajectory as
+  a Mermaid `xychart-beta` and/or a scenario-evolution diagram as a Mermaid `stateDiagram-v2`.
+  Both when the data supports it. Any figure, chart, or diagram is rendered as a fenced
+  `mermaid` code block (never ASCII art, an image link, or Graphviz/DOT), and a required figure is
+  never silently omitted — if the data cannot support it, say so in prose. Plain tabular
+  matter stays a Markdown table.
 - **Back matter**: references list; optional appendix with the underlying time-series data
   and signal log.
 

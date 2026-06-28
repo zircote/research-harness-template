@@ -70,7 +70,11 @@ rather than baking a year into the report as fact.
   in time), the as-of / through dates, and the in-scope Trust Services Criteria.
 - **Required matter**: a **controls / test-results matrix is required** — a table whose
   columns are, at minimum, **Control**, **Test Performed**, and **Result / Exception**, one
-  row per control, each row tracing to a finding `@id`.
+  row per control, each row tracing to a finding `@id`. Any figure, chart, or diagram —
+  for instance a control or process flow as a Mermaid `flowchart` — is rendered as a
+  fenced `mermaid` code block (never ASCII art, an image link, or Graphviz/DOT), and a
+  required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: references list; optional appendix with the full control inventory and
   the evidence log.
 

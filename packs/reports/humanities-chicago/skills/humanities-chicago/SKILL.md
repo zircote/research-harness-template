@@ -53,7 +53,10 @@ not bake an edition number into output as settled fact.
 
 - **Front matter**: title and, where the convention calls for it, author and date.
 - **Figures**: tables or images only where the argument genuinely needs them; caption and
-  reference each.
+  reference each. Any figure, chart, or diagram is rendered as a fenced Mermaid code block
+  (a `mermaid` info-string fence), never ASCII art, an image link, or Graphviz/DOT; a
+  required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: the full **Bibliography** (required) — alphabetized, Chicago style.
 
 ## Rules

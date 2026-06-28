@@ -57,10 +57,13 @@ assertion.
 
 - **Front matter**: title, date, the market evaluated, the inclusion criteria summary, and
   the as-of date of the vendor evidence.
-- **Figures**: a **two-axis quadrant figure is required** — Completeness of Vision (x) against
-  Ability to Execute (y), with the four quadrants labelled Leaders / Challengers /
-  Visionaries / Niche Players and each vendor plotted. Per vendor, a **Strengths / Cautions**
-  pair is required.
+- **Figures**: a **two-axis quadrant figure is required**, rendered as a Mermaid
+  `quadrantChart` — Completeness of Vision (x) against Ability to Execute (y), with the four
+  quadrants labelled Leaders / Challengers / Visionaries / Niche Players and each vendor
+  plotted. Any figure, chart, or diagram is rendered as a fenced `mermaid` code block (never
+  ASCII art, an image link, or Graphviz/DOT), and a required figure is never silently
+  omitted — if the data cannot support it, say so in prose. Plain tabular matter stays a
+  Markdown table. Per vendor, a **Strengths / Cautions** pair is required.
 - **Back matter**: references list; optional appendix with the per-axis scoring rubric and
   the raw evidence log.
 

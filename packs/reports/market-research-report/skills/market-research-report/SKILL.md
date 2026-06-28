@@ -54,7 +54,11 @@ derives from a MIF finding's `@id` / `urn:mif:` citation; the citation URL is ma
   fieldwork summary (mode, dates, response or completion rate).
 - **Figures**: tables and figures as the evidence warrants — include a table whenever
   multiple segments or sources are compared on shared attributes. Number and caption every
-  figure; reference each in the text.
+  figure; reference each in the text. Any figure, chart, or diagram is rendered as a fenced
+  Mermaid code block (a `mermaid` info-string fence) — a market chart as `xychart-beta` or
+  `pie` — never ASCII art, an image link, or Graphviz/DOT; a required figure is never
+  silently omitted — if the data cannot support it, say so in prose. Plain tabular matter
+  stays a Markdown table.
 - **Back matter**: the Technical Appendix (methodology detail, data-quality and limitations
   notes, ISO 20252 quality notes) and the numbered source list.
 - **Standards caveat**: the report must state the convention-not-standard caveat below; a

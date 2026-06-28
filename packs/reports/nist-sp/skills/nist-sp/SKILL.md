@@ -67,7 +67,11 @@ requirement and defined term cites the finding it rests on; no orphan normative 
   and control catalogs (e.g. a crosswalk table mapping requirements to an external control
   framework, or a catalog of the controls the publication defines).
 - **Figures / tables**: a control-mapping or crosswalk table is expected whenever the
-  findings support a mapping to an external framework.
+  findings support a mapping to an external framework. Any figure, chart, or diagram is
+  rendered as a fenced Mermaid code block (a `mermaid` info-string fence) — a control or
+  data-flow figure as a `flowchart` — never ASCII art, an image link, or Graphviz/DOT; a
+  required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 
 ## Rules
 

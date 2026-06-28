@@ -55,7 +55,10 @@ mandatory (MIF Level 3). No uncited claims, regardless of mode.
 - **Front matter**: title, author/attribution, date, abstract, optional table of contents.
 - **Figures**: tables and figures as the evidence warrants — include a table whenever
   multiple findings are compared on shared attributes. Number and caption every figure;
-  reference each in the text.
+  reference each in the text. Any figure, chart, or diagram is rendered as a
+  fenced `mermaid` code block (never ASCII art, an image link, or Graphviz/DOT), and a
+  required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: full References section; optional appendix for extended data or the
   method's verification log.
 

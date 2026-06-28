@@ -46,7 +46,10 @@ where a footnote is overkill. Markers resolve to the MIF finding's `@id` / `urn:
 
 - **Front matter**: title, date, the period this briefing covers (since last update).
 - **Figures**: none required — this is a one-pager. Add a single status indicator or sparkline
-  only if it replaces a sentence.
+  only if it replaces a sentence; any such chart is a Mermaid `xychart-beta`. Any figure,
+  chart, or diagram is rendered as a fenced `mermaid` code block (never ASCII art, an image
+  link, or Graphviz/DOT), and a required figure is never silently omitted — if the data
+  cannot support it, say so in prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: the footnote/source list if markers were used. No appendices.
 
 ## Rules

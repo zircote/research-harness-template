@@ -56,7 +56,11 @@ guidance live; do not bake a guidance revision into output as settled fact.
 
 - **Front matter**: title page identifying the study, and the Synopsis.
 - **Figures**: efficacy and safety tables (analysis populations, endpoint results,
-  adverse-event summaries); number and caption each and reference it in the text.
+  adverse-event summaries); number and caption each and reference it in the text. Any
+  efficacy or survival curve is rendered as a Mermaid `xychart-beta`. Any figure, chart,
+  or diagram is rendered as a fenced `mermaid` code block (never ASCII art, an image link, or
+  Graphviz/DOT), and a required figure is never silently omitted — if the data cannot
+  support it, say so in prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: appendices and the full reference list.
 
 ## Rules
