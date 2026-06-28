@@ -1,0 +1,29 @@
+# Repo-local label overlay for research-harness-template — the research/* namespace.
+#
+# These are this repo's research-loop stage labels (goal -> hypothesis -> augment
+# -> falsify -> synthesize; see CLAUDE.md). They are repo-local, NOT part of the
+# org-centralized set (modeled-information-format/.github labels.yml).
+#
+# NOTE: not wired to authoritative github-label-sync — this repo also carries its
+# own domain:* / pack:* / tier:* labels, and an authoritative sync would delete any
+# label not listed. These research/* labels are applied additively.
+
+- name: "research/goal"
+  color: "5319E7"
+  description: "The research goal / question driving the loop (goal.json)"
+
+- name: "research/hypothesis"
+  color: "5319E7"
+  description: "A hypothesis or claim under investigation"
+
+- name: "research/augment"
+  color: "5319E7"
+  description: "Dimension fan-out / evidence augmentation stage"
+
+- name: "research/falsify"
+  color: "5319E7"
+  description: "Adversarial falsification gate"
+
+- name: "research/synthesize"
+  color: "5319E7"
+  description: "Report synthesis stage"
