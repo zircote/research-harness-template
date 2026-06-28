@@ -643,13 +643,16 @@ gate_m8() {
   # an imported corpus in reports/ and may import in place, so these run only in
   # the template.
   if [ "$IS_TEMPLATE" = 1 ]; then
-    # 8c. The template repo itself ships clean — no imported corpus committed under
-    #     reports/ (only reports/_meta/ scaffolding and the sample session).
-    if [ -z "$(find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
-      ok "template repo reports/ ships clean (no corpus committed outside _meta)"
+    # 8c. The template repo itself ships clean — the only corpus committed under
+    #     reports/ is reports/_meta/ scaffolding (the sample-session gate fixture) plus
+    #     the single ARCHIVED example research topic the template serves straight out of
+    #     reports/ (example-okf-mif-knowledge-spine). On clone, scripts/seed-example-topic.sh
+    #     strips the `example-` prefix; everything else under reports/ is unexpected.
+    if [ -z "$(find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
+      ok "template repo reports/ ships clean (_meta scaffolding + the archived example topic only)"
     else
-      bad "unexpected corpus committed under reports/ (the template must stay clean)"
-      find reports -path 'reports/_meta' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
+      bad "unexpected corpus committed under reports/ (only _meta and the example topic may ship)"
+      find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
     fi
 
     # 8d. The import REFUSES to populate the template repo's own reports/ — the
@@ -662,6 +665,25 @@ gate_m8() {
     fi
   else
     info "Milestone 8 — 8c/8d template-clean checks skipped (instance holds a corpus)"
+  fi
+
+  # 8e. Namespace integrity (capability gate — runs in the template AND in a clone).
+  #     Every finding under reports/**/findings MUST carry a NON-EMPTY top-level
+  #     `.namespace`. build-index.sh / synthesize-artifact.sh / namespace-scoped
+  #     `/search` read this field; a finding that omits it projects a `null` namespace
+  #     (silently broken namespace queries + a "Findings: Research" artifact fallback).
+  #     The dimension-analyst is required to emit it; this is the deterministic gate
+  #     that fails closed if it is ever missing, so the bug can never ship silently.
+  local ns_missing=0 ns_checked=0 nsf nsv
+  while IFS= read -r -d '' nsf; do
+    ns_checked=$((ns_checked + 1))
+    nsv=$(jq -r '.namespace // ""' "$nsf" 2>/dev/null)
+    [ -n "$nsv" ] || { ns_missing=$((ns_missing + 1)); echo "      finding lacks .namespace: $nsf" >&2; }
+  done < <(find reports -path '*/findings/*.json' ! -name '.*' -print0 2>/dev/null)
+  if [ "$ns_missing" -eq 0 ]; then
+    ok "every finding carries a top-level .namespace ($ns_checked checked; index never null)"
+  else
+    bad "$ns_missing/$ns_checked finding(s) lack a top-level .namespace (projects a null namespace — breaks /search, topics rollup, synthesize-artifact)"
   fi
 }
 
@@ -1954,15 +1976,17 @@ gate_m23() {
     bad "harness.config.json does not validate against harness.config.schema.json"
   fi
 
-  # 23d. Template-only invariants: the template hosts the example-topic report (so the
-  #      reports surface is demonstrated) yet stays docs-primary, and the copier hook
-  #      activates reports-primary in a clone. (The example topic is .md-only by design;
-  #      gate 8c already enforces reports/ ships JSON-clean.)
+  # 23d. Template-only invariants: the template serves the single archived example
+  #      research topic straight out of reports/ (example-okf-mif-knowledge-spine — its
+  #      findings + rendered genre reports) so the reports surface is demonstrated, yet
+  #      stays docs-primary, and the copier hook activates reports-primary in a clone.
+  #      gate 8c enforces reports/ ships only this example topic + _meta scaffolding.
   if [ "$IS_TEMPLATE" = 1 ]; then
-    if [ -f reports/example-topic/example-topic.md ] && [ -f reports/example-topic/README.md ]; then
-      ok "template hosts the example-topic report (example-topic.md + README.md)"
+    if [ -f reports/example-okf-mif-knowledge-spine/README.md ] \
+       && ls reports/example-okf-mif-knowledge-spine/report-*.md >/dev/null 2>&1; then
+      ok "template serves the archived example topic (example-okf-mif-knowledge-spine: README + genre reports)"
     else
-      bad "template must host the example-topic report (reports/example-topic/{example-topic.md,README.md})"
+      bad "template must serve the example topic (reports/example-okf-mif-knowledge-spine/{README.md,report-*.md})"
     fi
     if [ "$(jq -r '.site.primarySurface // empty' harness.config.json)" = "docs" ]; then
       ok "template pins site.primarySurface = docs (docs-primary despite shipping the example report)"

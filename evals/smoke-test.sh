@@ -113,8 +113,11 @@ fi
 # skeleton.
 RM="$TMP/README.md"
 SF="reports/_meta/sample-session/findings"
-bash scripts/build-topic-readme.sh example-topic --findings "$SF" --out "$RM" >/dev/null 2>&1
-if bash scripts/build-topic-readme.sh example-topic --findings "$SF" --out "$RM" --check >/dev/null 2>&1; then
+# build-topic-readme requires a REGISTERED topic; use the manifest's first topic so this
+# works in the template (the archived example) and in a clone (its seeded topic) alike.
+RTOPIC=$(jq -r '.topics[0].id // "example-topic"' harness.config.json 2>/dev/null)
+bash scripts/build-topic-readme.sh "$RTOPIC" --findings "$SF" --out "$RM" >/dev/null 2>&1
+if bash scripts/build-topic-readme.sh "$RTOPIC" --findings "$SF" --out "$RM" --check >/dev/null 2>&1; then
   note "FAIL: gate accepted the un-synthesized skeleton"; fail=1
 else
   note "README gate refuses the un-synthesized skeleton (synthesis enforced)"
@@ -127,7 +130,7 @@ awk '
   skip { next }
   { print }
 ' "$RM" > "$RM.tmp" && mv "$RM.tmp" "$RM"
-if bash scripts/build-topic-readme.sh example-topic --findings "$SF" --out "$RM" --check >/dev/null 2>&1; then
+if bash scripts/build-topic-readme.sh "$RTOPIC" --findings "$SF" --out "$RM" --check >/dev/null 2>&1; then
   note "README gate passes once Key Findings are synthesized"
 else
   note "FAIL: gate rejected a synthesized README"; fail=1
@@ -136,10 +139,10 @@ fi
 # The 'created' trigger: a zero-findings topic yields a valid README (synthesis
 # gate is exempt — there is nothing to synthesize) and passes --check.
 mkdir -p "$TMP/empty"
-if bash scripts/build-topic-readme.sh example-topic --findings "$TMP/empty" \
+if bash scripts/build-topic-readme.sh "$RTOPIC" --findings "$TMP/empty" \
       --out "$TMP/empty-README.md" >/dev/null 2>&1 \
    && grep -qF '**Findings:** 0' "$TMP/empty-README.md" \
-   && bash scripts/build-topic-readme.sh example-topic --findings "$TMP/empty" \
+   && bash scripts/build-topic-readme.sh "$RTOPIC" --findings "$TMP/empty" \
       --out "$TMP/empty-README.md" --check >/dev/null 2>&1; then
   note "created-but-unstarted topic gets a valid zero-findings README (gate passes)"
 else

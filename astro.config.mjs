@@ -33,8 +33,8 @@ const plugins = {
 // containing a markdown file that the loader turns into a page: a `[^_]*` basename
 // with a markdown extension, excluding the continuity log (`research-progress.md`)
 // and the topic README (`README.md`, a repo-nav index excluded from the collection).
-// The template ships the example-topic report, so this is true there too — which is
-// why the template pins primarySurface "docs" rather than relying on "auto".
+// The template ships the archived example topic's rendered reports, so this is true
+// there too — which is why the template pins primarySurface "docs" rather than "auto".
 const REPORT_MD = /\.(?:markdown|mdown|mkdn|mkd|mdwn|md|mdx)$/i;
 const NON_PAGE_REPORT_MD = new Set(["research-progress.md", "README.md"]);
 function isReportPage(f) {
