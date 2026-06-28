@@ -28,17 +28,23 @@ const plugins = {
   ...(siteCfg.plugins ?? {}),
 };
 
-// hasReports: does reports/ hold at least one real rendered report? Mirror the
-// content.config.ts loader negations exactly (a topic dir that is not `_meta`,
-// containing a *.md/*.mdx that is not `research-progress.md`). The template ships
-// the example-topic report, so this is true there too — which is why the template
-// pins primarySurface "docs" rather than relying on "auto".
+// hasReports: does reports/ hold at least one real rendered report PAGE? Mirror the
+// content.config.ts loader negations exactly — a topic dir that is not `_meta`,
+// containing a markdown file that the loader turns into a page: a `[^_]*` basename
+// with a markdown extension, excluding the continuity log (`research-progress.md`)
+// and the topic README (`README.md`, a repo-nav index excluded from the collection).
+// The template ships the example-topic report, so this is true there too — which is
+// why the template pins primarySurface "docs" rather than relying on "auto".
+const REPORT_MD = /\.(?:markdown|mdown|mkdn|mkd|mdwn|md|mdx)$/i;
+const NON_PAGE_REPORT_MD = new Set(["research-progress.md", "README.md"]);
+function isReportPage(f) {
+  return REPORT_MD.test(f) && !f.startsWith("_") && !NON_PAGE_REPORT_MD.has(f);
+}
 function hasRenderedReports() {
   if (!existsSync("./reports")) return false;
   for (const d of readdirSync("./reports", { withFileTypes: true })) {
     if (!d.isDirectory() || d.name === "_meta") continue;
-    const files = readdirSync(`./reports/${d.name}`);
-    if (files.some((f) => /\.(md|mdx)$/.test(f) && f !== "research-progress.md")) return true;
+    if (readdirSync(`./reports/${d.name}`).some(isReportPage)) return true;
   }
   return false;
 }

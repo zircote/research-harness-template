@@ -13,6 +13,20 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
+# apply_jq <cfg> <jq-args...> — rewrite <cfg> through jq atomically via a temp file.
+# Fails loudly (non-zero, temp removed) on a jq error (e.g. invalid JSON) or a write
+# error, so callers never see a success message after a failed write.
+apply_jq() {
+  local cfg="$1"; shift
+  local tmp; tmp=$(mktemp)
+  if ! jq "$@" "$cfg" > "$tmp"; then
+    echo "site-toggle: jq failed to update $cfg (invalid JSON?)" >&2; rm -f "$tmp"; return 1
+  fi
+  if ! mv "$tmp" "$cfg"; then
+    echo "site-toggle: failed to write $cfg" >&2; rm -f "$tmp"; return 1
+  fi
+}
+
 SUB="${1:?usage: site-toggle.sh primary <reports|docs|auto> | plugin <name> <on|off> [config]}"
 
 case "$SUB" in
@@ -24,8 +38,7 @@ case "$SUB" in
       reports|docs|auto) ;;
       *) echo "site-toggle: primary must be reports|docs|auto" >&2; exit 2 ;;
     esac
-    tmp=$(mktemp)
-    jq --arg v "$VALUE" '.site = (.site // {}) | .site.primarySurface = $v' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+    apply_jq "$CFG" --arg v "$VALUE" '.site = (.site // {}) | .site.primarySurface = $v' || exit 1
     echo "site-toggle: primarySurface -> $VALUE in $CFG"
     ;;
   plugin)
@@ -42,9 +55,8 @@ case "$SUB" in
       off) EN=false ;;
       *)   echo "site-toggle: state must be on|off" >&2; exit 2 ;;
     esac
-    tmp=$(mktemp)
-    jq --arg n "$NAME" --argjson en "$EN" \
-      '.site = (.site // {}) | .site.plugins = (.site.plugins // {}) | .site.plugins[$n] = $en' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+    apply_jq "$CFG" --arg n "$NAME" --argjson en "$EN" \
+      '.site = (.site // {}) | .site.plugins = (.site.plugins // {}) | .site.plugins[$n] = $en' || exit 1
     echo "site-toggle: plugin $NAME -> enabled=$EN in $CFG"
     ;;
   *)
