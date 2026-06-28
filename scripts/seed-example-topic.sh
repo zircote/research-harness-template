@@ -50,8 +50,16 @@ normalize_config() {
         .topics = (
           (.topics // [])
           | map(
+              # Fresh seed: rename the OLD entry and stamp the seed identity.
               if .id == $old
               then (.id = $new | .namespace = ("harness/" + $new) | .status = "archived")
+              # Already-NEW entry (a prior/partial seed, or a manifest that already
+              # names NEW): normalize idempotently — backfill a MISSING namespace/status
+              # so it is always well-formed, but never clobber a value the clone owner
+              # deliberately set (e.g. flipping it back to active).
+              elif .id == $new
+              then (.namespace = (if (.namespace // "") == "" then ("harness/" + $new) else .namespace end)
+                    | .status = (if (.status // "") == "" then "archived" else .status end))
               else . end)
           | reduce .[] as $t ([]; if any(.[]; .id == $t.id) then . else . + [$t] end)
         )

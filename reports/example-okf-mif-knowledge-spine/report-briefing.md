@@ -441,7 +441,7 @@ extensions:
       disconfirming_evidence: []
       attempted_at: "2026-06-28T12:25:00Z"
 ---
-
+-->
 This briefing synthesis covers 36 surviving finding(s) across the research.
 
 ## Headline

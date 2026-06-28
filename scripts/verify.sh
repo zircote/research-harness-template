@@ -1930,43 +1930,55 @@ JSON
 gate_m23() {
   info "Milestone 23 — site projection (reports surface + feature flags)"
 
-  # 23a. The content loader binds BOTH docs/ and reports/ into the single Starlight
-  #      `docs` collection via a plain glob (not docsLoader) whose base stays the standard
-  #      `./src/content/docs` location the relative-links plugin relies on (so docs' relative
-  #      *.md cross-links still rewrite to routes); reports/ is reached through the committed
-  #      `docs/reports` symlink. The negations docsLoader's fixed pattern cannot express
-  #      exclude _meta/continuity/findings and the report README. Regression guard against a
-  #      revert that re-leaks _meta, drops the README handling, or moves the base off
-  #      src/content/docs (which silently breaks relative-link rewriting site-wide).
+  # 23a. The content loader binds BOTH docs/ and reports/ into the single Starlight `docs`
+  #      collection via a `glob()` WRAPPED to derive a Starlight title for reports/ deliverables
+  #      that carry none (README, synthesis, falsification report, research-progress) — so the
+  #      FULL topic deliverable tree renders (ADR-0009) instead of being excluded. The base
+  #      stays `./src/content/docs` (the relative-links plugin relies on it) and reports/ is
+  #      reached via the committed `docs/reports` symlink. README is re-slugged to the topic
+  #      index. Only _meta/findings + the *-delta/*-build-spec build logs stay excluded.
+  #      Regression guard: the three deliverable negations MUST be absent (so they serve), the
+  #      loader markers + kept negations + both symlinks MUST be present.
   local cc=src/content.config.ts
   if grep -qF "glob(" "$cc" \
      && grep -qF "base: './src/content/docs'" "$cc" \
+     && grep -qF "reportsLoader(" "$cc" \
+     && grep -qF "deriveTitleFromH1" "$cc" \
+     && grep -qF "generateId" "$cc" \
      && grep -qF "!reports/_meta/**" "$cc" \
-     && grep -qF "!reports/**/research-progress.md" "$cc" \
      && grep -qF "!reports/**/findings/**" "$cc" \
-     && grep -qF "!reports/**/README.md" "$cc" \
-     && grep -qF "!reports/**/*-falsification-report.md" "$cc" \
      && grep -qF "!reports/**/*-delta.md" "$cc" \
      && grep -qF "!reports/**/*-build-spec.md" "$cc" \
+     && ! grep -qF "!reports/**/README.md" "$cc" \
+     && ! grep -qF "!reports/**/*-falsification-report.md" "$cc" \
+     && ! grep -qF "!reports/**/research-progress.md" "$cc" \
      && [ "$(readlink docs/reports 2>/dev/null)" = "../reports" ] \
      && [ "$(readlink src/content/docs 2>/dev/null)" = "../../docs" ]; then
-    ok "content.config.ts binds reports via glob (docs/reports->../reports and src/content/docs->../../docs symlinks; report/findings/audit negations)"
+    ok "content.config.ts serves the full deliverable tree via the derived-title loader (README index re-slug; _meta/findings/build-log negations kept; the README/falsification/progress negations removed; both site symlinks)"
   else
-    bad "reports binding regressed (need glob base './src/content/docs', the docs/reports->../reports and src/content/docs->../../docs symlinks, and the _meta/research-progress/README/audit negations)"
+    bad "reports binding regressed (need the reportsLoader/deriveTitleFromH1/generateId glob at base './src/content/docs', the README+falsification+research-progress negations REMOVED so they render, _meta/findings/*-delta/*-build-spec kept, and the docs/reports + src/content/docs symlinks)"
   fi
 
   # 23b. astro.config.mjs reads harness.config.json and GATES each site enhancement on
   #      .site.plugins / .site.primarySurface — integrations are config-driven, not hardcoded.
+  #      It also builds the reports sidebar as ONE link per topic README index (reportTopics,
+  #      not a per-report autogenerate tree), strips the duplicate body H1 of derived-title
+  #      pages (remarkStripReportH1), and registers the Sidebar override that adds the topic
+  #      filter. The override component must exist.
   local ac=astro.config.mjs
   if grep -qF "harness.config.json" "$ac" \
      && grep -qF "primarySurface" "$ac" \
      && grep -qF "plugins.mermaid" "$ac" \
      && grep -qF "plugins.llmsTxt" "$ac" \
      && grep -qF "plugins.imageZoom" "$ac" \
-     && grep -qF "plugins.linksValidator" "$ac"; then
-    ok "astro.config.mjs reads harness.config.json and gates llms-txt/mermaid/image-zoom/links-validator + primarySurface"
+     && grep -qF "plugins.linksValidator" "$ac" \
+     && grep -qF "remarkStripReportH1" "$ac" \
+     && grep -qF "reportTopics(" "$ac" \
+     && grep -qF "Sidebar:" "$ac" \
+     && [ -f src/components/Sidebar.astro ]; then
+    ok "astro.config.mjs gates site plugins + primarySurface, builds an index-only reports sidebar (reportTopics), strips derived-title H1, and registers the Sidebar filter override"
   else
-    bad "astro.config.mjs must read harness.config.json and gate each site plugin + primarySurface (not hardcode them)"
+    bad "astro.config.mjs must read harness.config.json, gate each site plugin + primarySurface, build the index-only reports sidebar (reportTopics), strip the derived-title H1 (remarkStripReportH1), and register src/components/Sidebar.astro"
   fi
 
   # 23c. The manifest (with the optional .site block) validates against the schema.
@@ -1987,6 +1999,18 @@ gate_m23() {
       ok "template serves the archived example topic (example-okf-mif-knowledge-spine: README + genre reports)"
     else
       bad "template must serve the example topic (reports/example-okf-mif-knowledge-spine/{README.md,report-*.md})"
+    fi
+    # The full deliverable tree renders: synthesis, falsification report, and research-progress
+    # each exist and start with an H1, so the derived-title loader gives them a Starlight title
+    # (they are no longer excluded). This is the positive counterpart to the 23a negation removal.
+    local edir=reports/example-okf-mif-knowledge-spine all_titled=1
+    for d in "$edir"/synthesis-*.md "$edir"/*-falsification-report.md "$edir"/research-progress.md; do
+      { [ -f "$d" ] && grep -qE '^#[[:space:]]+' "$d"; } || all_titled=0
+    done
+    if [ "$all_titled" = 1 ]; then
+      ok "template serves the full deliverable tree (synthesis + falsification report + research-progress each render via a derivable H1 title)"
+    else
+      bad "example topic deliverables must each exist with an H1 so the derived-title loader renders them (synthesis, falsification report, research-progress)"
     fi
     if [ "$(jq -r '.site.primarySurface // empty' harness.config.json)" = "docs" ]; then
       ok "template pins site.primarySurface = docs (docs-primary despite shipping the example report)"

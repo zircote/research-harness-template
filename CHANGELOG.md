@@ -26,8 +26,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   competitive-quadrant, trend-analysis, trend-modeling, academic, engineering, and
   computing-paper). The distribution gate (`verify.sh` 8c) now permits this one served
   example under `reports/` alongside `reports/_meta/`.
+- **The site now serves the full topic deliverable tree** — the README (as the topic
+  index at `/reports/<topic>/`), the neutral synthesis, the falsification report, the
+  research-progress log, and every genre report all render, instead of being excluded
+  (these are critical consumer-facing deliverables). `src/content.config.ts` wraps `glob()`
+  to DERIVE the Starlight `title` from each file's body `# H1` (so the generated artifacts
+  are never mutated and clones get the same behaviour) and re-slugs the README to the topic
+  index; a `remarkStripReportH1` plugin drops the duplicate body heading at render. The
+  reports **sidebar lists one link per topic** (its README index), not a per-report tree, and
+  a `Sidebar` component override adds a client-side **topic filter**. ADR-0009 is amended to
+  record this (superseding its README/falsification exclusions).
+- The **readme channel** is upgraded toward the `zircote/research` per-topic exemplars:
+  a falsification audit-trail line in the header, dimensions rendered with their
+  descriptions, a richer Artifacts table (type + size), backtick-quoted tags, an optional
+  hero image, and a **Reports table listing the topic's constituents as Type → Title** in a
+  deterministic reader-consumption order (executive summary → briefing → synthesis → genre
+  reports → falsification report → research progress).
 - Site sidebar groups collapse by default so a large corpus stays navigable.
-- ADR-0009 records the site-renders-full-corpus decision.
 
 ### Removed
 
