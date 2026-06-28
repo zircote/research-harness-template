@@ -9,6 +9,10 @@
 # Version: 0.3.1
 # Last Updated: 2026-06-26
 #
+# 0.3.1: Narrowed the locally-retained cross-cutting types to `adoption-trend` and
+# `compliance-regulation`; dropped `security-framework` and `security-threat`, deferring
+# them to their canonical software-security home (not in this extends chain).
+#
 # 0.3.0: Added 14 leaf subtypes across husbandry-practice (5), farm-infrastructure (6),
 # equipment-or-input (2), and grant-program (1); added has_part and connects relationships.
 #
