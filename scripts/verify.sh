@@ -1921,13 +1921,14 @@ gate_m23() {
      && grep -qF "base: './src/content/docs'" "$cc" \
      && grep -qF "!reports/_meta/**" "$cc" \
      && grep -qF "!reports/**/research-progress.md" "$cc" \
+     && grep -qF "!reports/**/findings/**" "$cc" \
      && grep -qF "!reports/**/README.md" "$cc" \
      && grep -qF "!reports/**/*-falsification-report.md" "$cc" \
      && grep -qF "!reports/**/*-delta.md" "$cc" \
      && grep -qF "!reports/**/*-build-spec.md" "$cc" \
      && [ "$(readlink docs/reports 2>/dev/null)" = "../reports" ] \
      && [ "$(readlink src/content/docs 2>/dev/null)" = "../../docs" ]; then
-    ok "content.config.ts binds reports via glob (base src/content/docs + docs/reports symlink, report negations)"
+    ok "content.config.ts binds reports via glob (docs/reports->../reports and src/content/docs->../../docs symlinks; report/findings/audit negations)"
   else
     bad "reports binding regressed (need glob base './src/content/docs', the docs/reports->../reports and src/content/docs->../../docs symlinks, and the _meta/research-progress/README/audit negations)"
   fi
