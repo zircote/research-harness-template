@@ -67,7 +67,11 @@ URNs in the output. No bibliography — footnotes only.
 
 - **Front matter**: title, date, one-line scope statement, decision being supported.
 - **Figures**: none required. At most one small table or single chart if it replaces prose;
-  prefer text — this genre is read in five minutes.
+  prefer text — this genre is read in five minutes. Any such chart is a Mermaid figure
+  (`xychart-beta` or `pie`). Any figure, chart, or diagram is rendered as a
+  fenced `mermaid` code block (never ASCII art, an image link, or Graphviz/DOT), and a
+  required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: the numbered footnote list. No appendices.
 
 ## Rules

@@ -53,8 +53,12 @@ specific standard year into output as settled fact.
 
 - **Front matter**: organization and reporting-period identification, and the reporting
   boundary.
-- **Figures**: the materiality matrix or material-topic list; performance tables per topic
-  standard (number and caption each and reference it in the text).
+- **Figures**: the materiality matrix, rendered as a Mermaid `quadrantChart`, or a
+  material-topic list; performance tables per topic standard (number and caption each and
+  reference it in the text). Any figure, chart, or diagram is rendered as a fenced `mermaid` code
+  block (never ASCII art, an image link, or Graphviz/DOT), and a required figure is never
+  silently omitted — if the data cannot support it, say so in prose. Plain tabular matter
+  stays a Markdown table.
 - **Back matter**: the **GRI content index** table (required) and the full reference list.
 
 ## Rules

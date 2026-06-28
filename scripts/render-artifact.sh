@@ -70,8 +70,52 @@ DEF='
     | join("");
   # Strip trailing whitespace on every line (MD009).
   def detrail: gsub("[ \t]+(?=\n)"; "") | gsub("[ \t]+$"; "");
+  # Render a section body: autolink + deglob escape PROSE only. A fenced ``` code
+  # block (e.g. a Mermaid diagram) must pass through verbatim — escaping "*"/"_" or
+  # autolinking a URL inside a fence corrupts the diagram/code. Walk the body
+  # line-by-line: a fence opens/closes only on a line whose first non-space run is
+  # ``` (CommonMark), so a stray ``` MID-prose is just prose and never disables the
+  # escaping of the lines that follow. Fence lines and content between an opener and
+  # its closer pass through untouched; an unclosed fence keeps the rest verbatim (no
+  # content dropped). detrail then strips trailing whitespace (MD009).
+  def render_body:
+    ( . / "\n" ) as $lines
+    | reduce range(0; $lines | length) as $i
+        ( {out: [], infence: false};
+          $lines[$i] as $ln
+          | if ($ln | test("^[ \t]*```")) then (.out += [$ln] | .infence = (.infence | not))
+            elif .infence then (.out += [$ln])
+            else (.out += [$ln | autolink | deglob]) end )
+    | .out | join("\n")
+    | detrail;
+  # Per-section knowledge graph: when a section carries entity/relationship data,
+  # GENERATE a Mermaid `graph` of it (entities as nodes, the typed relationships
+  # as edges) rather than omitting the diagram. Node ids are index-synthesised
+  # (n0, n1, …) so MIF urn:/@id targets never leak special chars into Mermaid.
+  # Labels replace any embedded double-quote with U+0027 (a single quote),
+  # written as a jq escape because this program lives in a single-quoted shell string.
+  def mermaid_graph($s):
+    ($s.entities // []) as $ents
+    | ($s.relationships // []) as $rels
+    | ($s.supports[0]) as $src
+    | if (($ents | length) == 0 and ($rels | length) == 0) then []
+      else
+        ( [ $src ] + [ $ents[].id ] + [ $rels[].target ] | map(select(. != null)) | unique ) as $ids
+        | ( $ids | to_entries | map({ key: .value, value: ("n" + (.key | tostring)) }) | from_entries ) as $nid
+        | ( reduce $ids[] as $id ({};
+              .[$id] = ( if $id == $src then $s.heading
+                         elif (($ents | map(select(.id == $id)) | length) > 0)
+                           then (($ents | map(select(.id == $id)) | .[0]) | (.name + " (" + (.entityType // "entity") + ")"))
+                         else ($id | sub("^.*[:/]"; "")) end ) ) ) as $lbl
+        | [ "", "```mermaid", "graph TD" ]
+          + [ $ids[] | "  " + $nid[.] + "[\"" + ($lbl[.] | gsub("\""; "\u0027") | gsub("[\n\r]"; " ")) + "\"]" ]
+          + [ $rels[] | select(.target != null and $src != null)
+              | "  " + $nid[$src] + " -->|" + ((.type // "relates-to") | gsub("\"|\\|"; "\u0027") | gsub("[\n\r]"; " ")) + "| " + $nid[.target] ]
+          + [ "```" ]
+      end;
   def secblock($s; $meta; $ev):
-    [ "", "## " + ($s.heading | deglob | detrail), "", ($s.body | autolink | deglob | detrail) ]
+    [ "", "## " + ($s.heading | deglob | detrail), "", ($s.body | render_body) ]
+    + mermaid_graph($s)
     + (if (($s.entities // []) | length) > 0
        then [ "", ("Key entities: " + ([ $s.entities[] | .name + " (" + (.entityType // "entity") + ")" ] | join(", ")) + ".") ] else [] end)
     + (if $meta and ($s.dimension != null)

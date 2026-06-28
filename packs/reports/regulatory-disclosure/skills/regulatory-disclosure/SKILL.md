@@ -63,7 +63,10 @@ produces the disclosure *narrative structure* only.
 - **Front matter**: cover identifying the organization and reporting period.
 - **Figures**: financial-highlight tables in MD&A (and in Selected Financial Data when that
   section is currently required and populated); number and caption each and reference it in
-  the text.
+  the text. Any figure, chart, or diagram is rendered as a fenced Mermaid code block (a
+  `mermaid` info-string fence) — a trend chart as `xychart-beta` — never ASCII art, an image
+  link, or Graphviz/DOT; a required figure is never silently omitted — if the data cannot
+  support it, say so in prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: the notes to the financial statements and a full reference list.
 
 ## Rules

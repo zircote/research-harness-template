@@ -71,6 +71,15 @@ market report and no domain-specific scaffolding by default.
 - **Findings are MIF memory units** under `schemas/findings.schema.json`. By the
   time you run, each surviving finding carries `extensions.harness.verification`
   (stamped by the falsification gate) and ≥1 citation.
+- **Diagrams are Mermaid.** Any figure, chart, diagram, or graph a genre's
+  *Required Figures & Matter* calls for is emitted as a fenced Mermaid code block (a `mermaid`
+  info-string fence) of the fitting type — `flowchart`/`graph`, `quadrantChart`,
+  `xychart-beta`, `stateDiagram-v2`, `timeline`, `journey`, `gantt`, `pie`,
+  `sequenceDiagram`, `erDiagram`. Never render a figure as ASCII art, an
+  image link, or a Graphviz/DOT block, and never silently omit a figure the
+  genre requires — if the data cannot support it, say so explicitly in prose
+  rather than dropping the figure. This governs *figures*; plain tabular matter
+  stays a Markdown table.
 
 ## Step 1 — Load the session goal and surviving findings
 

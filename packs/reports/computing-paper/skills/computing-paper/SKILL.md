@@ -60,7 +60,11 @@ verify these live at implementation time, as the templates revise without fanfar
   venue requires.
 - **Figures & tables**: tables and figures as the evidence warrants — include a results
   table whenever multiple findings or baselines are compared on shared metrics. Number and
-  caption every figure; reference each in the text.
+  caption every figure; reference each in the text. Any figure, chart, or diagram — an
+  architecture or flow figure as a Mermaid `flowchart`, say — is rendered as a
+  fenced `mermaid` code block (never ASCII art, an image link, or Graphviz/DOT), and a
+  required figure is never silently omitted — if the data cannot support it, say so in
+  prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: full numbered References section; optional appendix for extended data
   or the verification log.
 

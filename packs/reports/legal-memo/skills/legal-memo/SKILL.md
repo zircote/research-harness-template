@@ -53,7 +53,10 @@ it — never bake an edition number into output as settled fact.
 - **Front matter**: a standard memo heading (To / From / Date / Re), then Question
   Presented and Brief Answer.
 - **Figures**: tables where authorities or factors are compared on shared attributes;
-  number and caption each and reference it in the text.
+  number and caption each and reference it in the text. Any figure, chart, or diagram is
+  rendered as a fenced Mermaid code block (a `mermaid` info-string fence), never ASCII art,
+  an image link, or Graphviz/DOT; a required figure is never silently omitted — if the data
+  cannot support it, say so in prose. Plain tabular matter stays a Markdown table.
 - **Back matter**: the full table of authorities / reference list; optional appendix for
   the verification log or extended record.
 
