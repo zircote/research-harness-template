@@ -1,0 +1,24 @@
+name: Sync labels
+
+# Apply the org-centralized label set (modeled-information-format/.github
+# labels.yml) merged with this repo's local overlay (.github/labels.yml — the
+# research: group) via the org's reusable label-sync workflow. SHA-pinned.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/labels.yml
+      - .github/workflows/label-sync.yml
+  schedule:
+    - cron: '0 6 * * 1'   # weekly drift correction
+  workflow_dispatch: {}
+
+jobs:
+  labels:
+    permissions:
+      contents: read
+      issues: write
+    uses: modeled-information-format/.github/.github/workflows/reusable-label-sync.yml@0ef7cfddaf9b1f763c896c373f227b3450270abc
+    with:
+      local-labels: .github/labels.yml
