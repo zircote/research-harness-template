@@ -677,8 +677,8 @@ gate_m8() {
   local ns_missing=0 ns_checked=0 nsf nsv
   while IFS= read -r -d '' nsf; do
     ns_checked=$((ns_checked + 1))
-    nsv=$(jq -r '.namespace // ""' "$nsf" 2>/dev/null)
-    [ -n "$nsv" ] || { ns_missing=$((ns_missing + 1)); echo "      finding lacks .namespace: $nsf" >&2; }
+    nsv=$(jq -r 'if (.namespace | type) == "string" then .namespace else "" end' "$nsf" 2>/dev/null)
+    [ -n "${nsv//[[:space:]]/}" ] || { ns_missing=$((ns_missing + 1)); echo "      finding lacks a non-empty string .namespace: $nsf" >&2; }
   done < <(find reports -path '*/findings/*.json' ! -name '.*' -print0 2>/dev/null)
   if [ "$ns_missing" -eq 0 ]; then
     ok "every finding carries a top-level .namespace ($ns_checked checked; index never null)"
@@ -1924,8 +1924,8 @@ JSON
 # config-driven feature flags). The Astro/Starlight site renders reports/ for human
 # reading; harness.config.json `.site` is the control plane astro.config.mjs reads at
 # build time (so neither template nor clone hand-edits astro.config.mjs). The template
-# hosts the example-topic report (docs-primary) and a copier hook activates
-# reports-primary in a clone.
+# serves the archived example topic (example-okf-mif-knowledge-spine; docs-primary) and
+# a copier hook activates reports-primary in a clone.
 # ---------------------------------------------------------------------------
 gate_m23() {
   info "Milestone 23 — site projection (reports surface + feature flags)"
