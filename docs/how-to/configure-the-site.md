@@ -29,7 +29,9 @@ npm run dev          # serve with live reload; or: npm run build && npm run prev
 ```
 
 `npm run reports` is an alias for the local reader. A clone is activated
-reports-primary at instantiation (see below), so your reports lead the sidebar.
+reports-primary at instantiation (see below), so your reports lead the sidebar. For
+the full step-by-step (the local URL and base path, production preview, and
+troubleshooting), see [How to run and browse the local site](run-the-local-site.md).
 
 ## Choose the leading surface
 
