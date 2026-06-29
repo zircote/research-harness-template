@@ -26,11 +26,11 @@ _exclude:
   - "IMPLEMENTATION-PLAN.md"
   # NOTE: reports/example-okf-mif-knowledge-spine/ is intentionally NOT excluded. The
   # template serves this single ARCHIVED example research topic straight out of reports/
-  # as its worked showcase, and clones inherit it: the post-copy `seed-example-topic.sh`
-  # task (below) strips the `example-` prefix to `okf-mif-knowledge-spine` so every clone
-  # starts with it as a seed fixture. That task is idempotent and self-cleaning, which is
-  # what keeps `copier update` conflict-free (the prefixed copy re-shipped on update is
-  # discarded; the renamed, instance-owned seed is never touched).
+  # as its worked showcase, and clones inherit it under the SAME name as their seed
+  # fixture. It is shipped as ordinary template content (no rename task): copier re-applies
+  # the unchanged corpus on `copier update` with no conflict, and keeping the directory
+  # name stable avoids churning copier's throwaway update render (a rename there
+  # intermittently breaks copier's temp-dir cleanup).
 
 # Instantiation Q&A.
 project_name:
@@ -49,18 +49,17 @@ author_name:
 #      (the template itself ships docs-primary). Edits only `.site.primarySurface`.
 #   2. site symlinks: re-establish docs/reports + src/content/docs, which copier
 #      flattens into real dirs on render, so the Astro content collection resolves.
-#   3. seed-example-topic: rename the shipped archived example topic
-#      (example-okf-mif-knowledge-spine -> okf-mif-knowledge-spine) so the clone starts
-#      with it as a seed fixture. Idempotent + self-cleaning; no-op in the template
-#      itself. Without `--trust` the clone keeps the `example-`-prefixed copy and the
-#      user can run `bash scripts/seed-example-topic.sh` by hand.
+# The archived example topic (reports/example-okf-mif-knowledge-spine) ships to clones
+# AS-IS as their inherited seed fixture — it keeps its name everywhere. There is NO
+# rename task: renaming the corpus directory inside copier's throwaway update render
+# churns the tree and destabilizes copier's temp-dir cleanup (it intermittently fails
+# to remove new_copy/.git), so we leave the topic name unchanged.
 _tasks:
   - "bash scripts/site-toggle.sh primary reports"
   # Copier renders symlinked directories as real dirs; re-establish the two
   # site symlinks so the Astro content collection reaches docs/ and reports/.
   - "rm -rf docs/reports && ln -s ../reports docs/reports"
   - "rm -rf src/content/docs && ln -s ../../docs src/content/docs"
-  - "bash scripts/seed-example-topic.sh"
 
 _message_after_copy: |
   Your research harness is ready.
@@ -76,7 +75,7 @@ _message_after_copy: |
       bash scripts/site-toggle.sh primary <reports|docs|auto>
       bash scripts/site-toggle.sh plugin <imageZoom|linksValidator|llmsTxt|mermaid> <on|off>
 
-  Your harness ships with one archived seed topic — `okf-mif-knowledge-spine`, a worked
-  OKF + MIF knowledge-spine research corpus (findings, knowledge graph, and a full set of
-  genre reports) — so you can see the engine's output immediately. Browse it under
-  reports/okf-mif-knowledge-spine/, then run `/start` to research your own first topic.
+  Your harness ships with one archived seed topic — `example-okf-mif-knowledge-spine`, a
+  worked OKF + MIF knowledge-spine research corpus (findings, knowledge graph, and a full
+  set of genre reports) — so you can see the engine's output immediately. Browse it under
+  reports/example-okf-mif-knowledge-spine/, then run `/start` to research your own first topic.

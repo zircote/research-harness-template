@@ -437,7 +437,7 @@ extensions:
     dimension: synthesis
     verification:
       verdict: survived
-      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Release Candidate, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
+      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Released, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
       disconfirming_evidence: []
       attempted_at: "2026-06-28T12:25:00Z"
 ---
@@ -507,7 +507,7 @@ Bear < Base < Bull holds for every metric. The dominant swing factor is OKF adop
 1. The SAM excludes organizations locked into Confluence, SharePoint, and Notion that lack a format-migration impetus; only organizations with active AI or research-infrastructure initiatives are counted as reachable near-term.
 2. The SOM assumes OKF reaches meaningful community adoption within 18-24 months of its 12 June 2026 v0.1 launch, and that MIF's richer provenance, typed-relationship, and ontology layer differentiates upmarket deployments above OKF-only ones.
 3. AI-driven demand (GraphRAG, agentic-AI grounding) is the primary growth accelerant; the legacy KM market grew only 3-5% per year before AI tailwinds, so the double-digit CAGRs depend on the AI thesis holding.
-4. Format maturity is not the binding constraint: MIF is already a stabilized v1.0.0 specification (Release Candidate, stabilized 18 June 2026, public since early 2026) that predates OKF v0.1 — the open risk is distribution and adoption, not spec readiness.
+4. Format maturity is not the binding constraint: MIF is already a stabilized v1.0.0 specification (Released, stabilized 18 June 2026, public since early 2026) that predates OKF v0.1 — the open risk is distribution and adoption, not spec readiness.
 5. The financial justification for buyers is the quantified cost of lost institutional knowledge, which the spine's provenance and temporal-versioning capabilities directly address.
 
 ## Data Sources

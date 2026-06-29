@@ -646,8 +646,8 @@ gate_m8() {
     # 8c. The template repo itself ships clean — the only corpus committed under
     #     reports/ is reports/_meta/ scaffolding (the sample-session gate fixture) plus
     #     the single ARCHIVED example research topic the template serves straight out of
-    #     reports/ (example-okf-mif-knowledge-spine). On clone, scripts/seed-example-topic.sh
-    #     strips the `example-` prefix; everything else under reports/ is unexpected.
+    #     reports/ (example-okf-mif-knowledge-spine), which clones inherit under the same
+    #     name as their seed fixture; everything else under reports/ is unexpected.
     if [ -z "$(find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
       ok "template repo reports/ ships clean (_meta scaffolding + the archived example topic only)"
     else

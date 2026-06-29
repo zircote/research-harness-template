@@ -437,7 +437,7 @@ extensions:
     dimension: synthesis
     verification:
       verdict: survived
-      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Release Candidate, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
+      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Released, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
       disconfirming_evidence: []
       attempted_at: "2026-06-28T12:25:00Z"
 ---
@@ -477,7 +477,7 @@ xychart-beta
 
 ### Where MIF sits on the curve
 
-MIF has been public since approximately February 2026 (zircote.com introduction post) and reached v1.0.0 (Release Candidate, stabilized 2026-06-18) per the in-repo specification at mif-spec.dev, which means it predates OKF v0.1 and is at a more advanced, stabilized version. MIF fills a documented gap, the fragmentation of AI-memory formats, with genuine technical differentiation, but against OKF's Google-backed launch it still lacks a large independent adopter base and formal governance. Its open question is therefore distribution and adoption, not specification maturity; this distinction frames every scenario below.
+MIF has been public since approximately February 2026 (zircote.com introduction post) and reached v1.0.0 (Released, stabilized 2026-06-18) per the in-repo specification at mif-spec.dev, which means it predates OKF v0.1 and is at a more advanced, stabilized version. MIF fills a documented gap, the fragmentation of AI-memory formats, with genuine technical differentiation, but against OKF's Google-backed launch it still lacks a large independent adopter base and formal governance. Its open question is therefore distribution and adoption, not specification maturity; this distinction frames every scenario below.
 
 Confidence: the direction of travel (rising demand for structured, provenance-aware knowledge persistence) is high-confidence and corroborated across landscape, technical, market, and trajectory findings. Absolute market magnitudes are lower-confidence: cross-firm sizing varies widely and several inputs are weakened (see Signals).
 
