@@ -49,6 +49,8 @@ author_name:
 #      (the template itself ships docs-primary). Edits only `.site.primarySurface`.
 #   2. site symlinks: re-establish docs/reports + src/content/docs, which copier
 #      flattens into real dirs on render, so the Astro content collection resolves.
+#   3. sync-packs: regenerate the derived ontology catalog (.claude/enabled-packs.json) on copy
+#      AND update, so an update never leaves it stale (issue #200).
 # The archived example topic (reports/example-okf-mif-knowledge-spine) ships to clones
 # AS-IS as their inherited seed fixture — it keeps its name everywhere. There is NO
 # rename task: renaming the corpus directory inside copier's throwaway update render
@@ -60,6 +62,10 @@ _tasks:
   # site symlinks so the Astro content collection reaches docs/ and reports/.
   - "rm -rf docs/reports && ln -s ../reports docs/reports"
   - "rm -rf src/content/docs && ln -s ../../docs src/content/docs"
+  # Regenerate the derived ontology catalog (.claude/enabled-packs.json) on copy AND update,
+  # so an update never leaves it stale — a stale catalog missing an `extends` target makes the
+  # fail-closed resolver mark the whole bound corpus invalid (issue #200).
+  - "bash scripts/sync-packs.sh"
 
 _message_after_copy: |
   Your research harness is ready.
