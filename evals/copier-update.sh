@@ -35,6 +35,28 @@ if ! command -v copier >/dev/null 2>&1; then
   exit 1
 fi
 
+# Run copier with its stderr CAPTURED (surfaced on failure, never swallowed — a gate that
+# hides its tool's error makes every failure an undiagnosable "flake") and a bounded retry of
+# one specific transient race: copier clones the template via a LOCAL path, so git hardlinks
+# loose objects from .git/objects, and under concurrent git/IO load that clone fails with
+# exit 128 "failed to copy file to ... .git/objects/...". Retry only that signature; surface
+# everything else immediately.
+copier_run() {
+  local sub="$1" attempt=1 max=4 rc errf
+  errf=$(mktemp) || { echo "copier-update: mktemp failed — cannot capture copier stderr (fail closed)" >&2; return 1; }
+  while :; do
+    copier "$@" >/dev/null 2>"$errf"; rc=$?
+    if [ "$rc" -eq 0 ]; then rm -f "$errf"; return 0; fi
+    if [ "$attempt" -lt "$max" ] && grep -q "failed to copy file to" "$errf"; then
+      echo "  copier: transient local-clone race on '$sub' (attempt $attempt/$max) — retrying" >&2
+      attempt=$((attempt + 1)); sleep 1; : > "$errf"; continue
+    fi
+    echo "copier-update: copier $sub failed (rc=$rc) — copier stderr:" >&2
+    cat "$errf" >&2; rm -f "$errf"
+    return "$rc"
+  done
+}
+
 TMPL=$(mktemp -d); INST=$(mktemp -d)
 trap 'rm -rf "$TMPL" "$INST"' EXIT
 GA="git -c user.email=harness@local -c user.name=harness"
@@ -48,8 +70,7 @@ git init -q && $GA add -A && $GA commit -q -m "harness template v1.0.0" && git t
 # 2. Instantiate the harness. --trust: the template runs a post-copy `_tasks` hook
 #    (site-toggle.sh activates the clone's reports surface); copier executes tasks
 #    only when explicitly trusted.
-copier copy --trust --defaults --quiet --vcs-ref v1.0.0 "$TMPL" "$INST" >/dev/null 2>&1 || {
-  echo "copier-update: copier copy failed" >&2; exit 1; }
+copier_run copy --trust --defaults --quiet --vcs-ref v1.0.0 "$TMPL" "$INST" || exit 1
 [ -f "$INST/.copier-answers.yml" ] || { echo "copier-update: no answers file recorded; update would be impossible" >&2; exit 1; }
 [ -f "$INST/docs/harness-instance.md" ] || { echo "copier-update: templated identity file not rendered" >&2; exit 1; }
 echo "  copier: instantiated harness (answers recorded, identity rendered)"
@@ -74,7 +95,7 @@ cd "$TMPL" && $GA commit -q -am "template v1.1.0: propagation marker" && git tag
 
 # 5. Re-apply the template change to the instantiated harness.
 cd "$INST"
-copier update --trust --defaults --quiet >/dev/null 2>&1 || { echo "copier-update: copier update failed" >&2; exit 1; }
+copier_run update --trust --defaults --quiet || exit 1
 
 # 6a. The example topic survives update: copier re-applies the (unchanged) corpus cleanly,
 #     so it persists under its name with no duplication and update stays conflict-free.
