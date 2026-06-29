@@ -25,8 +25,9 @@
 #   bump-version.sh 1.0.0 --check              # preview a 1.0.0 release
 #
 # The version-consistency gate in verify.sh (the marketplace catalog equals the
-# template version; no stamp is a malformed semver or ahead of the release) is the
-# durable safety net; this script is the convenience that keeps you inside it.
+# template version; every stamp is well-formed semver) plus the PR-only bump-on-
+# change gate (scripts/check-version-bump.sh) are the durable safety net; this
+# script is the convenience that keeps you inside it.
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
@@ -140,10 +141,12 @@ for i in ${PACK_NAME[@]+"${!PACK_NAME[@]}"}; do
     die "pack '$comp' is at $pv, ahead of the new release $NEW — refusing to move it backward"
   fi
   write_json "${PACK_PLUGIN[$i]}" ".version = \"$NEW\""
-  # SKILL.md frontmatter: `version: X` -> `version: NEW` (frontmatter only).
+  # SKILL.md frontmatter: first `version: X` -> `version: NEW`. awk (not the
+  # GNU-only `sed 0,/re/`) so it runs the same on BSD/macOS and Linux.
   sk="${PACK_SKILL[$i]}"
   grep -q "^version:[[:space:]]" "$sk" || die "pack '$comp' SKILL.md has no 'version:' frontmatter"
-  tmp="$(mktemp)"; sed "0,/^version:[[:space:]].*/s//version: $NEW/" "$sk" >"$tmp" && mv "$tmp" "$sk"
+  tmp="$(mktemp)"
+  awk -v ver="$NEW" '!d && /^version:[[:space:]]/ { print "version: " ver; d=1; next } { print }' "$sk" >"$tmp" && mv "$tmp" "$sk"
   # Family doc: the FIRST `**Version:** X` line after the `## <comp>` heading.
   doc="${PACK_DOC[$i]}"
   grep -Eq "^#{2,3} $comp\$" "$doc" || die "pack '$comp': no '## $comp' section in $doc"

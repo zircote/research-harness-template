@@ -131,8 +131,9 @@ This is realized by:
   diffs against the base and fails when a changed pack or core skill did not move
   its own version, or when any change left the `harness.config.json` release
   pointer unmoved — naming the offending component and the fix. A change that
-  warrants no release uses `[skip-version-check]` in the commit (waiving the
-  pointer rule only; a changed pack or skill must always bump). Ontology packs are
+  warrants no release uses `[skip-version-check]` on its own line in a commit
+  (waiving the pointer rule only; a changed pack or skill must always bump).
+  Ontology packs are
   exempt. `gate_versions` checks versions are *consistent*; this gate checks they
   were *moved when required* — together they close the gap the old, fictional
   drift gate only pretended to.

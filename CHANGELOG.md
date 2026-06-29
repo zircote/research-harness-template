@@ -28,8 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A **bump-on-change CI gate** (`scripts/check-version-bump.sh`, wired as the
   PR-only `version-bump` job): a changed pack or core skill must move its own
   version, and any change must move the `harness.config.json` release pointer, or
-  CI fails naming the un-bumped component. `[skip-version-check]` in the commit
-  waives the pointer rule for a change that warrants no release.
+  CI fails naming the un-bumped component. `[skip-version-check]` on its own line
+  in a commit waives the pointer rule for a change that warrants no release.
 
 ### Changed
 

@@ -15,9 +15,9 @@
 # Independently-versioned ontology packs (packs/ontologies/**, schemas/ontologies/**)
 # are exempt — they carry their own version on their own cadence.
 #
-# Escape hatch: put `[skip-version-check]` in the head commit message for a change
-# that genuinely warrants no release (it bypasses the pointer rule only; a changed
-# pack/skill must still bump, since that is never a no-op).
+# Escape hatch: put `[skip-version-check]` on its OWN LINE in a PR commit message
+# for a change that genuinely warrants no release (it bypasses the pointer rule
+# only; a changed pack/skill must still bump, since that is never a no-op).
 #
 # Usage:
 #   check-version-bump.sh [BASE_REF]      # BASE_REF default: $BASE_REF env, else origin/main
@@ -35,11 +35,18 @@ git rev-parse --verify "$BASE" >/dev/null 2>&1 || {
   exit 2
 }
 
-# Escape hatch for the release-pointer rule.
+# Escape hatch for the release-pointer rule. Two things make the match robust:
+#  - Scan the PR commit RANGE, not HEAD: on a pull_request CI checks out the merge
+#    commit, so HEAD's message is the auto-generated "Merge ..."; the contributor's
+#    marker lives in BASE..HEAD (the PR's own commits), found in CI and locally.
+#  - Require the marker ALONE on a line (grep -x), so merely *mentioning*
+#    `[skip-version-check]` in prose (a commit that documents the hatch) does not
+#    trip it — only an intentional standalone marker line does.
 SKIP_POINTER=0
-if git log -1 --format=%B HEAD 2>/dev/null | grep -qF '[skip-version-check]'; then
+if git log "$BASE..HEAD" --format=%B 2>/dev/null \
+     | grep -qxE '[[:space:]]*\[skip-version-check\][[:space:]]*'; then
   SKIP_POINTER=1
-  echo "check-version-bump: '[skip-version-check]' in head commit — release-pointer rule waived"
+  echo "check-version-bump: '[skip-version-check]' marker line in a PR commit — release-pointer rule waived"
 fi
 
 changed="$(git diff --name-only "$BASE...HEAD")"

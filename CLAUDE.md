@@ -140,7 +140,8 @@ must merge cleanly.
   (`scripts/check-version-bump.sh`) enforces **bump-on-change** — a changed
   pack/core-skill must move its own version and any change must move the release
   pointer, else CI fails naming the un-bumped component. A change that warrants no
-  release puts `[skip-version-check]` in the commit (waives the pointer rule only).
+  release puts `[skip-version-check]` on its own line in a commit (waives the
+  pointer rule only).
   CHANGELOG
   follows Keep a Changelog: a new `## [X.Y.Z] - YYYY-MM-DD` header is inserted under
   `## [Unreleased]` (the script does this); leave prior dated sections and CHANGELOG
