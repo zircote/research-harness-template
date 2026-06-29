@@ -109,6 +109,26 @@ echo "  template : $CFG .version, $MARKET .metadata.version, $CHANGELOG"
 for i in ${PACK_NAME[@]+"${!PACK_NAME[@]}"}; do
   echo "  pack     : ${PACK_NAME[$i]} (${PACK_FAMILY[$i]}) — skills/$(basename "$(dirname "${PACK_SKILL[$i]}")")/SKILL.md, plugin.json, ${PACK_DOC[$i]} row"
 done
+
+# --- pre-flight: validate EVERY mutation BEFORE writing ANY file -------------
+# Transactional: a malformed input (missing CHANGELOG anchor, a pack with no
+# version stamp or doc row, a pack ahead of the release) must fail here, with the
+# tree untouched — never half-bumped. Running before the --check exit also lets a
+# dry run surface these failures.
+grep -q "^## \[$NEW\]" "$CHANGELOG" || grep -q '^## \[Unreleased\]$' "$CHANGELOG" \
+  || die "CHANGELOG has no '## [Unreleased]' anchor to insert '[$NEW]' under (nor an existing [$NEW] section)"
+for i in ${PACK_NAME[@]+"${!PACK_NAME[@]}"}; do
+  comp="${PACK_NAME[$i]}"; pv="$(jq -r '.version // empty' "${PACK_PLUGIN[$i]}")"
+  echo "$pv" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
+    || die "pack '$comp' ${PACK_PLUGIN[$i]} has no valid semver .version (got '${pv:-MISSING}')"
+  ! semver_gt "$pv" "$NEW" \
+    || die "pack '$comp' is at $pv, ahead of the new release $NEW — refusing to move it backward"
+  grep -q "^version:[[:space:]]" "${PACK_SKILL[$i]}" \
+    || die "pack '$comp' ${PACK_SKILL[$i]} has no 'version:' frontmatter"
+  grep -Eq "^#{2,3} $comp\$" "${PACK_DOC[$i]}" \
+    || die "pack '$comp': no '## $comp' section in ${PACK_DOC[$i]}"
+done
+
 if [ "$CHECK" -eq 1 ]; then echo "bump-version: --check, no files written."; exit 0; fi
 
 # --- apply: template stamps (structural, via jq) ----------------------------
@@ -133,28 +153,25 @@ else
   mv "$tmp" "$CHANGELOG"
 fi
 
-# --- apply: per-pack stamps -------------------------------------------------
+# --- apply: per-pack stamps (all inputs pre-validated above) -----------------
 for i in ${PACK_NAME[@]+"${!PACK_NAME[@]}"}; do
   comp="${PACK_NAME[$i]}"
-  pv="$(jq -r '.version' "${PACK_PLUGIN[$i]}")"
-  if semver_gt "$pv" "$NEW"; then
-    die "pack '$comp' is at $pv, ahead of the new release $NEW — refusing to move it backward"
-  fi
   write_json "${PACK_PLUGIN[$i]}" ".version = \"$NEW\""
   # SKILL.md frontmatter: first `version: X` -> `version: NEW`. awk (not the
   # GNU-only `sed 0,/re/`) so it runs the same on BSD/macOS and Linux.
   sk="${PACK_SKILL[$i]}"
-  grep -q "^version:[[:space:]]" "$sk" || die "pack '$comp' SKILL.md has no 'version:' frontmatter"
   tmp="$(mktemp)"
   awk -v ver="$NEW" '!d && /^version:[[:space:]]/ { print "version: " ver; d=1; next } { print }' "$sk" >"$tmp" && mv "$tmp" "$sk"
-  # Family doc: the FIRST `**Version:** X` line after the `## <comp>` heading.
+  # Family doc: the FIRST `**Version:** X` row inside comp's section. Reset `insec`
+  # on EVERY heading (set iff it is the comp heading) so the rewrite is bounded to
+  # comp's section — otherwise a comp section lacking a **Version:** row would bleed
+  # the substitution into a later pack's row.
   doc="${PACK_DOC[$i]}"
-  grep -Eq "^#{2,3} $comp\$" "$doc" || die "pack '$comp': no '## $comp' section in $doc"
   tmp="$(mktemp)"
   awk -v comp="$comp" -v ver="$NEW" '
-    $0 ~ "^#{2,3} " comp "$" { insec=1 }
+    /^#{1,6} / { insec = ($0 ~ "^#{2,3} " comp "$") }
     insec && /^\*\*Version:\*\*/ && !done {
-      sub(/\*\*Version:\*\* [0-9]+\.[0-9]+\.[0-9]+/, "**Version:** " ver); done=1; insec=0
+      sub(/\*\*Version:\*\* [0-9]+\.[0-9]+\.[0-9]+/, "**Version:** " ver); done=1
     }
     { print }
   ' "$doc" >"$tmp" || die "awk failed on $doc"
@@ -169,6 +186,12 @@ grep -q "^## \[$NEW\]" "$CHANGELOG" || { echo "VERIFY: CHANGELOG missing [$NEW]"
 for i in ${PACK_NAME[@]+"${!PACK_NAME[@]}"}; do
   [ "$(jq -r '.version' "${PACK_PLUGIN[$i]}")" = "$NEW" ] || { echo "VERIFY: ${PACK_PLUGIN[$i]} not updated" >&2; fail=1; }
   grep -q "^version: $NEW\$" "${PACK_SKILL[$i]}" || { echo "VERIFY: ${PACK_SKILL[$i]} not updated" >&2; fail=1; }
+  # The family-doc row is a mutation too — verify comp's **Version:** now reads NEW.
+  docv="$(awk -v comp="${PACK_NAME[$i]}" '
+    /^#{1,6} / { insec = ($0 ~ "^#{2,3} " comp "$") }
+    insec && /^\*\*Version:\*\*/ { sub(/.*\*\*Version:\*\* /, ""); sub(/[^0-9.].*$/, ""); print; exit }
+  ' "${PACK_DOC[$i]}")"
+  [ "$docv" = "$NEW" ] || { echo "VERIFY: ${PACK_DOC[$i]} ${PACK_NAME[$i]} row not updated (got '${docv:-MISSING}')" >&2; fail=1; }
 done
 [ "$fail" -eq 0 ] || die "self-verification failed — inspect the files above"
 

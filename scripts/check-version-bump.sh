@@ -35,6 +35,13 @@ git rev-parse --verify "$BASE" >/dev/null 2>&1 || {
   exit 2
 }
 
+# Anchor everything at the MERGE-BASE, not the base tip. The change set and the
+# base-side version reads must share one anchor: if origin/main advanced past this
+# branch point AND a pack was independently bumped on main, reading versions at the
+# base *tip* would compare against that newer value and could false-pass an
+# un-bumped change. The merge-base is the branch point — the honest "before".
+BASE="$(git merge-base "$BASE" HEAD 2>/dev/null || echo "$BASE")"
+
 # Escape hatch for the release-pointer rule. Two things make the match robust:
 #  - Scan the PR commit RANGE, not HEAD: on a pull_request CI checks out the merge
 #    commit, so HEAD's message is the auto-generated "Merge ..."; the contributor's
