@@ -322,7 +322,7 @@ That turns prior research into a substrate, not an archive:
   lets you reason across topics interactively rather than one at a time.
 - **Link it.** A finding's `relationships[]` and EntityReferences target other
   findings *by URN* — including findings in other topics — so a new topic's claim
-  can `derive-from` or `relates-to` evidence already gathered, and the
+  can `derived-from` or `relates-to` evidence already gathered, and the
   [knowledge graph](../reference/core-skills.md) traverses those edges across
   topic boundaries.
 - **Trust it.** A reused finding carries its full provenance with it — citations,
