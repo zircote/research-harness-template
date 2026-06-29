@@ -249,6 +249,26 @@
       "name": "ectd",
       "enabled": false,
       "source": "bundled"
+    },
+    {
+      "name": "architecture-spec",
+      "enabled": false,
+      "source": "bundled"
+    },
+    {
+      "name": "kiro-spec",
+      "enabled": false,
+      "source": "bundled"
+    },
+    {
+      "name": "feature-spec",
+      "enabled": false,
+      "source": "bundled"
+    },
+    {
+      "name": "ai-spec",
+      "enabled": false,
+      "source": "bundled"
     }
   ],
   "ontologies": [
