@@ -60,6 +60,10 @@ _tasks:
   # site symlinks so the Astro content collection reaches docs/ and reports/.
   - "rm -rf docs/reports && ln -s ../reports docs/reports"
   - "rm -rf src/content/docs && ln -s ../../docs src/content/docs"
+  # Regenerate the derived ontology catalog (.claude/enabled-packs.json) on copy AND update,
+  # so an update never leaves it stale — a stale catalog missing an `extends` target makes the
+  # fail-closed resolver mark the whole bound corpus invalid (issue #200).
+  - "bash scripts/sync-packs.sh"
 
 _message_after_copy: |
   Your research harness is ready.
