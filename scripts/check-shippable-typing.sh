@@ -51,12 +51,16 @@ while IFS= read -r f; do
   id=$(jq -r '."@id" // empty' "$f" 2>/dev/null)
   # Block if the map has no record, the record is invalid, or it resolved to no type
   # (basis untyped/unresolved). Same predicate reconcile-session.sh uses for untyped_shippable.
-  bad=$(jq -r --arg id "$id" '
+  # Exit-check the lookup: with no `set -e`, a jq failure here would yield "" and silently
+  # NOT block — fail closed by treating any lookup error itself as a blocker.
+  if ! bad=$(jq -r --arg id "$id" '
     (map(select(.finding_id==$id)) | first) as $r
     | if   $r == null         then "missing"
       elif ($r.valid != true) then "invalid"
       elif ($r.basis=="untyped" or $r.basis=="unresolved") then $r.basis
-      else "" end' "$MAP")
+      else "" end' "$MAP" 2>/dev/null); then
+    bad="map-lookup-error"
+  fi
   [ -n "$bad" ] && blockers="${blockers}  ${id} (${bad})"$'\n'
 done < <( { find "$FDIR" -maxdepth 1 -type f -name '*.json' ! -name '.*' ! -name '*.tmp'
             find "$RD" -maxdepth 1 -type f -name 'finding-*.json' ! -name '.*' ! -name '*.tmp'; } 2>/dev/null | sort -u )

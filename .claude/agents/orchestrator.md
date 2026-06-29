@@ -609,20 +609,31 @@ Append to the progress file:
    ```
 
    **If the gate PASSES:** clear any stale sentinel, reconcile the cross-topic spine
-   (build + fail-closed validate), record its status, and project that into the
-   checkpoint:
+   (build, then validate — a non-conformance OR a validation error is a soft NOTE for
+   this topic, not a block), record its status, and project that into the checkpoint:
 
    ```bash
    rm -f "$REPORTS_DIR/.synthesis-withheld"
    bash scripts/build-concordance.sh                           # reports/ -> reports/concordance.json (all topics)
-   if bash scripts/validate-concordance.sh reports/concordance.json; then cval=true; else cval=false; fi
-   jq -n --argjson valid "$cval" \
+   # Distinguish validate-concordance's outcomes: exit 0 = conformant; exit 1 = it RAN and
+   # found a violation; exit >1 = it could NOT validate (missing catalog/config, jq/yq error).
+   # Conflating "non-conformant" with "couldn't validate" would record a tooling failure as a
+   # clean valid:false — keep them distinct in the status and the operator NOTE.
+   if bash scripts/validate-concordance.sh reports/concordance.json; then vrc=0; else vrc=$?; fi
+   if   [ "$vrc" -eq 0 ]; then cval=true;  cstate=conformant
+   elif [ "$vrc" -eq 1 ]; then cval=false; cstate=non-conformant
+   else                        cval=false; cstate=unvalidated
+   fi
+   jq -n --argjson valid "$cval" --arg state "$cstate" \
          --argjson nodes "$(jq '.nodes|length' reports/concordance.json)" \
          --argjson edges "$(jq '.edges|length' reports/concordance.json)" \
          --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-     '{built:true, valid:$valid, nodes:$nodes, edges:$edges, validated_at:$at}' \
+     '{built:true, valid:$valid, state:$state, nodes:$nodes, edges:$edges, validated_at:$at}' \
      > reports/concordance-status.json
-   [ "$cval" = true ] || echo "NOTE: concordance non-conformant — /ontology-review --enrich the named topic(s) and rebuild. Per-topic synthesis is NOT blocked by this (per-topic isolation)."
+   case "$cstate" in
+     non-conformant) echo "NOTE: concordance non-conformant — /ontology-review --enrich the named topic(s) and rebuild. Per-topic synthesis is NOT blocked (per-topic isolation)." ;;
+     unvalidated)    echo "NOTE: concordance could NOT be validated (validate-concordance exit $vrc — catalog/config/toolchain). Investigate; per-topic synthesis is NOT blocked." ;;
+   esac
    bash scripts/reconcile-session.sh "$REPORTS_DIR" >/dev/null  # projects the concordance block into state.json
    ```
 
