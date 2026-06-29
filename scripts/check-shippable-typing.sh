@@ -63,7 +63,9 @@ while IFS= read -r f; do
       else "" end' "$MAP" 2>/dev/null); then
     bad="map-lookup-error"
   fi
-  [ -n "$bad" ] && blockers="${blockers}  ${id} (${bad})"$'\n'
+  # Identify the blocker by @id, or by file path when the finding has no @id (the empty-id
+  # case the operator most needs to locate) — never print a bare "  (missing)".
+  [ -n "$bad" ] && blockers="${blockers}  ${id:-$f} (${bad})"$'\n'
 done < <( { find "$FDIR" -maxdepth 1 -type f -name '*.json' ! -name '.*' ! -name '*.tmp'
             find "$RD" -maxdepth 1 -type f -name 'finding-*.json' ! -name '.*' ! -name '*.tmp'; } 2>/dev/null | sort -u )
 # Discovery scans BOTH the canonical findings/ subdir AND a flat reports/<topic>/finding-*.json,

@@ -129,7 +129,10 @@ if [ -f "$CONC" ]; then
       [ -z "$key" ] && continue
       if [ "${key#noid:}" != "$key" ]; then echo x; continue; fi   # no-@id finding -> gate blocks -> untyped
       if [ "$mapok" != true ]; then echo x; continue; fi
-      jq -e --arg id "$key" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved")' "$RD/ontology-map.json" >/dev/null 2>&1 && echo x
+      jq -e --arg id "$key" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved")' "$RD/ontology-map.json" >/dev/null 2>&1; jrc=$?
+      # exit 0 = untyped (count); 1 = typed (skip); >1 = jq error -> fail closed, count as untyped
+      # (a transient read/partial-write error must not silently undercount vs the gate).
+      if [ "$jrc" -eq 0 ] || [ "$jrc" -gt 1 ]; then echo x; fi
     done | grep -c x
   )
   [ -z "$uns" ] && uns=0

@@ -2178,6 +2178,18 @@ JSON
     bad "exit-3 path missing the /ontology-review unblock footer (rc=$rc3)"
   fi
 
+  # 24j. A shippable finding with NO @id blocks AND names the FILE in the blocker line (not a
+  #      bare empty id), so the operator can locate exactly the file to fix.
+  echo '[]' > "$T/reports/edu/ontology-map.json"
+  rm -f "$T/reports/edu/findings/f1.json"
+  echo '{"title":"no id","extensions":{"harness":{"verification":{"verdict":"survived"}}}}' > "$T/reports/edu/findings/noid.json"
+  mj=$(scripts/check-shippable-typing.sh "$T/reports/edu" 2>&1); rcj=$?
+  if [ "$rcj" = 1 ] && printf '%s' "$mj" | grep -q "noid.json"; then
+    ok "a no-@id shippable finding blocks and names the file (not a bare empty id)"
+  else
+    bad "no-@id blocker did not name the file (rc=$rcj)"
+  fi
+
   rm -rf "$T"
 }
 
