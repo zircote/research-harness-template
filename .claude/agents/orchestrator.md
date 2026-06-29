@@ -602,7 +602,7 @@ Append to the progress file:
    : > "$REPORTS_DIR/.synthesis-withheld"
    {
      echo "## $(date -u +%Y-%m-%dT%H:%M:%SZ) — Synthesis WITHHELD (ontology-completeness gate)"
-     echo "- A shippable finding has no valid ontology type (see the gate output above)."
+     echo "- The ontology-completeness gate did not pass — see the gate output above (an untyped/unresolved shippable finding, a missing ontology-map, or an ontology-review error)."
      echo "- Unblock: \`/ontology-review --topic $TOPIC_SLUG --enrich\` then \`/resume --topic $TOPIC_SLUG\`."
    } >> "$REPORTS_DIR/research-progress.md"
    scripts/run-lock.sh release "$REPORTS_DIR"   # a stopped run frees the topic

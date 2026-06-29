@@ -2,7 +2,8 @@
 # check-shippable-typing.sh — fail-closed pre-synthesis gate (ADR-0011). A finding that
 # SHIPS (extensions.harness.verification.verdict in survived|weakened) MUST resolve to a
 # valid ontology type. Untyped/unresolved/invalid/missing-from-map shippable findings BLOCK
-# synthesis (exit 1). Falsified/quarantined/inconclusive never block. Deterministic, read-only.
+# synthesis (exit 1); an UNPARSEABLE finding file also blocks (its verdict/type are
+# unknowable — fail closed). Falsified/quarantined/inconclusive never block. Read-only.
 #
 # This covers the gap validate-concordance.sh structurally cannot see: a concept node for an
 # untyped finding gets entityType:null (build-concordance.sh), and validate-concordance.sh
@@ -24,9 +25,17 @@ FDIR="$RD/findings"; MAP="$RD/ontology-map.json"
 blockers=""
 while IFS= read -r f; do
   [ -z "$f" ] && continue
+  # Fail closed on a finding we cannot parse: its verdict and type are unknowable, so we
+  # cannot prove it is safe to ship — an unreadable shippable-or-unknown finding BLOCKS
+  # rather than being silently skipped. (-e makes jq exit non-zero on a parse error; a
+  # valid finding with no verdict yields "" and exit 0, so it is correctly not a blocker.)
+  if ! verdict=$(jq -er '.extensions.harness.verification.verdict // ""' "$f" 2>/dev/null); then
+    blockers="${blockers}  ${f} (unreadable JSON)"$'\n'
+    continue
+  fi
   # Only findings that SHIP gate. Falsified/quarantined/inconclusive (and any other verdict)
   # are excluded from synthesis already, so their typing never blocks.
-  case "$(jq -r '.extensions.harness.verification.verdict // empty' "$f" 2>/dev/null)" in
+  case "$verdict" in
     survived|weakened) : ;;
     *) continue ;;
   esac

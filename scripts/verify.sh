@@ -2114,6 +2114,19 @@ JSON
     bad "orchestrator does not wire the typing gate + spine before synthesis (gate=$lg build=$lb val=$lv synth=$lsynth)"
   fi
 
+  # 24e. An UNPARSEABLE finding fails closed (blocks), not silently skipped — its
+  #      verdict/type are unknowable. f1 is set falsified (skipped) so the corrupt file is
+  #      the only variable under test; the map from 24a still exists so the gate reaches the loop.
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"falsified","extensions":{"harness":{"verification":{"verdict":"falsified"}}}}
+JSON
+  printf '{ not valid json ' > "$T/reports/edu/findings/corrupt.json"
+  if ! scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; then
+    ok "an unparseable shippable-or-unknown finding fails closed (blocks), not silently skipped"
+  else
+    bad "an unparseable finding did not block — fail-open hole in the fail-closed gate"
+  fi
+
   rm -rf "$T"
 }
 
