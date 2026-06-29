@@ -104,7 +104,7 @@
           },
           "basis": {
             "type": "string",
-            "description": "How the finding's type was resolved: declared | resolved | discovery | untyped | unresolved."
+            "description": "How the finding's type was resolved, as recorded by scripts/resolve-ontology.sh: declared | resolved | discovery | untyped | unresolved | ambiguous."
           }
         }
       }
