@@ -27,20 +27,13 @@ on:
       - "patches/**"
       - "scripts/check-pack-docs.py"
       - ".github/workflows/docs.yml"
+  # NOT path-filtered: `build` is a REQUIRED status check on main. A required check
+  # that is path-filtered never reports on a PR that misses the filter — it sits
+  # "Expected — waiting for status" and blocks the merge forever. So build runs on
+  # every PR to main (the Astro build is cheap and is a meaningful regression gate
+  # regardless of what changed). The deploy notification below stays push+path-gated.
   pull_request:
     branches: [main]
-    paths:
-      - "docs/**"
-      - "reports/**"
-      - "src/**"
-      - "packs/**"
-      - "astro.config.mjs"
-      - "harness.config.json"
-      - "package.json"
-      - "package-lock.json"
-      - "patches/**"
-      - "scripts/check-pack-docs.py"
-      - ".github/workflows/docs.yml"
 
 permissions:
   contents: read
