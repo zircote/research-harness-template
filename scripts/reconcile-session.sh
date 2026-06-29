@@ -99,6 +99,54 @@ if [ "$partial_count" -eq 0 ]; then nptw=true; else nptw=false; fi
 state=$(jq -S --argjson nptw "$nptw" \
   '.checks += [{check:"no_partial_writes", passed:$nptw}] | .checks |= sort_by(.check)' <<<"$state")
 
+# Concordance status (ADR-0011): project the cross-topic spine's status into the
+# checkpoint WHEN it has been built. The spine + its status sidecar live one level up
+# from this topic dir (reports/concordance{,-status}.json) — a deliberate, existence-
+# guarded exception to "purely from reports/<topic>". Absent concordance.json -> no
+# concordance key (keeps temp-dir fixtures byte-identical). Deterministic: no wall-clock
+# here; validated_at lives only in the sidecar. untyped_shippable mirrors the ship gate
+# (scripts/check-shippable-typing.sh): count UNIQUE shippable (survived|weakened) findings
+# whose ontology-map record is missing/invalid/untyped/unresolved. Dedupe by @id so a finding
+# present in both the canonical findings/ path and a flat finding-*.json counts once; a
+# missing/unparseable map means EVERY shippable finding is untyped (fail-closed, mirroring the
+# gate's exit 3), not zero.
+CONC="$RD/../concordance.json"; CSTAT="$RD/../concordance-status.json"
+if [ -f "$CONC" ]; then
+  mapok=false
+  [ -f "$RD/ontology-map.json" ] && jq -e 'type=="array"' "$RD/ontology-map.json" >/dev/null 2>&1 && mapok=true
+  uns=$(
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      # An UNPARSEABLE finding is blocked by the gate (its verdict/type are unknowable); count it
+      # here too (keyed by path) so the projection never reads 0 while synthesis is withheld.
+      if ! v=$(jq -er '.extensions.harness.verification.verdict // ""' "$f" 2>/dev/null); then
+        printf '%s\n' "unreadable:$f"; continue
+      fi
+      [ "$v" = survived ] || [ "$v" = weakened ] || continue
+      fid=$(jq -r '."@id" // empty' "$f" 2>/dev/null)
+      # A shippable finding with NO @id is blocked by the gate (its empty-id map lookup resolves to
+      # "missing"); key it by file path so it is counted here too, never dropped or deduped away.
+      [ -z "$fid" ] && fid="noid:$f"
+      printf '%s\n' "$fid"
+    done < <(list_findings) | sort -u | while IFS= read -r key; do
+      [ -z "$key" ] && continue
+      # no-@id OR unparseable finding -> gate blocks it -> untyped (count, do not look up the map)
+      if [ "${key#noid:}" != "$key" ] || [ "${key#unreadable:}" != "$key" ]; then echo x; continue; fi
+      if [ "$mapok" != true ]; then echo x; continue; fi
+      jq -e --arg id "$key" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved")' "$RD/ontology-map.json" >/dev/null 2>&1; jrc=$?
+      # exit 0 = untyped (count); 1 = typed (skip); >1 = jq error -> fail closed, count as untyped
+      # (a transient read/partial-write error must not silently undercount vs the gate).
+      if [ "$jrc" -eq 0 ] || [ "$jrc" -gt 1 ]; then echo x; fi
+    done | grep -c x
+  )
+  [ -z "$uns" ] && uns=0
+  cvalid=false; [ -f "$CSTAT" ] && cvalid=$(jq -r 'if .valid==true then true else false end' "$CSTAT" 2>/dev/null || echo false)
+  state=$(jq -S --argjson n "$(jq '.nodes|length' "$CONC" 2>/dev/null || echo 0)" \
+               --argjson e "$(jq '.edges|length' "$CONC" 2>/dev/null || echo 0)" \
+               --argjson v "$cvalid" --argjson u "$uns" \
+    '.concordance = {built:true, valid:$v, nodes:$n, edges:$e, untyped_shippable:$u}' <<<"$state")
+fi
+
 # Write the checkpoint atomically. A failed write/rename must NOT fall through to a
 # plan computed from a stale/missing state.json — abort (callers treat non-zero as
 # "cannot determine remaining work — stop", never "everything done").

@@ -38,3 +38,9 @@ docs/proposals/mif-entity-type-subsumption.md
 *.fix.json
 *.vb.json
 reports/**/.gate_stderr*
+# ADR-0011 derived run-state: non-deterministic (per-run wall-clock) status sidecar
+# and the transient pre-synthesis withhold sentinel. Both are written into reports/
+# at run time; committing them would dirty the tree every run and block copier update.
+# (concordance.json itself stays tracked — it is deterministic and on the allowlist.)
+reports/concordance-status.json
+reports/**/.synthesis-withheld

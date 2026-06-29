@@ -2046,6 +2046,179 @@ gate_m23() {
   fi
 }
 
+gate_m24() {
+  info "Milestone 24 — fail-closed ontology-completeness gate + auto-reconciled spine (ADR-0011)"
+  local T; T="$(mktemp -d)"
+  mkdir -p "$T/reports/edu/findings"
+  # A shippable (survived) but UNTYPED finding + its untyped map record.
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"Untyped survivor","extensions":{"harness":{"dimension":"d","verification":{"verdict":"survived","verdict_basis":"x"}}}}
+JSON
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":null,"resolved_ontology":null,"basis":"untyped","valid":true}]' > "$T/reports/edu/ontology-map.json"
+
+  # 24a. An untyped shippable finding BLOCKS synthesis (exit 1) and points to /ontology-review.
+  local msg rc
+  msg=$(scripts/check-shippable-typing.sh "$T/reports/edu" 2>&1); rc=$?
+  if [ "$rc" = 1 ] && printf '%s' "$msg" | grep -q "/ontology-review"; then
+    ok "an untyped shippable finding blocks synthesis (fail closed) and points to /ontology-review --enrich"
+  else
+    bad "untyped shippable finding did not block (rc=$rc)"
+  fi
+
+  # 24b. The SAME finding FALSIFIED does NOT block (only survived|weakened gate).
+  jq '.extensions.harness.verification.verdict="falsified"' "$T/reports/edu/findings/f1.json" > "$T/f.tmp" && mv "$T/f.tmp" "$T/reports/edu/findings/f1.json"
+  if scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; then
+    ok "a falsified untyped finding does not block synthesis (only shippable verdicts gate)"
+  else
+    bad "a falsified finding wrongly blocked synthesis"
+  fi
+
+  # 24c. A fully-typed shippable corpus PASSES the gate, and the spine builds + conforms
+  #      (reuse the gate_m13 catalog/cfg fixture shape: edu->edu-fixture, a 'title' belongs_to a 'program').
+  local T2; T2="$(mktemp -d)"
+  cat > "$T2/cat.json" <<JSON
+{"ontologies":[
+ {"id":"mif-generic","version":"1.0.0","source":"schemas/ontologies/mif-generic/1.0.0.yaml","core":true},
+ {"id":"mif-base","version":"1.0.0","source":"schemas/ontologies/mif-base/1.0.0.yaml","core":true},
+ {"id":"shared-traits","version":"1.0.0","source":"schemas/ontologies/shared-traits/1.0.0.yaml","core":true},
+ {"id":"edu-fixture","version":"0.1.0","source":"evals/fixtures/ontology/edu-fixture.ontology.yaml","core":false}
+]}
+JSON
+  echo '{"topics":[{"id":"edu","namespace":"x/edu","ontologies":["edu-fixture"]}]}' > "$T2/cfg.json"
+  mkdir -p "$T2/reports/edu/findings"
+  cat > "$T2/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"Algebra textbook","entity":{"name":"Algebra I","entity_type":"title"},"entities":[{"@type":"EntityReference","entity":{"@id":"urn:mif:entity:prog:math"},"name":"Math","entityType":"program"}],"relationships":[{"type":"belongs_to","target":"urn:mif:entity:prog:math","strength":1}],"extensions":{"harness":{"dimension":"d","verification":{"verdict":"survived","verdict_basis":"x"}}}}
+JSON
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"edu-fixture@0.1.0","basis":"declared","valid":true}]' > "$T2/reports/edu/ontology-map.json"
+  scripts/build-concordance.sh "$T2/reports" "$T2/concordance.json" >/dev/null 2>&1
+  if scripts/check-shippable-typing.sh "$T2/reports/edu" >/dev/null 2>&1 \
+     && [ -f "$T2/concordance.json" ] && ajv_plain schemas/concordance.schema.json "$T2/concordance.json" \
+     && scripts/validate-concordance.sh "$T2/concordance.json" --config "$T2/cfg.json" --catalog "$T2/cat.json" >/dev/null 2>&1; then
+    ok "a fully-typed shippable corpus passes the gate and its concordance builds + conforms"
+  else
+    bad "typed corpus path failed (gate/build/validate-concordance)"
+  fi
+  rm -rf "$T2"
+
+  # 24d. Wiring (static): orchestrator Phase 4 runs the typing gate + builds/validates the
+  #      spine BEFORE spawning the synthesizer (the gate is useless if synthesis can bypass it).
+  local lg lb lv lsynth
+  lg=$(grep -n 'check-shippable-typing.sh' .claude/agents/orchestrator.md | head -1 | cut -d: -f1)
+  lb=$(grep -n 'build-concordance.sh' .claude/agents/orchestrator.md | head -1 | cut -d: -f1)
+  lv=$(grep -n 'validate-concordance.sh' .claude/agents/orchestrator.md | head -1 | cut -d: -f1)
+  lsynth=$(grep -n 'subagent_type: "report-synthesizer"' .claude/agents/orchestrator.md | head -1 | cut -d: -f1)
+  if [ -n "$lg" ] && [ -n "$lb" ] && [ -n "$lv" ] && [ -n "$lsynth" ] \
+     && [ "$lg" -lt "$lsynth" ] && [ "$lb" -lt "$lsynth" ] && [ "$lv" -lt "$lsynth" ]; then
+    ok "orchestrator Phase 4 runs the typing gate + concordance build/validate before spawning the synthesizer"
+  else
+    bad "orchestrator does not wire the typing gate + spine before synthesis (gate=$lg build=$lb val=$lv synth=$lsynth)"
+  fi
+
+  # 24e. An UNPARSEABLE finding fails closed (blocks), not silently skipped — its
+  #      verdict/type are unknowable. f1 is set falsified (skipped) so the corrupt file is
+  #      the only variable under test; the map from 24a still exists so the gate reaches the loop.
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"falsified","extensions":{"harness":{"verification":{"verdict":"falsified"}}}}
+JSON
+  printf '{ not valid json ' > "$T/reports/edu/findings/corrupt.json"
+  if ! scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; then
+    ok "an unparseable shippable-or-unknown finding fails closed (blocks), not silently skipped"
+  else
+    bad "an unparseable finding did not block — fail-open hole in the fail-closed gate"
+  fi
+
+  # 24f. A present-but-UNPARSEABLE ontology-map.json fails closed (cannot prove typing), not
+  #      vacuously pass. Without the map-parse guard, every per-finding lookup errors to "" so a
+  #      shippable survivor would PASS — the exact vacuous-pass class this gate exists to refuse.
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"survivor","extensions":{"harness":{"verification":{"verdict":"survived"}}}}
+JSON
+  rm -f "$T/reports/edu/findings/corrupt.json"
+  printf '[ { not valid json ' > "$T/reports/edu/ontology-map.json"
+  if ! scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; then
+    ok "a present-but-unparseable ontology-map fails closed (cannot prove typing), not vacuously pass"
+  else
+    bad "a corrupt ontology-map passed the gate vacuously — fail-open hole in the fail-closed gate"
+  fi
+
+  # 24g. Discovery scans the flat reports/<topic>/finding-*.json layout too (matching
+  #      reconcile-session.sh's list_findings) — a flat untyped survivor is gated, not bypassed.
+  rm -f "$T/reports/edu/findings/f1.json"
+  echo '[{"finding_id":"urn:mif:concept:x/edu:flat","entity_type":null,"resolved_ontology":null,"basis":"untyped","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  cat > "$T/reports/edu/finding-flat.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:flat","title":"flat untyped survivor","extensions":{"harness":{"verification":{"verdict":"survived"}}}}
+JSON
+  if ! scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; then
+    ok "a flat reports/<topic>/finding-*.json is gated too (union discovery; cannot bypass)"
+  else
+    bad "a flat finding-*.json bypassed the typing gate (discovery divergence from reconcile)"
+  fi
+  rm -f "$T/reports/edu/finding-flat.json"
+
+  # 24h. A valid-JSON but wrong-SHAPE ontology-map (not a record array) fails closed too —
+  #      a `type=="array"` guard, not just a parse check, since a non-array errors every lookup.
+  echo '{"not":"an array"}' > "$T/reports/edu/ontology-map.json"
+  cat > "$T/reports/edu/findings/f1.json" <<'JSON'
+{"@id":"urn:mif:concept:x/edu:f1","title":"survivor","extensions":{"harness":{"verification":{"verdict":"survived"}}}}
+JSON
+  scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; rc=$?
+  if [ "$rc" = 3 ]; then
+    ok "a wrong-shape (non-array) ontology-map fails closed (exit 3), not vacuously pass"
+  else
+    bad "a wrong-shape ontology-map did not fail closed (rc=$rc)"
+  fi
+
+  # 24i. The exit-3 (unreadable map) path prints the SAME /ontology-review unblock footer as
+  #      the exit-1 blocker — the operator needs the remediation most when the map can't be read.
+  rm -f "$T/reports/edu/ontology-map.json"
+  m3=$(scripts/check-shippable-typing.sh "$T/reports/edu" 2>&1); rc3=$?
+  if [ "$rc3" = 3 ] && printf '%s' "$m3" | grep -q "/ontology-review"; then
+    ok "the exit-3 (unreadable map) path names the /ontology-review unblock footer"
+  else
+    bad "exit-3 path missing the /ontology-review unblock footer (rc=$rc3)"
+  fi
+
+  # 24j. A shippable finding with NO @id blocks AND names the FILE in the blocker line (not a
+  #      bare empty id), so the operator can locate exactly the file to fix.
+  echo '[]' > "$T/reports/edu/ontology-map.json"
+  rm -f "$T/reports/edu/findings/f1.json"
+  echo '{"title":"no id","extensions":{"harness":{"verification":{"verdict":"survived"}}}}' > "$T/reports/edu/findings/noid.json"
+  mj=$(scripts/check-shippable-typing.sh "$T/reports/edu" 2>&1); rcj=$?
+  if [ "$rcj" = 1 ] && printf '%s' "$mj" | grep -q "noid.json"; then
+    ok "a no-@id shippable finding blocks and names the file (not a bare empty id)"
+  else
+    bad "no-@id blocker did not name the file (rc=$rcj)"
+  fi
+
+  # 24k. A flat-only layout (reports/<topic>/finding-*.json, NO findings/ subdir) is gated, not
+  #      rejected with exit 2 — discovery matches reconcile's list_findings (which needs no findings/).
+  rm -rf "$T/reports/edu/findings"
+  echo '[{"finding_id":"urn:mif:concept:x/edu:flat","entity_type":null,"resolved_ontology":null,"basis":"untyped","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  echo '{"@id":"urn:mif:concept:x/edu:flat","extensions":{"harness":{"verification":{"verdict":"survived"}}}}' > "$T/reports/edu/finding-flat.json"
+  scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; rck=$?
+  if [ "$rck" = 1 ]; then
+    ok "a flat-only layout (no findings/ subdir) is gated (exit 1), not rejected with exit 2"
+  else
+    bad "flat-only layout not gated (rc=$rck; want 1)"
+  fi
+
+  # 24l. reconcile's untyped_shippable mirrors the gate: an UNPARSEABLE finding is counted (the
+  #      gate blocks it), so state.json never reports 0 while synthesis is actually withheld.
+  rm -f "$T/reports/edu/finding-flat.json"
+  mkdir -p "$T/reports/edu/findings"
+  printf '{ not valid json ' > "$T/reports/edu/findings/corrupt.json"
+  echo '[]' > "$T/reports/edu/ontology-map.json"
+  echo '{"@type":"Concordance","nodes":[],"edges":[]}' > "$T/reports/concordance.json"
+  scripts/reconcile-session.sh "$T/reports/edu" >/dev/null 2>&1
+  if [ "$(jq -r '.concordance.untyped_shippable' "$T/reports/edu/state.json" 2>/dev/null)" = "1" ]; then
+    ok "reconcile untyped_shippable counts an unparseable finding (matches the gate's fail-closed block)"
+  else
+    bad "reconcile undercounted an unparseable finding vs the gate"
+  fi
+
+  rm -rf "$T"
+}
+
 gate_versions() {
   info "Version consistency — change-driven model (ADR-0010)"
 
@@ -2095,7 +2268,7 @@ gate_versions() {
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23 gate_versions)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23 gate_m24 gate_versions)
 
 for g in "${GATES[@]}"; do "$g"; done
 
