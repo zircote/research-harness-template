@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-06-29
+
+### Added
+
+- A MIF-branded **social-preview card** (`.github/social-preview.svg` / `.png`)
+  and a README hero banner. The card frames the harness as a MIF-native engine
+  across three pillars — MIF substrate, ontological spine, and a living knowledge
+  graph that grows each session — the last shown as a typed cyan spine accreting
+  amber findings.
+- `scripts/bump-version.sh` — a change-driven version-bump tool. It moves the
+  template release pointer (`harness.config.json`), the marketplace catalog
+  (`.metadata.version`), and inserts the CHANGELOG section, and bumps a pack's
+  stamps (`plugin.json`, its `SKILL.md`, and its family-doc row) only when that
+  pack is named with `--pack`. It self-verifies and supports `--check` (dry run).
+- A **version-consistency gate** in `scripts/verify.sh`: the marketplace catalog
+  version equals the template version, and every skill/plugin stamp is well-formed
+  semver. It does not force uniformity (independent versions stay legal), replacing
+  the previously-claimed (but unenforced) lockstep gate.
+
+### Changed
+
+- **Versioning is now change-driven, not lockstep** (ADR-0010). A pack or skill
+  version bumps only when its own files change; `harness.config.json` is the sole
+  always-bumps release pointer. A release that touches no pack now changes three
+  files instead of ~80, removing the per-release stamp churn and the corruption
+  risk it carried. `CLAUDE.md` is updated to document the new model and tool.
+
 ## [0.4.2] - 2026-06-28
 
 ### Added

@@ -27,3 +27,4 @@ Start a new record from [`template.md`](template.md), numbered sequentially.
 | [0007](0007-report-channel-canonical-blog-mif-exempt.md) | Canonical report channel as L3 source of truth; blog channel MIF-exempt | accepted |
 | [0008](0008-attested-fail-closed-supply-chain.md) | Attested delivery and fail-closed supply-chain verification | accepted |
 | [0009](0009-site-renders-full-instance-corpus.md) | The Astro/Starlight site renders the full instance corpus | accepted |
+| [0010](0010-change-driven-component-versioning.md) | Change-driven component versioning | accepted |

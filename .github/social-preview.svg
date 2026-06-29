@@ -1,0 +1,117 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Research Harness — a MIF-native research engine that grows a living, typed knowledge graph">
+  <title>Research Harness — built on MIF</title>
+  <desc>Dark field. The chevron-M MIF mark and wordmark. Title "Research Harness". Three pillars — MIF substrate, ontological spine, living knowledge graph — beside a knowledge-graph motif: a machine-cyan ontological spine of typed nodes, accreting amber findings left to right, the right edge still forming, demonstrating knowledge that grows each session.</desc>
+  <defs>
+    <linearGradient id="field" x1="0" y1="0" x2="1280" y2="640" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A0D13"/>
+      <stop offset="1" stop-color="#0E121B"/>
+    </linearGradient>
+    <radialGradient id="growGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#34D3E8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#34D3E8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Field -->
+  <rect width="1280" height="640" fill="url(#field)"/>
+  <!-- Faint inset frame -->
+  <rect x="36" y="36" width="1208" height="568" rx="20" fill="none" stroke="#222C3C" stroke-width="2"/>
+
+  <!-- ===== Identity lockup (top-left): chevron-M mark + wordmark ===== -->
+  <g transform="translate(84 66) scale(1.15)" fill="none" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M6 42 L6 6 L24 29" stroke="#34D3E8"/>
+    <path d="M24 29 L42 6 L42 42" stroke="#F5B642"/>
+    <path d="M24 25.6 L27.4 29 L24 32.4 L20.6 29 Z" fill="#E8EEF6" stroke="none"/>
+  </g>
+  <text x="150" y="112" font-family="Menlo, 'SF Mono', 'JetBrains Mono', monospace"
+        font-size="30" font-weight="700" letter-spacing="0.04em" fill="#E8EEF6">MIF</text>
+  <text x="222" y="112" font-family="Menlo, 'SF Mono', 'JetBrains Mono', monospace"
+        font-size="15" fill="#7C8AA0" letter-spacing="0.05em">Modeled Information Format</text>
+
+  <!-- ===== Title block (left column) ===== -->
+  <text x="84" y="214" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="60" font-weight="700" letter-spacing="-0.02em" fill="#E8EEF6">Research Harness</text>
+  <text x="86" y="254" font-family="Menlo, 'SF Mono', 'JetBrains Mono', monospace"
+        font-size="19" fill="#AEBCCF" letter-spacing="0.01em">A clonable, MIF-native research engine.</text>
+
+  <!-- ===== Three pillars ===== -->
+  <!-- 1 · MIF substrate (machine-cyan square = the typed wire form) -->
+  <rect x="86" y="316" width="16" height="16" rx="2" fill="#34D3E8"/>
+  <text x="122" y="324" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="24" font-weight="600" fill="#E8EEF6">MIF substrate</text>
+  <text x="122" y="350" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="16" fill="#7C8AA0">Every finding in and out is MIF — read by a person and a parser.</text>
+
+  <!-- 2 · Ontological spine (light vertex node = the convergence point) -->
+  <path d="M94 398 L100.4 404.4 L94 410.8 L87.6 404.4 Z" fill="#E8EEF6"/>
+  <text x="122" y="406" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="24" font-weight="600" fill="#E8EEF6">Ontological spine</text>
+  <text x="122" y="432" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="16" fill="#7C8AA0">Typed against ontologies, fail-closed into one cross-topic concordance.</text>
+
+  <!-- 3 · Living knowledge graph (human-amber dot = the meaning that accrues) -->
+  <circle cx="94" cy="488" r="9" fill="#F5B642"/>
+  <text x="122" y="496" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="24" font-weight="600" fill="#E8EEF6">Living knowledge graph</text>
+  <text x="122" y="522" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="16" fill="#7C8AA0">Entities and relationships that grow with every research session.</text>
+
+  <!-- ===== Knowledge-graph motif (right column): a typed spine accreting findings, still growing ===== -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- soft growth glow at the forming (right) edge -->
+    <circle cx="1168" cy="356" r="74" fill="url(#growGlow)"/>
+
+    <!-- the ontological SPINE: machine-cyan backbone, ascending left→right (knowledge over time) -->
+    <polyline points="724,500 820,484 916,492 1012,460 1108,470 1188,440"
+              fill="none" stroke="#34D3E8" stroke-width="3.5" opacity="0.92"/>
+
+    <!-- hairline tethers: findings branch off the spine -->
+    <g stroke="#2E3A4D" stroke-width="1.5">
+      <line x1="772" y1="492" x2="800" y2="430"/>
+      <line x1="868" y1="488" x2="892" y2="410"/>
+      <line x1="964" y1="476" x2="980" y2="402"/>
+      <line x1="1060" y1="465" x2="1086" y2="384"/>
+      <line x1="1148" y1="455" x2="1172" y2="370"/>
+      <!-- below-spine entity links -->
+      <line x1="820" y1="484" x2="864" y2="544"/>
+      <line x1="1012" y1="460" x2="1056" y2="536"/>
+    </g>
+
+    <!-- spine nodes: cyan squares = typed structure a parser reads -->
+    <g fill="#0A2630" stroke="#34D3E8" stroke-width="2.5">
+      <rect x="717" y="493" width="14" height="14" rx="2" opacity="0.55"/>
+      <rect x="813" y="477" width="14" height="14" rx="2" opacity="0.7"/>
+      <rect x="909" y="485" width="14" height="14" rx="2" opacity="0.82"/>
+      <rect x="1005" y="453" width="14" height="14" rx="2" opacity="0.92"/>
+      <rect x="1101" y="463" width="14" height="14" rx="2"/>
+    </g>
+    <!-- the live spine tip — still forming (dashed) = the graph keeps growing -->
+    <rect x="1181" y="433" width="14" height="14" rx="2" fill="#0A2630" stroke="#34D3E8"
+          stroke-width="2.5" stroke-dasharray="3 3"/>
+
+    <!-- finding nodes: amber = meaning a person reads, brighter as knowledge accretes -->
+    <circle cx="800" cy="430" r="8" fill="#F5B642" opacity="0.6"/>
+    <circle cx="892" cy="410" r="8" fill="#F5B642" opacity="0.74"/>
+    <circle cx="980" cy="402" r="8" fill="#F5B642" opacity="0.86"/>
+    <circle cx="1086" cy="384" r="8.5" fill="#F5B642"/>
+    <circle cx="1172" cy="370" r="8.5" fill="#F5B642"/>
+
+    <!-- below-spine entity nodes (cyan, small) -->
+    <circle cx="864" cy="544" r="5.5" fill="#34D3E8" opacity="0.55"/>
+    <circle cx="1056" cy="536" r="5.5" fill="#34D3E8" opacity="0.7"/>
+  </g>
+
+  <!-- typed micro-labels: be the example — real field/type names, mono, sparse -->
+  <g font-family="Menlo, 'SF Mono', 'JetBrains Mono', monospace" font-size="12.5" letter-spacing="0.02em">
+    <text x="892" y="396" text-anchor="middle" fill="#7C8AA0">claim</text>
+    <text x="1004" y="446" text-anchor="middle" fill="#7C8AA0">entity</text>
+    <text x="1056" y="558" text-anchor="middle" fill="#7C8AA0">source</text>
+    <text x="1172" y="356" text-anchor="middle" fill="#F5B642">+new</text>
+  </g>
+
+  <!-- ===== Footer locators ===== -->
+  <text x="84" y="572" font-family="Menlo, 'SF Mono', 'JetBrains Mono', monospace"
+        font-size="15" fill="#7C8AA0" letter-spacing="0.01em">modeled-information-format/research-harness-template</text>
+  <text x="1192" y="572" text-anchor="end" font-family="Menlo, 'SF Mono', 'JetBrains Mono', monospace"
+        font-size="15" fill="#7C8AA0" letter-spacing="0.02em">mif-spec.dev</text>
+</svg>

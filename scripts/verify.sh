@@ -2046,10 +2046,56 @@ gate_m23() {
   fi
 }
 
+gate_versions() {
+  info "Version consistency — change-driven model (ADR-0010)"
+
+  # The harness versions by CHANGE, not lockstep: harness.config.json is the single
+  # release pointer, the marketplace catalog tracks it, and every other stamp moves
+  # only when its own component changes (so versions are legitimately heterogeneous —
+  # e.g. an independently-versioned skill). The invariants that DO hold:
+  #   - the template version is well-formed semver,
+  #   - the marketplace catalog equals the template version,
+  #   - every SKILL.md / plugin.json stamp is well-formed semver (a botched bump,
+  #     e.g. a truncated or emptied stamp, fails here even though presence passes 2c-fm).
+  local tpl mkt
+  tpl="$(jq -r '.version // empty' harness.config.json 2>/dev/null)"
+  if printf '%s' "$tpl" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    ok "harness.config.json .version is valid semver ($tpl)"
+  else
+    bad "harness.config.json .version is not semver: '${tpl:-MISSING}'"
+  fi
+
+  if [ -f .claude-plugin/marketplace.json ]; then
+    mkt="$(jq -r '.metadata.version // empty' .claude-plugin/marketplace.json 2>/dev/null)"
+    if [ -n "$tpl" ] && [ "$mkt" = "$tpl" ]; then
+      ok "marketplace catalog .metadata.version tracks the template release ($mkt)"
+    else
+      bad "marketplace .metadata.version ('${mkt:-MISSING}') must equal the template version ('${tpl:-MISSING}')"
+    fi
+  fi
+
+  local bad_stamp="" f v
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    v="$(sed -n 's/^version:[[:space:]]*//p' "$f" | head -1 | tr -d '"'"'"' ')"
+    printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || bad_stamp="${bad_stamp}${f}('${v:-MISSING}') "
+  done < <(find .claude/skills packs -name SKILL.md 2>/dev/null | sort)
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    v="$(jq -r '.version // empty' "$f" 2>/dev/null)"
+    printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || bad_stamp="${bad_stamp}${f}('${v:-MISSING}') "
+  done < <(find packs -name plugin.json 2>/dev/null | sort)
+  if [ -z "$bad_stamp" ]; then
+    ok "every SKILL.md / plugin.json version stamp is well-formed semver"
+  else
+    bad "malformed version stamps: $bad_stamp"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23 gate_versions)
 
 for g in "${GATES[@]}"; do "$g"; done
 
