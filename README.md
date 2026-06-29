@@ -1,3 +1,8 @@
+<p align="center">
+  <img src=".github/social-preview.png" width="860"
+       alt="Research Harness — a clonable, MIF-native research engine. Three pillars: MIF substrate (every finding in and out is MIF), ontological spine (typed against ontologies, fail-closed into one cross-topic concordance), and a living knowledge graph that grows with every research session — shown as a machine-cyan typed spine accreting amber findings, its right edge still forming.">
+</p>
+
 # Research Harness
 
 One distributable template repository that a user clones (or instantiates with
