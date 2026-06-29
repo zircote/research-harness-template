@@ -43,7 +43,7 @@ fi
 # everything else immediately.
 copier_run() {
   local sub="$1" attempt=1 max=4 rc errf
-  errf=$(mktemp)
+  errf=$(mktemp) || { echo "copier-update: mktemp failed — cannot capture copier stderr (fail closed)" >&2; return 1; }
   while :; do
     copier "$@" >/dev/null 2>"$errf"; rc=$?
     if [ "$rc" -eq 0 ]; then rm -f "$errf"; return 0; fi
