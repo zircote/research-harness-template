@@ -65,8 +65,9 @@ Before a single finding exists, the harness writes a **`goal.json`** (validated
 by [`schemas/goal.schema.json`](../reference/contracts.md)). It is the one
 artifact that turns a vague ask into a measurable, gated session: the
 orchestrator fans out, falsifies, and synthesizes *until the goal's checks hold
-or its bound is hit*. Authored by `/start` (through the goal-writer), it is the
-contract you can hold the research to after the fact.
+or its bound is hit*. You rarely write it by hand — the **`/goal-writer`**
+assistant develops it with you (detailed below) — and it is the contract you can
+hold the research to after the fact.
 
 The example topic's goal makes the whole run legible. Abridged from its real
 [`goal.json`](https://github.com/modeled-information-format/research-harness-template/blob/main/reports/example-okf-mif-knowledge-spine/goal.json):
@@ -103,6 +104,19 @@ Read it field by field — this is what every research session is steered by:
 | `completion_condition.checks` | **Transcript-verifiable end states, not steps.** Each is an `assertion` plus a `verify` command/fact; the loop runs until they all hold. | 9 checks — 4 dimension-coverage thresholds, 2 falsifiable thesis sub-questions, schema-valid, gate-ran-once, citation-integrity |
 | `bound` | The stop condition if the goal cannot be fully met — the runaway guard. | `max_rounds: 3`, `min_dimensions_complete: 4` |
 
+> **Which dimensions are available?** Dimensions are **not a fixed taxonomy** —
+> they are whatever `harness.config.json` `dimensions[]` declares, so you can
+> rename them or add your own. The shipped harness declares four: **`technical`**
+> (feasibility, architecture, implementation), **`landscape`** (prior art and
+> alternatives), **`trajectory`** (adoption, standards, momentum), and
+> **`market`** (demand, segments, positioning, sizing). A dimension can also be
+> **pack-provided**: enabling a methodology pack adds its dimension *and* the
+> analysis method behind it — `market-research` contributes `competitive`,
+> `customer`, `financial`, `sizing`, and `regulatory`; `trend-modeling`
+> contributes `trend`. See the [configuration reference](../reference/configuration.md)
+> for the `dimensions[]` field, and the [pack catalog](../reference/packs/index.md)
+> for the methodology dimensions.
+
 Two properties make the goal trustworthy rather than decorative:
 
 - **Checks are falsifiable, not aspirational.** "The technical dimension has ≥4
@@ -121,6 +135,41 @@ Two properties make the goal trustworthy rather than decorative:
   Evolving the goal (`/goal-writer --reshape`) mints a *new* version and
   reclassifies existing findings as carry / gap / stale — it never rewrites the
   record.
+
+### Developing the goal with `/goal-writer`
+
+You do not have to write `goal.json` by hand. **`/goal-writer` is the assisting
+tool that turns a plain-language research ask into the measurable contract
+above** — hand it a rough ask and it does the goal-engineering with you:
+
+- **It insists on a decision, not a topic.** "Learn about X" is rejected; the
+  tool presses the ask into "enable decision Y," because a session that cannot be
+  *done* cannot be gated. The example's `goal_statement` — *should MIF be the
+  spine beneath OKF?* — is what that insistence produces.
+- **It elicits what is ambiguous.** Before writing, it resolves the decision, the
+  in-scope / out-of-scope / non-goals boundary, which config dimensions each earn
+  a check, the per-dimension coverage and the sub-question a surviving finding
+  must answer, the topic id, and the bound — folding any genuinely open question
+  into the draft for you to settle rather than guessing a value.
+- **It makes every check self-proving.** Each `verify` is drawn from a fixed
+  vocabulary of commands the harness actually runs — `ajv` schema validation,
+  `jq` / `ls` coverage counts, the citation-integrity gate, the
+  falsification-gate log — so "done" is a printable fact a fresh reader can
+  re-run, never an opinion.
+- **It writes both halves, then stops.** It emits the validated `goal.json` to
+  `reports/<topic>/` *and* a short `/goal` prose summary you can paste into Claude
+  Code's `/goal`. Authoring the goal is the whole job — it never starts the
+  research itself; you run `/start`, which loads the goal and drives the
+  orchestrator under the harness's phase machinery.
+
+When the question shifts mid-stream, `/goal-writer --reshape <what changed>`
+*evolves* the goal instead of rewriting it: it mints the next content-hashed
+version, then classifies every existing finding as **carry** (still in scope),
+**gap** (a new check with no evidence yet), or **stale** (needs re-verification),
+so `/start --update` re-researches only the gap and the stale and reuses
+everything that still holds. For the step-by-step, see
+[how to run a research session](../how-to/run-a-research-session.md) and
+[how to evolve a goal](../how-to/evolve-a-goal.md).
 
 ## How to navigate a topic — the navigation hierarchy
 
