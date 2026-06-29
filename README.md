@@ -6,6 +6,11 @@ engine, the methodology skills, the workflows, the contracts, the knowledge
 graph, multi-topic support, and the research→blog and research→book output
 pipelines — all in one package.
 
+**New here?** [Reading the research](docs/explanation/reading-the-research.md)
+explains what a research topic produces, how to navigate it, how to read a
+report, and what each report genre is for — the fastest way to understand the
+value.
+
 ## Status
 
 This template is evolving and should not be considered stable. Interfaces,
