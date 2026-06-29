@@ -170,7 +170,9 @@ for i in ${PACK_NAME[@]+"${!PACK_NAME[@]}"}; do
   # GNU-only `sed 0,/re/`) so it runs the same on BSD/macOS and Linux.
   sk="${PACK_SKILL[$i]}"
   tmp="$(mktemp)"
-  awk -v ver="$NEW" '!d && /^version:[[:space:]]/ { print "version: " ver; d=1; next } { print }' "$sk" >"$tmp" && mv "$tmp" "$sk"
+  awk -v ver="$NEW" '!d && /^version:[[:space:]]/ { print "version: " ver; d=1; next } { print }' "$sk" >"$tmp" \
+    || die "awk failed rewriting $sk"
+  mv "$tmp" "$sk"
   # Family doc: the FIRST `**Version:** X` row inside comp's section. Reset `insec`
   # on EVERY heading (set iff it is the comp heading) so the rewrite is bounded to
   # comp's section — otherwise a comp section lacking a **Version:** row would bleed

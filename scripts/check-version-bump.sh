@@ -13,7 +13,10 @@
 #     release pointer) stayed put.
 #
 # Independently-versioned ontology packs (packs/ontologies/**, schemas/ontologies/**)
-# are exempt — they carry their own version on their own cadence.
+# are exempt from the per-pack version rule (Rule A) — they carry their own version
+# on their own cadence. They are NOT exempt from the release-pointer rule (Rule B):
+# an ontology-only PR must still bump harness.config.json, or carry the
+# [skip-version-check] marker if it warrants no release.
 #
 # Escape hatch: put `[skip-version-check]` on its OWN LINE in a PR commit message
 # for a change that genuinely warrants no release (it bypasses the pointer rule
