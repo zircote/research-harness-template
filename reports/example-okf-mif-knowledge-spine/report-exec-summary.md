@@ -437,7 +437,7 @@ extensions:
     dimension: synthesis
     verification:
       verdict: survived
-      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Release Candidate, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
+      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Released, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
       disconfirming_evidence: []
       attempted_at: "2026-06-28T12:25:00Z"
 ---
@@ -476,7 +476,7 @@ Risk: If the pilot shows OKF's minimalism already satisfies the workflow, treat 
 
 OKF nascency is the dominant risk. Google Cloud published OKF v0.1 on 12 June 2026, only days before this research; the repository drew 5,440 stars and 416 forks quickly [1] but ships with no producer libraries, consumer integrations, governance, or enterprise adoption record. Demand for OKF specifically — as distinct from structured knowledge formats generally — remains undemonstrated, and OKF's minimalism may itself be the buyer preference, which would leave MIF's richer layer a solution ahead of its segment.
 
-MIF's gap is distribution, not maturity. MIF has been public since February 2026 and reached v1.0.0 (Release Candidate, stabilized 18 June 2026) [2], so it predates OKF v0.1 and is the more stabilized specification. Its challenge is building an independent adopter base and formal governance against OKF's Google-backed launch — not closing a spec-maturity gap.
+MIF's gap is distribution, not maturity. MIF has been public since February 2026 and reached v1.0.0 (Released, stabilized 18 June 2026) [2], so it predates OKF v0.1 and is the more stabilized specification. Its challenge is building an independent adopter base and formal governance against OKF's Google-backed launch — not closing a spec-maturity gap.
 
 Five claims carry caveats (confidence basis). Four market statistics are weakened and travel as directional only: an enterprise AI-agent adoption figure (a cited "80% by Q1 2026" overstates Gartner's own roughly 40%-by-2026 / under-5%-in-2025 trajectory), a "76% SaaS, up from 50-50 in 2024" build-versus-buy split the cited source does not substantiate on inspection, and knowledge-graph pricing and growth bands (self-managed platforms at $15K-100K+/year, personal tools at $5-16/user/month, AI-driven knowledge management growing around 47% year over year). Separately, the gate narrowed one technical claim: MIF does provide typed, directed edges with optional strength that OKF lacks (core types include relates-to, derived-from, supersedes, and part-of), but the broader nine-type enumeration mixes in harness-specific custom types and must not be cited as MIF core. The GraphRAG accuracy, enterprise-KG growth, and agent-memory provenance-demand findings survived unweakened and carry the trajectory case.
 
@@ -491,7 +491,7 @@ pie showData title Corpus evidence base — 36 adversarially tested findings
 ## Footnotes
 
 - [1] Google Cloud — How the Open Knowledge Format can improve data sharing: <https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing>
-- [2] MIF specification, v1.0.0 Release Candidate: <https://mif-spec.dev/>
+- [2] MIF specification, v1.0.0 Released: <https://mif-spec.dev/>
 - [3] Microsoft Research — GraphRAG: <https://www.microsoft.com/en-us/research/project/graphrag/>
 - [4] Gartner on context graphs (via Atlan): <https://atlan.com/know/gartner-context-graphs/>
 - [5] State of AI Agent Memory 2026 (mem0): <https://mem0.ai/blog/state-of-ai-agent-memory-2026>

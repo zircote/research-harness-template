@@ -437,7 +437,7 @@ extensions:
     dimension: synthesis
     verification:
       verdict: survived
-      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Release Candidate, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
+      verdict_basis: 'Report-level verdict aggregating the corpus adversarial falsification gate (2026-06-28; see 2026-06-28-falsification-report.md): all 36 supporting findings were adversarially tested exactly once — 31 survived, 5 weakened, 0 falsified, 0 inconclusive. The 5 weakened findings (4 market statistics + 1 technical enumeration) travel with explicit caveats; no finding underpinning the central OKF+MIF layering thesis was falsified. The MIF-version sub-claim was additionally corrected against the authoritative in-repo SPECIFICATION.md (v1.0.0, Released, stabilized 2026-06-18; public since ~Feb 2026), which supersedes the analyst''s stale web sources. The report thesis therefore inherits a surviving verdict with documented weakened-statistic caveats. This genre report is a projection of that single graded synthesis.'
       disconfirming_evidence: []
       attempted_at: "2026-06-28T12:25:00Z"
 ---
@@ -475,7 +475,7 @@ Each entrant carries an explicit Strengths list and a Cautions list, source-attr
 Strengths:
 
 - The only entrant that pairs accessible git-native markdown distribution with formal semantics — ontology typing, first-class provenance, bi-temporal decay, and typed relationships layered onto OKF's bundle.
-- MIF is a stabilized v1.0.0 Release Candidate (stabilized 2026-06-18), public since around February 2026 and therefore predating OKF v0.1; it fills a documented gap (fragmented AI-memory formats) with genuine technical differentiation.
+- MIF is a stabilized v1.0.0 Released (stabilized 2026-06-18), public since around February 2026 and therefore predating OKF v0.1; it fills a documented gap (fragmented AI-memory formats) with genuine technical differentiation.
 - The layering is mechanically clean, injecting MIF fields through OKF's permissive extension seam rather than forking either spec.
 
 Cautions:
@@ -592,7 +592,7 @@ quadrantChart
     "Frictionless Data": [0.25, 0.42]
 ```
 
-Visionaries — high vision, lower execution. OKF+MIF sits here: the most complete spine vision (accessible markdown plus formal ontology, first-class provenance, bi-temporal decay, and typed relationships) but the thinnest adoption, since MIF — though a stabilized v1.0.0 Release Candidate predating OKF — lacks a large independent adopter base and formal governance. RDF/OWL is also Visionary: complete semantics, with execution depressed by prohibitive toolchain cost and the Semantic Web's adoption failure.
+Visionaries — high vision, lower execution. OKF+MIF sits here: the most complete spine vision (accessible markdown plus formal ontology, first-class provenance, bi-temporal decay, and typed relationships) but the thinnest adoption, since MIF — though a stabilized v1.0.0 Released predating OKF — lacks a large independent adopter base and formal governance. RDF/OWL is also Visionary: complete semantics, with execution depressed by prohibitive toolchain cost and the Semantic Web's adoption failure.
 
 Challengers — strong execution, narrower vision. OKF alone (Google-backed, 5,440 stars, but deliberately minimal, with no ontology, provenance, or typed links), schema.org (web ubiquity at ~45% of top sites, but web-annotation scope), JSON-LD/YAML-LD (W3C-standard reach, but a Semantic Web toolchain and no markdown or git bundle), and the PKM tools (Obsidian's 1.5 million-plus users, but untyped links and no provenance) all execute well while addressing only part of the spine vision.
 
@@ -618,7 +618,7 @@ Not a Gartner Magic Quadrant. This is a generic two-axis competitive analysis (C
 
 Evidence and verification. Findings were gathered across four dimensions — technical, landscape, trajectory, and market — and each was adversarially tested exactly once by the falsification gate on 28 June 2026: of the 36 supporting findings, 31 survived and 5 were weakened, with none falsified. The five weakened units are carried with explicit caveats at the point of use. Four are market statistics — an overstated Gartner agent-adoption headline that appears in two findings, an unlocatable a16z SaaS-share figure, and soft or misattributed AI-KM market-sizing numbers — and one is technical: the typed-relationship core-predicate enumeration, narrowed against the published MIF specification. No finding underpinning the central layering thesis was falsified.
 
-As-of date and limits. Vendor evidence is current as of 28 June 2026. The dominant limit is recency: OKF v0.1 was 16 days old at assessment and has no ecosystem, so its execution score reflects launch momentum (5,440 stars, Google backing) rather than proven adoption, and the genuine downside risk is that OKF's minimalism is itself the buyer preference — leaving MIF's richer layer a solution ahead of a segment that demands it. MIF, by contrast, is a stabilized v1.0.0 Release Candidate public since early 2026; its constraint is distribution and adoption, not spec maturity. The placements would shift if OKF develops a producer/consumer ecosystem, if buyers signal demand for typed semantics over minimalism, or if a proprietary platform open-sources a competing spine format.
+As-of date and limits. Vendor evidence is current as of 28 June 2026. The dominant limit is recency: OKF v0.1 was 16 days old at assessment and has no ecosystem, so its execution score reflects launch momentum (5,440 stars, Google backing) rather than proven adoption, and the genuine downside risk is that OKF's minimalism is itself the buyer preference — leaving MIF's richer layer a solution ahead of a segment that demands it. MIF, by contrast, is a stabilized v1.0.0 Released public since early 2026; its constraint is distribution and adoption, not spec maturity. The placements would shift if OKF develops a producer/consumer ecosystem, if buyers signal demand for typed semantics over minimalism, or if a proprietary platform open-sources a competing spine format.
 
 ## Sources
 

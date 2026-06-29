@@ -7,15 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-06-28
+
 ### Added
 
-- `scripts/seed-example-topic.sh` — a copier post-copy `_task` that renames the shipped
-  example topic to `okf-mif-knowledge-spine` (strips the `example-` prefix across the
-  directory name, every finding/report `@id` namespace, the manifest, and goal check
-  paths) so each clone starts with it as a seed fixture. Idempotent and self-cleaning
-  (it discards the prefixed copy copier re-ships on update and is a no-op in the template
-  itself), which keeps `copier update` conflict-free. The `copier-update` eval now asserts
-  the seed renames + archives on copy and survives update without duplication.
+- The bundled **archived example research corpus** (`reports/example-okf-mif-knowledge-spine`)
+  ships to every clone as its inherited seed fixture — keeping the same name in the template
+  and in clones — so a fresh clone shows the engine's worked output immediately. The
+  `copier-update` eval asserts it ships archived on copy and survives `copier update` without
+  duplication or conflict. (It is served straight out of `reports/`; the prior `example-`-prefix
+  rename was dropped — renaming the corpus directory inside copier's update render destabilized
+  copier's temp-dir cleanup.)
 
 ### Changed
 
