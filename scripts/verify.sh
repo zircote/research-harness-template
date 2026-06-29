@@ -2168,6 +2168,16 @@ JSON
     bad "a wrong-shape ontology-map did not fail closed (rc=$rc)"
   fi
 
+  # 24i. The exit-3 (unreadable map) path prints the SAME /ontology-review unblock footer as
+  #      the exit-1 blocker — the operator needs the remediation most when the map can't be read.
+  rm -f "$T/reports/edu/ontology-map.json"
+  m3=$(scripts/check-shippable-typing.sh "$T/reports/edu" 2>&1); rc3=$?
+  if [ "$rc3" = 3 ] && printf '%s' "$m3" | grep -q "/ontology-review"; then
+    ok "the exit-3 (unreadable map) path names the /ontology-review unblock footer"
+  else
+    bad "exit-3 path missing the /ontology-review unblock footer (rc=$rc3)"
+  fi
+
   rm -rf "$T"
 }
 

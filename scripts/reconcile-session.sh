@@ -119,11 +119,17 @@ if [ -f "$CONC" ]; then
       [ -z "$f" ] && continue
       v=$(jq -r '.extensions.harness.verification.verdict // empty' "$f" 2>/dev/null)
       [ "$v" = survived ] || [ "$v" = weakened ] || continue
-      jq -r '."@id" // empty' "$f" 2>/dev/null
-    done < <(list_findings) | sort -u | while IFS= read -r fid; do
-      [ -z "$fid" ] && continue
+      fid=$(jq -r '."@id" // empty' "$f" 2>/dev/null)
+      # A shippable finding with NO @id is blocked by the gate (its empty-id map lookup
+      # resolves to "missing"); key it by file path so it is counted here too, never dropped
+      # or deduped to a single empty key.
+      [ -z "$fid" ] && fid="noid:$f"
+      printf '%s\n' "$fid"
+    done < <(list_findings) | sort -u | while IFS= read -r key; do
+      [ -z "$key" ] && continue
+      if [ "${key#noid:}" != "$key" ]; then echo x; continue; fi   # no-@id finding -> gate blocks -> untyped
       if [ "$mapok" != true ]; then echo x; continue; fi
-      jq -e --arg id "$fid" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved")' "$RD/ontology-map.json" >/dev/null 2>&1 && echo x
+      jq -e --arg id "$key" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved")' "$RD/ontology-map.json" >/dev/null 2>&1 && echo x
     done | grep -c x
   )
   [ -z "$uns" ] && uns=0

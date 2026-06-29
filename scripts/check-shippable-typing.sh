@@ -22,14 +22,16 @@ set -uo pipefail
 command -v jq >/dev/null 2>&1 || { echo "check-shippable-typing: 'jq' not found — cannot evaluate typing (fail closed)" >&2; exit 5; }
 RD="${1:?usage: check-shippable-typing.sh <reports-dir>}"
 case "$RD" in /*) : ;; *) RD="$(pwd)/$RD" ;; esac
-FDIR="$RD/findings"; MAP="$RD/ontology-map.json"
+FDIR="$RD/findings"; MAP="$RD/ontology-map.json"; topic="$(basename "$RD")"
 [ -d "$FDIR" ] || { echo "check-shippable-typing: no findings dir: $FDIR" >&2; exit 2; }
-# Fail closed: without a map we cannot prove typing (never pass vacuously).
-[ -f "$MAP" ] || { echo "check-shippable-typing: ontology-map.json missing — run ontology-review.sh --topic first (fail closed)" >&2; exit 3; }
+# Fail closed: without a map we cannot prove typing (never pass vacuously). Print the SAME
+# operator unblock path the exit-1 blocker prints — a missing/unreadable map is exactly when
+# the operator needs to know how to regenerate it.
+[ -f "$MAP" ] || { echo "check-shippable-typing: ontology-map.json missing — synthesis BLOCKED (fail closed). Unblock: /ontology-review --topic $topic --enrich  then  /resume --topic $topic" >&2; exit 3; }
 # Fail closed: a present-but-unparseable map cannot prove typing either. A corrupt/partial
 # map makes every per-finding `bad` lookup error to "" (no blocker) — i.e. it would PASS
 # vacuously, the exact hole this gate exists to close. Treat it like a missing map (exit 3).
-jq -e 'type=="array"' "$MAP" >/dev/null 2>&1 || { echo "check-shippable-typing: ontology-map.json unparseable or not a record array — re-run ontology-review.sh --topic first (fail closed)" >&2; exit 3; }
+jq -e 'type=="array"' "$MAP" >/dev/null 2>&1 || { echo "check-shippable-typing: ontology-map.json unparseable or not a record array — synthesis BLOCKED (fail closed). Unblock: /ontology-review --topic $topic --enrich  then  /resume --topic $topic" >&2; exit 3; }
 
 blockers=""
 while IFS= read -r f; do
@@ -69,7 +71,6 @@ done < <( { find "$FDIR" -maxdepth 1 -type f -name '*.json' ! -name '.*' ! -name
 # can bypass the fail-closed typing check (sort -u dedupes; the two dirs do not overlap).
 
 if [ -n "$blockers" ]; then
-  topic="$(basename "$RD")"
   echo "check-shippable-typing: $(printf '%s' "$blockers" | grep -c .) shippable finding(s) lack a valid ontology type — synthesis BLOCKED (fail closed):" >&2
   printf '%s' "$blockers" >&2
   echo "check-shippable-typing: unblock with  /ontology-review --topic $topic --enrich  then  /resume --topic $topic" >&2
