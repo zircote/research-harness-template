@@ -1876,7 +1876,14 @@ gate_m22() {
   # software-security is a domain pack vendored on demand (ADR-0012/#224) and is not
   # in the always-enabled set, so this gate vendors its subtype_of exemplar itself.
   if [ ! -f packs/ontologies/software-security/software-security.ontology.yaml ]; then
-    scripts/fetch-ontology.sh software-security >/dev/null 2>&1 || true
+    # Fail closed and surface fetch-ontology's own diagnostic: swallowing it (|| true)
+    # lets a vendoring failure (offline / registry down / checksum mismatch) fall through
+    # to a misleading "subsumption wrong" verdict below, hiding the real cause — exactly
+    # the "a gate that hides its tool's error makes every failure undiagnosable" anti-pattern.
+    if ! scripts/fetch-ontology.sh software-security; then
+      bad "gate_m22: could not vendor software-security exemplar (fetch-ontology.sh failed — see error above)"
+      return
+    fi
   fi
   local T; T="$(mktemp -d)"
   cat > "$T/cat.json" <<'JSON'
