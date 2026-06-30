@@ -25,7 +25,14 @@ lineage) are closed **locally** under `extensions.harness` — never by forking 
 ## Quality gates (run before reporting any change complete)
 
 CI (`.github/workflows/ci.yml`, on push/PR to `main`) runs exactly these. Run the
-same locally:
+same locally.
+
+> **Vendor first (ADR-0012/#224).** Domain ontology packs are NOT bundled — they
+> are vendored on demand. A Copier-instantiated clone vendors them in `_tasks` and
+> CI vendors them before `verify.sh`, but a raw `git clone` does not: run
+> `bash scripts/fetch-ontology.sh --all-enabled` once before `verify.sh` /
+> `ontology-review.sh` (set `MIF_ONTOLOGY_SOURCE=<dir>` to vendor from a local
+> mirror offline). Without it `gate_ontology_lock` reports `NOT VENDORED`.
 
 ```bash
 bash scripts/verify.sh                                   # full build gate: schema validation,

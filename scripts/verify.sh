@@ -644,15 +644,18 @@ gate_m8() {
   # the template.
   if [ "$IS_TEMPLATE" = 1 ]; then
     # 8c. The template repo itself ships clean — the only corpus committed under
-    #     reports/ is reports/_meta/ scaffolding (the sample-session gate fixture) plus
-    #     the single ARCHIVED example research topic the template serves straight out of
-    #     reports/ (example-okf-mif-knowledge-spine), which clones inherit under the same
-    #     name as their seed fixture; everything else under reports/ is unexpected.
-    if [ -z "$(find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
-      ok "template repo reports/ ships clean (_meta scaffolding + the archived example topic only)"
+    #     reports/ is reports/_meta/ scaffolding (the sample-session gate fixture), the
+    #     single ARCHIVED example research topic the template serves straight out of
+    #     reports/ (example-okf-mif-knowledge-spine, which clones inherit under the same
+    #     name as their seed fixture), and the canonical cross-topic concordance
+    #     (reports/concordance.json — deterministic, on the .gitignore allowlist, rebuilt
+    #     by scripts/build-concordance.sh over the shipped corpus); everything else under
+    #     reports/ is unexpected.
+    if [ -z "$(find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -path 'reports/concordance.json' -prune -o -name '*.json' -print 2>/dev/null)" ]; then
+      ok "template repo reports/ ships clean (_meta scaffolding + the archived example topic + the cross-topic concordance only)"
     else
-      bad "unexpected corpus committed under reports/ (only _meta and the example topic may ship)"
-      find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
+      bad "unexpected corpus committed under reports/ (only _meta, the example topic, and reports/concordance.json may ship)"
+      find reports -path 'reports/_meta' -prune -o -path 'reports/example-okf-mif-knowledge-spine' -prune -o -path 'reports/concordance.json' -prune -o -name '*.json' -print 2>/dev/null | sed 's/^/      /' >&2
     fi
 
     # 8d. The import REFUSES to populate the template repo's own reports/ — the
@@ -994,23 +997,10 @@ gate_m12() {
     bad "duplicate ontology id@version: $(echo $dupes)"
   fi
 
-  # 12d. NOTHING is vendor-locked. The MIF contract is first-class and evolves in-repo
-  #      (it travels back to MIF), so no file may be verbatim/checksum-gated — a re-locked
-  #      file would freeze the contract and block that evolution. Assert the verbatim set
-  #      is EMPTY. (VENDOR.lock is retained for provenance: source/commit + seed checksums.)
-  local verbatim_set
-  # A missing/unreadable/invalid lock, or one whose `.files` is absent/not an array, must
-  # NOT read as an empty (== "nothing locked") set and pass vacuously — fail closed. Then
-  # extract the verbatim set under `jq -e` so a jq error is a failure, never an empty pass.
-  if ! jq -e '.files | type == "array"' schemas/mif/VENDOR.lock >/dev/null 2>&1; then
-    bad "VENDOR.lock missing, invalid JSON, or has no .files array — provenance broken (cannot assert the verbatim set)"
-  elif ! verbatim_set=$(jq -er '[.files[] | select(.verbatim) | .path] | sort | join(",")' schemas/mif/VENDOR.lock); then
-    bad "VENDOR.lock: could not extract the verbatim set (jq error) — fail closed"
-  elif [ -z "$verbatim_set" ]; then
-    ok "VENDOR.lock: nothing is verbatim-locked — the contract is first-class editable"
-  else
-    bad "VENDOR.lock: file(s) verbatim-locked but nothing should be: [$verbatim_set]"
-  fi
+  # 12d. (RETIRED, #223) The VENDOR.lock verbatim-set assertion is gone: on-demand
+  #      vendoring from the canonical registry (ADR-0012) supersedes the seed-time
+  #      VENDOR.lock provenance, so there is no longer a verbatim set to assert.
+  #      ontologies.lock.json + check-ontology-lock.sh now pin vendored packs.
 
   # Build a catalog (core + the dedicated edu-fixture TEST ontology) to drive the
   # resolver fixtures. The fixture lives under evals/fixtures/ (it is NOT a
@@ -1883,6 +1873,18 @@ gate_m22() {
   # `control`; the cross-cutting `governs` edge (control/policy -> component/artifact)
   # must therefore ACCEPT a security-control source and REJECT a non-subtype source.
   # Also: every subtype_of parent across the registry must be a declared type.
+  # software-security is a domain pack vendored on demand (ADR-0012/#224) and is not
+  # in the always-enabled set, so this gate vendors its subtype_of exemplar itself.
+  if [ ! -f packs/ontologies/software-security/software-security.ontology.yaml ]; then
+    # Fail closed and surface fetch-ontology's own diagnostic: swallowing it (|| true)
+    # lets a vendoring failure (offline / registry down / checksum mismatch) fall through
+    # to a misleading "subsumption wrong" verdict below, hiding the real cause — exactly
+    # the "a gate that hides its tool's error makes every failure undiagnosable" anti-pattern.
+    if ! scripts/fetch-ontology.sh software-security; then
+      bad "gate_m22: could not vendor software-security exemplar (fetch-ontology.sh failed — see error above)"
+      return
+    fi
+  fi
   local T; T="$(mktemp -d)"
   cat > "$T/cat.json" <<'JSON'
 {"ontologies":[

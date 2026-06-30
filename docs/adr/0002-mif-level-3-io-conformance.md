@@ -96,8 +96,9 @@ adds harness-local concerns under `extensions.harness`, never overriding MIF
 
 ### Negative
 
-1. Vendoring the MIF closure adds an upstream-tracking obligation
-   (`schemas/mif/VENDOR.lock`).
+1. Vendoring the MIF closure adds an upstream-tracking obligation (originally
+   recorded in `schemas/mif/VENDOR.lock`; that seed-time provenance file was
+   retired by #223, superseded by on-demand vendoring per ADR-0012).
 
 ### Neutral
 
@@ -108,8 +109,8 @@ adds harness-local concerns under `extensions.harness`, never overriding MIF
 
 A single authoritative format makes findings, the graph, citations, and
 provenance one validated contract, with harness lifecycle state added locally
-rather than by forking MIF. The upstream-tracking cost is contained by the
-vendor lock file.
+rather than by forking MIF. The upstream-tracking cost is now contained by
+on-demand vendoring from the canonical registry (ADR-0012).
 
 ## Related Decisions
 
@@ -134,5 +135,19 @@ vendor lock file.
 | Vendored MIF closure present | `schemas/mif/`, `schemas/mif/VENDOR.lock` | compliant |
 
 **Summary:** The L3 conformance level is declared, the findings schema references the vendored MIF closure, and the closure is vendored under `schemas/mif/`.
+
+**Action Required:** None
+
+### 2026-06-30
+
+**Status:** Compliant
+
+| Finding | Files | Assessment |
+| --- | --- | --- |
+| Conformance level declared | `harness.config.json` (`mifConformanceLevel: 3`) | compliant |
+| Findings schema refs vendored MIF | `schemas/findings.schema.json` | compliant |
+| Vendored MIF closure present | `schemas/mif/` | compliant |
+
+**Summary:** The seed-time `schemas/mif/VENDOR.lock` provenance file was retired (#223): on-demand vendoring from the canonical registry (ADR-0012, pinned in `ontologies.lock.json` via `scripts/check-ontology-lock.sh`) supersedes it. The vendored MIF closure remains under `schemas/mif/`; `gate_m12` still validates it and every registry ontology against the contract.
 
 **Action Required:** None

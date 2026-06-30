@@ -9,14 +9,15 @@ description: >-
   structure. Triggers on: "ontology", "create ontology", "validate
   ontology", "inspect ontology", "convert ontology", "ontology schema",
   "entity types", "traits", "discovery patterns", "namespace hierarchy".
-version: 0.4.2
+version: 0.4.3
 ---
 
 # MIF Ontology Manager
 
 Manage MIF ontology definition files using `yq`, `jq`, `ajv`, and bundled
 shell scripts. All operations are grounded in the vendored MIF ontology JSON
-Schema at `schemas/mif/ontology.schema.json` (pinned via `schemas/mif/VENDOR.lock`).
+Schema at `schemas/mif/ontology.schema.json` (seeded from MIF; first-class and
+editable in-repo).
 
 In the research-harness this skill is the authoring/validate/inspect surface for
 the ontology registry (`schemas/ontologies/`), the pack catalog

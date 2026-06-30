@@ -62,6 +62,12 @@ _tasks:
   # site symlinks so the Astro content collection reaches docs/ and reports/.
   - "rm -rf docs/reports && ln -s ../reports docs/reports"
   - "rm -rf src/content/docs && ln -s ../../docs src/content/docs"
+  # Vendor the enabled domain ontologies on demand from the canonical registry
+  # (ADR-0012): domain packs are NOT bundled — they are fetched + sha256-verified
+  # into packs/ontologies/<id>/ and pinned in ontologies.lock.json before the
+  # catalog is built. Base layers ship committed under schemas/ontologies/.
+  # (#224. Override the source for dev/CI/offline with $MIF_ONTOLOGY_SOURCE.)
+  - "bash scripts/fetch-ontology.sh --all-enabled"
   # Regenerate the derived ontology catalog (.claude/enabled-packs.json) on copy AND update,
   # so an update never leaves it stale — a stale catalog missing an `extends` target makes the
   # fail-closed resolver mark the whole bound corpus invalid (issue #200).

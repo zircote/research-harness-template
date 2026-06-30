@@ -1,0 +1,30 @@
+{
+  "ontologies": {
+    "data-engineering": {
+      "sha256": "15e5edac8f212859cecb1af363f5b6d9ec0edbf19fb4650cd2534a3307cb874c",
+      "version": "0.2.0"
+    },
+    "market-research": {
+      "sha256": "ce28d06ba61100dc19ef5f5c81d46dc09861a84375c3a1c848d2c56afe466242",
+      "version": "0.2.0"
+    },
+    "scientific": {
+      "sha256": "91efe7a7d4d2f3952cc63fa9af1c47de6e763be585cf7ba83edb5e729bd79ac9",
+      "version": "0.2.1"
+    },
+    "software-engineering": {
+      "sha256": "cdd425d3b25133b443f65f910ffdb7191172533fcf2969c4145858fcc81f5b0a",
+      "version": "0.5.0"
+    },
+    "software-security": {
+      "sha256": "8b8aafa07bfdc4b3f76ceffc91b691c0764b0cf84ac6bf4f99929716181a91a3",
+      "version": "0.2.0"
+    },
+    "trend-analysis": {
+      "sha256": "de9c8b21cfb029629849d56b0023c7c028f09b9f9d3e1d8820891d19b99478c6",
+      "version": "0.2.0"
+    }
+  },
+  "schema": "mif-ontology-lock/v1",
+  "source": "https://mif-spec.dev/ontologies"
+}

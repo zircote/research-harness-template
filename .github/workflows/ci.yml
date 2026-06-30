@@ -66,6 +66,9 @@ jobs:
       - name: model codegen in sync (regenerate from schemas, fail if committed models drift)
         run: CHECK=1 bash scripts/codegen/gen-models.sh  # self-provisions a pinned venv
 
+      - name: vendor enabled domain ontologies on demand (ADR-0012; before verify)
+        run: bash scripts/fetch-ontology.sh --all-enabled  # sha256-verified; pins ontologies.lock.json
+
       - name: verify.sh (build gate — schemas, citation gate, per-milestone gates, evals)
         run: bash scripts/verify.sh
 
