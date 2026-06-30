@@ -25,6 +25,11 @@ if [ ! -f "$LOCK" ]; then
   echo "check-ontology-lock: no $LOCK — on-demand vendoring not adopted; nothing to verify"
   exit 0
 fi
+# Fail closed on an unparseable lock: a malformed file would otherwise yield an
+# empty key list below and pass the gate silently. A present-but-empty lock
+# ({"ontologies":{}}) is valid and still passes.
+jq -e 'has("ontologies")' "$LOCK" >/dev/null 2>&1 \
+  || { echo "check-ontology-lock: $LOCK is not valid JSON / missing .ontologies (fail-closed)" >&2; exit 1; }
 
 fail=0; checked=0
 

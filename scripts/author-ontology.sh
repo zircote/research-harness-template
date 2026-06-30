@@ -43,7 +43,11 @@ types_json=$(jq '[.[]? | {t: .entity_type, generic: ((.resolved_ontology // "") 
 ntypes=$(jq 'length' <<<"$types_json")
 [ "$ntypes" -gt 0 ] || { echo "author-ontology: no entity types found in $MAP" >&2; exit 1; }
 
-[ -n "$OUT" ] || OUT="$(mktemp -t "$NEWID.ontology.XXXX.yaml")" || { echo "author-ontology: mktemp failed" >&2; exit 1; }
+# Portable temp: `mktemp -t <template>` is interpreted differently across
+# implementations (BSD/BusyBox treat a non-trailing-X template inconsistently).
+# `mktemp -d` is portable everywhere; we control the filename inside it.
+[ -n "$OUT" ] || { tmpd="$(mktemp -d)" && OUT="$tmpd/$NEWID.ontology.yaml"; } \
+  || { echo "author-ontology: mktemp failed" >&2; exit 1; }
 {
   echo "---"
   echo "# ${NEWID} ontology — DRAFT scaffolded from research topic '${TOPIC}'."

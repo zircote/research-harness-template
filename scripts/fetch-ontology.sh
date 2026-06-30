@@ -143,5 +143,11 @@ for id in $fetch_list; do
   echo "fetch-ontology: vendored $id@$ver (sha256 ok) -> packs/ontologies/$id/"
 done
 
-jq -S --arg idx "$INDEX_SHA" --arg src "$SRC" '.index_sha256=$idx | .source=$src' "$lock_tmp" > "$LOCK"; rm -f "$lock_tmp"
+# Atomic publish: render to a sibling temp in the lock's own dir (so mv is a
+# rename, not a cross-filesystem copy) and swap only on jq success — a failed
+# render must never truncate the pinned lock (fail-closed).
+jq -S --arg idx "$INDEX_SHA" --arg src "$SRC" '.index_sha256=$idx | .source=$src' "$lock_tmp" > "$LOCK.tmp" \
+  && mv "$LOCK.tmp" "$LOCK" \
+  || { rm -f "$LOCK.tmp" "$lock_tmp"; die "failed to write $LOCK (lock left unchanged)"; }
+rm -f "$lock_tmp"
 echo "fetch-ontology: lock updated ($LOCK; index pinned). Run scripts/sync-packs.sh to refresh the catalog."
