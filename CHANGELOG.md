@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.1] - 2026-06-30
 
+### Added
+
+- **Ship the cross-topic concordance** `reports/concordance.json` (#218). The
+  ontological spine is now rebuilt over the shipped example corpus
+  (`scripts/build-concordance.sh`: 36 nodes / 46 edges) and committed, reflecting the
+  domain-pack entity types the corpus resolves to (`trend`, `segment`,
+  `sizing-estimate`, `value-proposition`, `market-intelligence-report`,
+  `critical-uncertainty`, `emerging-issue`, `data-provenance`, …). `verify.sh`'s
+  template corpus-shape gate (8c) now allows this deterministic, allowlisted artifact
+  alongside `_meta/` and the archived example topic.
+
 ### Removed
 
 - **Retired the seed-time `schemas/mif/VENDOR.lock` provenance file** (#223). It is
