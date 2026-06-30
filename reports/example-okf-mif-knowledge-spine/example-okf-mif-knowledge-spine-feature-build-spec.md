@@ -24,8 +24,8 @@ tags:
 # OKF+MIF Extension Seam — Feature Spec
 
 A worked specimen in the `feature-spec` genre: **one capability** of the OKF+MIF build — the
-extension seam that joins MIF's typed spine to OKF packages — authored for a coding agent. Rendered
-by the `ai-spec` channel from this topic's surviving technical findings.
+extension seam that joins MIF's typed spine to OKF packages — authored for a coding agent. It is a
+worked example in the genre, grounded in this topic's surviving technical findings.
 
 ## Summary
 

@@ -25,9 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (Tulving's memory systems, cited as MIF `Citation` objects), the base-vs-namespace
   distinction, and why a derivation method such as "analytical" is never a base — its
   outputs (`forecast`/`scenario`/`adoption-curve`) are `_semantic`.
-- **Worked specimens.** One spec per genre rendered against the bundled
-  `example-okf-mif-knowledge-spine` corpus (`*-build-spec.md`), each a MIF Level-1
-  deliverable grounded in surviving findings with EARS criteria from the goal checks.
+- **Worked specimens.** One worked example per genre in the bundled
+  `example-okf-mif-knowledge-spine` topic (`*-build-spec.md`), each a MIF Level-1
+  deliverable grounded in surviving findings with EARS criteria drawn from the goal checks.
 
 ### Changed
 

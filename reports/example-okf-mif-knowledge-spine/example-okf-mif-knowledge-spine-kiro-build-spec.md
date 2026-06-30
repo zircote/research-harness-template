@@ -25,7 +25,7 @@ tags:
 
 A worked specimen in the `kiro-spec` genre: one **feature** of the OKF+MIF build — adding MIF's
 first-class provenance to OKF packages — decomposed as requirements → design → tasks for a coding
-agent. It is rendered by the `ai-spec` channel from this topic's surviving technical findings.
+agent. It is a worked example in the genre, grounded in this topic's surviving technical findings.
 
 ## 1. Requirements
 

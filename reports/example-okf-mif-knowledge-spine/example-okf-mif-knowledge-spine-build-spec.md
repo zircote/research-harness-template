@@ -47,8 +47,8 @@ tags:
 This is an AI-ready architecture specification for building a **knowledge spine** that layers
 **MIF** (Modeled Information Format) as the modeling, provenance, and temporal layer over **OKF**
 (Google Cloud's Open Knowledge Format) as the accessible, git-distributable packaging layer. It is
-the **worked specimen** the `ai-spec` channel emits from this topic's research: every design claim
-below is grounded in a surviving finding, and the acceptance criteria are generated from the goal's
+a **worked specimen** in the `architecture-spec` genre the `ai-spec` channel targets: every design
+claim below is grounded in a surviving finding, and the acceptance criteria are drawn from the goal's
 completion checks. It is written in the genre it demonstrates.
 
 ## 1. Introduction and goals
