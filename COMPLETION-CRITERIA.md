@@ -205,10 +205,10 @@ into `scripts/verify.sh` wherever a command can assert it.
 
 - Gate: `verify.sh` `gate_m12` shows that the vendored `ontology.schema.json`
   validates its sample; that every registry ontology (core + the six example data
-  packs) validates against the contract; that `id@version` is unique; that
-  `VENDOR.lock` checksum-locks the **contract only** (`ontology.schema.json` +
-  context) while ontology **definitions are unlocked/editable** and re-locking one
-  fails the gate; that the `ontology-manager` skill scaffolds a contract-valid NEW
+  packs) validates against the contract; that `id@version` is unique; that the
+  ontology **contract and definitions are unlocked/editable** (no verbatim lock —
+  on-demand vendoring per ADR-0012 supersedes the retired seed-time `VENDOR.lock`,
+  #223); that the `ontology-manager` skill scaffolds a contract-valid NEW
   ontology and the registry is extensible (count rises); that
   `scripts/resolve-ontology.sh` resolves a typed finding to exactly one bound
   ontology and validates its entity (additive) while undeclared, missing-required,

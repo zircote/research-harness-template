@@ -133,8 +133,8 @@ and under a broken ajv.
 ## Ontology — `schemas/mif/ontology.schema.json`
 
 The ontology definition contract (`schemas/mif/ontology.schema.json`), seeded from MIF
-with provenance recorded in `schemas/mif/VENDOR.lock` (nothing is locked — the contract
-is first-class and evolves in-repo on its way back to MIF). An ontology declares
+(nothing is locked — the contract is first-class and evolves in-repo on its way back to
+MIF). An ontology declares
 `entity_types` (each `{name, base, subtype_of?, schema:{required, properties}}`) and
 `relationships`. A type may declare `subtype_of` (parent types it specializes); a
 subtype is substitutable for its supertype at a relationship endpoint. The **registry** is the set of
@@ -158,7 +158,7 @@ catalog aborts) and is bash-3.2 portable. Classification — stamping a finding'
 `entity_type` — is an upstream agent step (`dimension-analyst`, topic onboarding in
 `/start`); the resolver and `gate_m12` are the deterministic floor. `gate_m12` asserts:
 the contract validates its sample; every registry ontology validates; id@version is
-unique; VENDOR.lock locks nothing (the contract is first-class editable);
+unique;
 the `ontology-manager` skill scaffolds a new valid ontology (registry extensible);
 the resolver pass/fail matrix; fail-safe; binding
 → catalog → registry integrity; and the pack-enable path end to end.

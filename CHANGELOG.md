@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-30
+
+### Removed
+
+- **Retired the seed-time `schemas/mif/VENDOR.lock` provenance file** (#223). It is
+  moot under on-demand vendoring (ADR-0012, #221): the registry-pinned
+  `ontologies.lock.json` + `scripts/check-ontology-lock.sh` now carry vendored-pack
+  provenance, and the MIF contract is first-class and editable in-repo. `gate_m12`
+  drops its verbatim-set assertion (subsection 12d); it still validates the contract
+  and every registry ontology, asserts `id@version` uniqueness, and exercises the
+  resolver/pack-enable matrix. Docs reconciled (ADR-0002 audit, ontology-conformance,
+  contracts reference, COMPLETION-CRITERIA, `ontology-manager` skill).
+
 ## [0.7.0] - 2026-06-30
 
 ### Added

@@ -16,16 +16,15 @@ MIF's `mif.schema.json` ships an ontology *reference* (`OntologyReference`) and 
 referenced ontology existed, that an `entity_type` was one the ontology declared, or
 that an entity's fields matched. Ontology was conformance-*claimed* but unenforced —
 pure agent trust. `gate_m12` makes it real: the build fails on any unresolvable
-reference, undeclared/ambiguous type, missing required field, dangling
-binding/catalog link, or broken (missing/invalid) `VENDOR.lock` provenance.
+reference, undeclared/ambiguous type, missing required field, or dangling
+binding/catalog link.
 
 ## Vendored from MIF, not invented
 
 The **contract** (`schemas/mif/ontology.schema.json` + context) was seeded from
-`github.com/modeled-information-format/MIF`, with provenance (source, commit, seed SHA-256) recorded in
-`schemas/mif/VENDOR.lock`. **Nothing is locked** — the contract is first-class and
+`github.com/modeled-information-format/MIF`. **Nothing is locked** — the contract is first-class and
 evolves in-repo (e.g. the `subtype_of` entity-type subsumption field) on its way back
-to MIF; `gate_m12` asserts no file is verbatim-locked. The base ontologies (`mif-base`,
+to MIF. The base ontologies (`mif-base`,
 `shared-traits`) and the example ontologies were seeded the same way and are equally
 editable: created, expanded, and enriched via the `ontology-manager` skill (see
 `/ontology-review` Phase 3). `gate_m12` re-validates every ontology — original or
@@ -41,7 +40,7 @@ file) expressed so they can be classified against.
 The registry is the set of vendored ontology **YAMLs** — the single committed source
 of truth. JSON is projected with `yq -o=json | ajv` at validate time and never
 committed. This avoids three failure modes a committed projection would create: an
-uncheckable file outside VENDOR.lock, silent drift when the yaml changes, and hostage
+uncheckable committed artifact, silent drift when the yaml changes, and hostage
 to whatever `yq` version produced the json.
 
 ## Per-topic binding, with an always-on core
