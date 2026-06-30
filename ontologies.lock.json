@@ -1,5 +1,4 @@
 {
-  "index_sha256": "00c2899edf798a465ca305dd7e00db2ac51125c51493c549d6dca0d355378ac3",
   "ontologies": {
     "data-engineering": {
       "sha256": "15e5edac8f212859cecb1af363f5b6d9ec0edbf19fb4650cd2534a3307cb874c",
@@ -27,5 +26,5 @@
     }
   },
   "schema": "mif-ontology-lock/v1",
-  "source": "/Users/AllenR1_1/Projects/modeled-information-format/repos/MIF/public/ontologies"
+  "source": "https://mif-spec.dev/ontologies"
 }
