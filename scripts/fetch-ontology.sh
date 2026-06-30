@@ -57,9 +57,26 @@ fetch_raw() { # <relpath> <out>
 }
 
 # --- load the registry index ------------------------------------------------
-INDEX_FILE="$(mktemp)"; trap 'rm -f "$INDEX_FILE"' EXIT
+INDEX_FILE="$(mktemp)" || die "mktemp failed"; trap 'rm -f "$INDEX_FILE"' EXIT
 fetch_raw "$INDEX_NAME" "$INDEX_FILE" || die "cannot read index at $SRC/$INDEX_NAME"
 jq -e '.ontologies' "$INDEX_FILE" >/dev/null 2>&1 || die "index at $SRC is malformed (no .ontologies)"
+
+# Index integrity — the index is the trust root (it supplies every per-file sha256),
+# so first-fetch authenticity otherwise rests only on TLS. Trust-on-first-use, then
+# PIN: record the index sha256 in the lock and refuse a changed index for the same
+# source on later fetches (deliberate re-pin = clear .index_sha256). A served,
+# attested registry will supersede TOFU here.
+INDEX_SHA="$(sha_of "$INDEX_FILE")"
+if [ -f "$LOCK" ]; then
+  pinned_idx="$(jq -r '.index_sha256 // empty' "$LOCK" 2>/dev/null)"
+  lock_src="$(jq -r '.source // empty' "$LOCK" 2>/dev/null)"
+  if [ -n "$pinned_idx" ] && [ "$lock_src" = "$SRC" ] && [ "$pinned_idx" != "$INDEX_SHA" ]; then
+    die "registry index sha256 changed from the pinned value for source $SRC
+       pinned $pinned_idx
+       got    $INDEX_SHA
+  -> the trust root moved; refusing (clear .index_sha256 in $LOCK to re-pin deliberately)."
+  fi
+fi
 
 idx() { jq -r --arg id "$1" --arg k "$2" '.ontologies[$id][$k] // empty' "$INDEX_FILE"; }
 idx_extends() { jq -r --arg id "$1" '.ontologies[$id].extends[]? // empty' "$INDEX_FILE"; }
@@ -96,12 +113,15 @@ fi
 
 # --- fetch + verify + materialize each domain layer -------------------------
 [ -f "$LOCK" ] || printf '{\n  "schema": "mif-ontology-lock/v1",\n  "source": "%s",\n  "ontologies": {}\n}\n' "$SRC" > "$LOCK"
-lock_tmp="$(mktemp)"; cp "$LOCK" "$lock_tmp"
+lock_tmp="$(mktemp)" || die "mktemp failed"; cp "$LOCK" "$lock_tmp"
 
 for id in $fetch_list; do
   file="$(idx "$id" file)"; want="$(idx "$id" sha256)"; ver="$(idx "$id" version)"
   [ -n "$file" ] && [ -n "$want" ] || die "index entry for '$id' is incomplete (file/sha256 missing)"
-  tmp="$(mktemp)"
+  # The index's `file` is untrusted input used to build a fetch path; a poisoned
+  # index with `file:"../../evil"` could escape. Require a bare filename.
+  case "$file" in */*|*..*) die "index entry for '$id' has an unsafe file path: '$file' (must be a bare filename)";; esac
+  tmp="$(mktemp)" || die "mktemp failed"
   fetch_raw "$file" "$tmp" || { rm -f "$tmp"; die "failed to fetch $file from $SRC"; }
   got="$(sha_of "$tmp")"
   if [ "$got" != "$want" ]; then
@@ -110,8 +130,11 @@ for id in $fetch_list; do
   -> refusing to vendor an ontology that does not match the pinned registry hash (fail-closed)."
   fi
   dest="$PACKS_DIR/$id"; mkdir -p "$dest"
-  mv "$tmp" "$dest/$file"
-  desc="$(yq -r '.ontology.description // ""' "$dest/$file")"
+  # Write to the canonical <id>.ontology.yaml regardless of the registry's `file`,
+  # so sync-packs.sh / check-ontology-lock.sh (which hard-code that name) stay in sync.
+  out_yaml="$dest/$id.ontology.yaml"
+  mv "$tmp" "$out_yaml"
+  desc="$(yq -r '.ontology.description // ""' "$out_yaml")"
   jq -n --arg name "$id" --arg ver "$ver" --arg desc "$desc" \
     '{name:$name, version:$ver, kind:"ontology", description:$desc, provides:{ontologies:[$name]}}' \
     > "$dest/ontology.pack.json"
@@ -120,5 +143,5 @@ for id in $fetch_list; do
   echo "fetch-ontology: vendored $id@$ver (sha256 ok) -> packs/ontologies/$id/"
 done
 
-jq -S '.' "$lock_tmp" > "$LOCK"; rm -f "$lock_tmp"
-echo "fetch-ontology: lock updated ($LOCK). Run scripts/sync-packs.sh to refresh the catalog."
+jq -S --arg idx "$INDEX_SHA" --arg src "$SRC" '.index_sha256=$idx | .source=$src' "$lock_tmp" > "$LOCK"; rm -f "$lock_tmp"
+echo "fetch-ontology: lock updated ($LOCK; index pinned). Run scripts/sync-packs.sh to refresh the catalog."

@@ -2280,6 +2280,21 @@ JSON
   rm -rf "$T"
 }
 
+gate_ontology_lock() {
+  info "Ontology vendoring — pinned-lock integrity (ADR-0012)"
+  # On-demand vendored domain ontologies must match their pinned sha256 (no local
+  # drift; fixes go upstream). No ontologies.lock.json = vendoring not adopted in
+  # this clone = nothing to verify = clean pass.
+  local out rc
+  out="$(scripts/check-ontology-lock.sh 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ]; then
+    ok "vendored ontologies match the lock (or on-demand vendoring not adopted)"
+  else
+    bad "vendored ontology drift / missing pin (scripts/check-ontology-lock.sh)"
+    printf '%s\n' "$out" | sed 's/^/      /' >&2
+  fi
+}
+
 gate_versions() {
   info "Version consistency — change-driven model (ADR-0010)"
 
@@ -2329,7 +2344,7 @@ gate_versions() {
 # ---------------------------------------------------------------------------
 # Gate registry — each milestone appends its function name here.
 # ---------------------------------------------------------------------------
-GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23 gate_m24 gate_m25 gate_versions)
+GATES=(gate_m1 gate_m2 gate_m3 gate_m4 gate_m5 gate_m6 gate_m7 gate_m8 gate_m9 gate_m10 gate_m11 gate_m12 gate_m13 gate_m14 gate_m15 gate_m16 gate_m17 gate_m18 gate_m19 gate_m20 gate_m21 gate_m22 gate_m23 gate_m24 gate_m25 gate_ontology_lock gate_versions)
 
 for g in "${GATES[@]}"; do "$g"; done
 

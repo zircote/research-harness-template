@@ -43,7 +43,7 @@ types_json=$(jq '[.[]? | {t: .entity_type, generic: ((.resolved_ontology // "") 
 ntypes=$(jq 'length' <<<"$types_json")
 [ "$ntypes" -gt 0 ] || { echo "author-ontology: no entity types found in $MAP" >&2; exit 1; }
 
-OUT="${OUT:-$(mktemp -t "$NEWID.ontology.XXXX.yaml")}"
+[ -n "$OUT" ] || OUT="$(mktemp -t "$NEWID.ontology.XXXX.yaml")" || { echo "author-ontology: mktemp failed" >&2; exit 1; }
 {
   echo "---"
   echo "# ${NEWID} ontology — DRAFT scaffolded from research topic '${TOPIC}'."
@@ -103,9 +103,9 @@ command -v gh >/dev/null || { echo "author-ontology: gh CLI required for --open-
 
 branch="feat/ontology-${NEWID}"
 cp "$OUT" "$ONT_REPO/ontologies/${NEWID}.ontology.yaml"
-( cd "$ONT_REPO" \
-  && [ -x scripts/gen-ontology-index.sh ] && bash scripts/gen-ontology-index.sh \
-  ; git checkout -b "$branch" \
+( cd "$ONT_REPO" || exit 1
+  if [ -x scripts/gen-ontology-index.sh ]; then bash scripts/gen-ontology-index.sh || exit 1; fi
+  git checkout -b "$branch" \
   && git add -A \
   && git commit -q -m "feat(ontology): add ${NEWID} (drafted from harness topic ${TOPIC})
 
