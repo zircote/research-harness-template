@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-30
+
+### Added
+
+- **On-demand ontology vendoring** (ADR-0012). Domain ontologies are fetched from
+  the canonical registry (the `ontologies` repo → `mif-spec.dev/ontologies/`) and
+  verified fail-closed against a pinned `sha256` index, instead of every clone
+  bundling every ontology. New `scripts/fetch-ontology.sh` (resolve the `extends`
+  closure, fetch, sha256-verify, materialize `packs/ontologies/<id>/`, pin
+  `ontologies.lock.json`); `scripts/check-ontology-lock.sh` (drift gate — a
+  vendored copy must match its pinned hash, so fixes go upstream, not in place);
+  and `scripts/author-ontology.sh` (when no ontology covers a domain, scaffold one
+  from the topic's observed entity types and concierge a draft PR upstream). Base
+  layers stay committed. Covered by `evals/ontology-vendoring.sh`. Flipping the
+  bundled domain packs to a gitignored on-demand cache (with corpus re-enrichment)
+  is a staged follow-up once the registry is served.
+
 ## [0.6.1] - 2026-06-30
 
 ### Fixed
