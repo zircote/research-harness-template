@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-30
+
+### Fixed
+
+- **Project hooks skip cleanly when their script is absent.** Each `.claude/settings.json`
+  Stop/PreToolUse hook command now guards on the script's presence
+  (`[ -f "$CLAUDE_PROJECT_DIR/.claude/hooks/…" ] || exit 0`) before invoking it, so a
+  partial checkout or any context without the harness hook scripts no-ops the hook
+  instead of failing the tool call.
+
 ## [0.6.0] - 2026-06-29
 
 ### Added
