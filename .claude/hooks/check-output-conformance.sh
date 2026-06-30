@@ -27,7 +27,7 @@ while IFS= read -r f; do
   # agent-consumable architecture spec (mif.exempt, MIF Level-1, a synthesis across many findings,
   # not a single Level-3 graded finding) — all MIF-exempt projections (like blog/book), not
   # Level-3 reports of record.
-  case "$f" in reports/_meta/*|reports/_corpus/*|reports/*/README.md|reports/**/*-build-spec.md|reports/*/*-build-spec.md) continue ;; esac
+  case "$f" in reports/_meta/*|reports/_corpus/*|reports/*/README.md|reports/*/*-build-spec.md) continue ;; esac
   scripts/mif-project.sh "$f" >/dev/null 2>&1 || BAD="${BAD}${f} "
 done <<< "$CHANGED"
 [ -z "$BAD" ] && exit 0
