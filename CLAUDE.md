@@ -111,6 +111,19 @@ always-on generic core + optional domain ontologies, layered via `extends`,
 enforced fail-closed by `resolve-ontology.sh` / `validate-concordance.sh`. Types
 compose into the cross-topic **concordance** (`reports/concordance.json`).
 
+**Domain ontologies are vendored on demand** (ADR-0012). Base layers
+(`schemas/ontologies/*`) ship committed; domain packs are fetched from the
+canonical registry (`ontologies` repo → `mif-spec.dev/ontologies/`) by
+`scripts/fetch-ontology.sh <id>`, sha256-verified fail-closed against the
+registry `index.json` and pinned in `ontologies.lock.json`
+(`scripts/check-ontology-lock.sh` proves no drift — **never hand-edit a vendored
+pack; fix it upstream and re-fetch**). When no ontology covers a domain,
+`scripts/author-ontology.sh <id> <topic>` scaffolds one from the corpus and
+concierges a PR upstream. NOTE: the mechanism is shipped; flipping the bundled
+domain packs to a gitignored cache + re-syncing to canonical is a staged
+follow-up (it requires re-enriching the bundled corpus, since canonical migrated
+some entity-type names).
+
 ## Template vs instance
 
 The distributable template carries `copier.yml`; an instantiated clone does not.
