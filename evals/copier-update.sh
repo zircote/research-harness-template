@@ -37,16 +37,30 @@ fi
 
 # Run copier with its stderr CAPTURED (surfaced on failure, never swallowed — a gate that
 # hides its tool's error makes every failure an undiagnosable "flake") and a bounded retry of
-# one specific transient race: copier clones the template via a LOCAL path, so git hardlinks
-# loose objects from .git/objects, and under concurrent git/IO load that clone fails with
-# exit 128 "failed to copy file to ... .git/objects/...". Retry only that signature; surface
-# everything else immediately.
+# two specific transient races on copier's LOCAL-path clone of the template, both under
+# concurrent git/IO load on its temp `.git/objects`:
+#   (1) the clone fails to hardlink a loose object — exit 128 "failed to copy file to
+#       ... .git/objects/..."; and
+#   (2) copier's POST-RUN cleanup rmtree of its temp clone hits "Directory not empty:
+#       .../copier._main.new_copy*/.git[...]" (Python 3.14 TemporaryDirectory rmtree race).
+#       This fires AFTER copier has already rendered/applied to the destination — only the
+#       temp cleanup crashes — so retrying the whole op is wrong (the destination is now
+#       dirty -> "Destination repository is dirty"). Treat it as success instead; the
+#       caller's own assertions verify the update actually landed.
+# Retry (1); pass-through (2); surface everything else immediately.
 copier_run() {
-  local sub="$1" attempt=1 max=4 rc errf
+  local sub="$1" attempt=1 max=6 rc errf
   errf=$(mktemp) || { echo "copier-update: mktemp failed — cannot capture copier stderr (fail closed)" >&2; return 1; }
   while :; do
     copier "$@" >/dev/null 2>"$errf"; rc=$?
     if [ "$rc" -eq 0 ]; then rm -f "$errf"; return 0; fi
+    # (2) Post-apply temp-cleanup race: the render finished; only copier's temp rmtree crashed.
+    if grep -qE "Directory not empty:.*copier\._main\.new_copy" "$errf" \
+       && ! grep -q "failed to copy file to" "$errf"; then
+      echo "  copier: ignored post-update temp-cleanup race on '$sub' (update applied; assertions verify)" >&2
+      rm -f "$errf"; return 0
+    fi
+    # (1) Pre-apply clone hardlink race: the render never happened; retrying is safe.
     if [ "$attempt" -lt "$max" ] && grep -q "failed to copy file to" "$errf"; then
       echo "  copier: transient local-clone race on '$sub' (attempt $attempt/$max) — retrying" >&2
       attempt=$((attempt + 1)); sleep 1; : > "$errf"; continue

@@ -44,3 +44,7 @@ reports/**/.gate_stderr*
 # (concordance.json itself stays tracked — it is deterministic and on the allowlist.)
 reports/concordance-status.json
 reports/**/.synthesis-withheld
+
+# Domain ontology packs are vendored on demand from the canonical registry
+# (ADR-0012, #224); only base layers under schemas/ontologies/ ship committed.
+packs/ontologies/

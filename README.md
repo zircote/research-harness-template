@@ -11,6 +11,22 @@ engine, the methodology skills, the workflows, the contracts, the knowledge
 graph, multi-topic support, and the research→blog and research→book output
 pipelines — all in one package.
 
+> [!IMPORTANT]
+> **This is not a chatbot "deep research" button.** It is a *falsified deep
+> exploration* and a persistent *knowledge graph* — not a one-shot answer. It
+> deliberately exchanges tokens for adversarial falsification (every finding
+> survives a falsification gate or is recorded as disproven), extreme depth of
+> detail, and reusable, typed research results that accrete into an
+> ever-expanding knowledge tree. Expect higher token cost and longer runs than a
+> conversational summary; what you get back is a durable, citable, MIF-native
+> corpus you can build on, not a transient reply.
+>
+> And be clear-eyed about what's underneath: this is an AI tool. It doesn't just
+> *can* make mistakes — it **will** make mistakes. That is precisely why the
+> rigor is here: schemas, the ontology spine, MIF conformance, and an adversarial
+> falsification gate exist to catch, type-check, and disprove what the model gets
+> wrong, so what survives is something you can actually trust.
+
 **New here?** [Reading the research](docs/explanation/reading-the-research.md)
 explains what a research topic produces, how to navigate it, how to read a
 report, and what each report genre is for — the fastest way to understand the

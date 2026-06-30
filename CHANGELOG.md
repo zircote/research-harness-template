@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-30
+
+### Changed
+
+- **Domain ontology packs are now vendored on demand, not bundled** (#224,
+  completing ADR-0012). The 12 domain packs under `packs/ontologies/*` are
+  `git rm`'d and the directory is gitignored; only base layers under
+  `schemas/ontologies/` ship committed. Clones/CI vendor the enabled packs from
+  the canonical registry (`scripts/fetch-ontology.sh --all-enabled`,
+  sha256-verified, pinned in `ontologies.lock.json`) before the catalog is built
+  — wired into copier `_tasks` and the CI `verify` job ahead of `verify.sh`. The
+  `ontologies.lock.json` pin ships committed and `check-ontology-lock.sh` proves
+  no drift (#222 follow-through: lock present + gate-clean). `gate_m22` vendors
+  its `software-security` subtype_of exemplar on demand. Override the registry
+  source for dev/CI/offline with `$MIF_ONTOLOGY_SOURCE`.
+
+### Added
+
+- **README "not a chatbot deep-research" notice** — clarifies the harness is a
+  falsified deep-exploration + knowledge-graph engine (adversarial falsification,
+  depth, reusable accreting results), and that AI *will* make mistakes, which is
+  why the schema/ontology/MIF/falsification rigor exists.
+
+### Fixed
+
+- `evals/copier-update.sh` now treats copier's post-apply temp-clone cleanup
+  race (Python 3.14 `rmtree` "Directory not empty" on `copier._main.new_copy*`)
+  as success — the render already landed; the script's assertions verify it — and
+  still retries the pre-apply local-clone hardlink race.
+
 ## [0.7.1] - 2026-06-30
 
 ### Added

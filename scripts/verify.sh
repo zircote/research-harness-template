@@ -1873,6 +1873,11 @@ gate_m22() {
   # `control`; the cross-cutting `governs` edge (control/policy -> component/artifact)
   # must therefore ACCEPT a security-control source and REJECT a non-subtype source.
   # Also: every subtype_of parent across the registry must be a declared type.
+  # software-security is a domain pack vendored on demand (ADR-0012/#224) and is not
+  # in the always-enabled set, so this gate vendors its subtype_of exemplar itself.
+  if [ ! -f packs/ontologies/software-security/software-security.ontology.yaml ]; then
+    scripts/fetch-ontology.sh software-security >/dev/null 2>&1 || true
+  fi
   local T; T="$(mktemp -d)"
   cat > "$T/cat.json" <<'JSON'
 {"ontologies":[
