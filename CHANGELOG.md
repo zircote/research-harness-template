@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.1] - 2026-06-30
 
+### Changed
+
+- Re-cut of 0.8.0 (the v0.8.0 tag was bound to a deleted release); no functional changes. See 0.8.0 notes below.
+
 ## [0.8.0] - 2026-06-30
 
 ### Changed
