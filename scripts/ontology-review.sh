@@ -83,9 +83,25 @@ done
 # Runs (and prints) before the coverage summary below, which callers treat as
 # the final line of output.
 rel_bad=0
-if ! "$ROOT/scripts/check-relationship-targets.sh" --reports-dir "$RD"; then
-  rel_bad=1
-  any_bad=1
+if [ -d "$RD" ]; then
+  # Mirror the per-topic loop's own "$fdir doesn't exist -> skip" behavior
+  # above: a reports dir that doesn't exist at all (fresh checkout) is
+  # nothing-to-check, not a failure.
+  "$ROOT/scripts/check-relationship-targets.sh" --reports-dir "$RD"
+  rel_rc=$?
+  if [ "$rel_rc" = 1 ]; then
+    # Orphaned relationships[].target values — this is the condition the
+    # message below names.
+    rel_bad=1
+    any_bad=1
+  elif [ "$rel_rc" != 0 ]; then
+    # Usage/environment error (missing jq, or a finding jq cannot parse —
+    # see check-relationship-targets.sh's own exit-2 contract). Do not fold
+    # this into rel_bad/"orphaned" — that would misreport an environment
+    # failure as a data-integrity finding.
+    echo "ontology-review: check-relationship-targets.sh failed (exit $rel_rc, not an orphan finding) — see its output above" >&2
+    exit 2
+  fi
 fi
 
 echo "---"

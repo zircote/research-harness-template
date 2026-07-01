@@ -15,9 +15,10 @@
 # finding that used to be active.
 #
 # The "real @id" universe is corpus-wide (@id is a globally unique URN) and
-# ACTIVE-ONLY: quarantine/, archive/, and drafts-superseded/ are excluded,
-# matching falsification-analyst.md's own working-set definition ("the
-# quarantine/ and archive/ siblings are separate and excluded").
+# ACTIVE-ONLY: only <topic>/findings/*.json is globbed, so quarantine/ and
+# archive/ are excluded, matching falsification-analyst.md's own working-set
+# definition ("the quarantine/ and archive/ siblings are separate and
+# excluded").
 #
 # KNOWN LIMITATION: dimension-analyst.md permits a target that is "a urn:mif:
 # id of an external concept" outside this corpus. This gate cannot distinguish
@@ -31,7 +32,9 @@
 #   exit 0 = every relationships[].target resolves to an active finding @id
 #   exit 1 = one or more orphaned targets found (each printed as
 #            "<source-file>\t<orphaned-target>")
-#   exit 2 = usage/environment error (missing jq, missing reports dir)
+#   exit 2 = usage/environment error (missing jq, missing reports dir, or a
+#            finding file that jq cannot parse — see below for why this must
+#            be a hard failure rather than a silent skip)
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RD="$ROOT/reports"
@@ -44,12 +47,12 @@ done
 command -v jq >/dev/null || { echo "check-relationship-targets: jq required" >&2; exit 2; }
 [ -d "$RD" ] || { echo "check-relationship-targets: reports dir not found: $RD" >&2; exit 2; }
 
-FILES="$(mktemp)"; IDS="$(mktemp)"; TARGETS="$(mktemp)"
-trap 'rm -f "$FILES" "$IDS" "$TARGETS"' EXIT
+FILES="$(mktemp)"; IDS="$(mktemp)"; TARGETS="$(mktemp)"; JQERR="$(mktemp)"
+trap 'rm -f "$FILES" "$IDS" "$TARGETS" "$JQERR"' EXIT
 
 # Active-id universe: every finding's @id under <topic>/findings/*.json,
-# across every topic. quarantine/, archive/, and drafts-superseded/ are
-# separate siblings of findings/ and are never globbed here. Collect the file
+# across every topic. quarantine/ and archive/ are separate siblings of
+# findings/ and are never globbed here. Collect the file
 # list once, then hand it to jq/xargs in bulk (a handful of process spawns,
 # not one per finding) — this corpus runs into the thousands of files.
 find "$RD" -mindepth 2 -maxdepth 2 -type d -name findings -print0 \
@@ -59,12 +62,29 @@ find "$RD" -mindepth 2 -maxdepth 2 -type d -name findings -print0 \
 
 [ -s "$FILES" ] || { echo "check-relationship-targets: no active findings found under $RD — nothing to check" >&2; exit 0; }
 
-xargs -0 jq -r '."@id" // empty' < "$FILES" 2>/dev/null | sort -u > "$IDS"
+# jq, given multiple file args, aborts the whole batch (not just the one bad
+# file) on the first unparseable JSON — silently truncating everything after
+# it in file order. Under the old `2>/dev/null`, that meant one malformed
+# finding anywhere in the corpus made the active-@id universe (and the
+# targets list) silently incomplete: real orphans past the bad file went
+# unreported, and findings past the bad file could be misreported as
+# orphaned. Both jq passes here therefore fail loudly (exit 2) instead of
+# swallowing the error, matching this repo's no-silent-diagnostic-suppression
+# convention.
+if ! xargs -0 jq -r '."@id" // empty' < "$FILES" 2>"$JQERR" | sort -u > "$IDS"; then
+  echo "check-relationship-targets: jq failed to parse one or more finding files under $RD — fix the invalid JSON before re-running:" >&2
+  cat "$JQERR" >&2
+  exit 2
+fi
 
 # Every relationships[].target, paired with its source file for reporting.
 # input_filename is jq's current-file name when given multiple file args.
-xargs -0 jq -r 'input_filename as $f | (.relationships // [])[]?.target // empty | "\($f)\t\(.)"' \
-  < "$FILES" 2>/dev/null > "$TARGETS"
+if ! xargs -0 jq -r 'input_filename as $f | (.relationships // [])[]?.target // empty | "\($f)\t\(.)"' \
+  < "$FILES" 2>"$JQERR" > "$TARGETS"; then
+  echo "check-relationship-targets: jq failed to parse one or more finding files under $RD — fix the invalid JSON before re-running:" >&2
+  cat "$JQERR" >&2
+  exit 2
+fi
 
 fail=0; checked=0
 while IFS=$'\t' read -r src target; do
