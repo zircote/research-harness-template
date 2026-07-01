@@ -246,6 +246,34 @@
         }
       }
     },
+    "marketplaces": {
+      "type": "array",
+      "description": "External Claude Code plugin marketplaces this harness depends on, declared once. A packs[] entry with source.type \"marketplace-ref\" names one of these by `name` instead of repeating {type, url, ref} per pack \u2014 the fix for N packs from the same external plugin (e.g. every genre mif-docs-plugin ships) each duplicating an identical source object. Declaring a plugin here does not enable any of its skills; packs[] enabled flags still control that per-pack.",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "url"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Referenced by packs[] entries via source.marketplace."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The marketplace/plugin repo (e.g. a GitHub repo hosting a .claude-plugin/marketplace.json or a single-plugin .claude-plugin/plugin.json)."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Pinned tag/SHA for the marketplace repo itself. A consuming pack's source.ref overrides this when that specific pack/skill needs a different pin (e.g. a newer commit than the rest of the marketplace has been bumped to)."
+          }
+        }
+      }
+    },
     "packs": {
       "type": "array",
       "description": "The pack control plane (SPEC \u00a77b): each entry enables/disables a pack and declares its source. Materialized into Claude Code's enabledPlugins at instantiation.",
@@ -273,7 +301,7 @@
               },
               {
                 "type": "object",
-                "description": "An external or private plugin the clone is entitled to.",
+                "description": "An external or private plugin the clone is entitled to, declared inline (one-off; not shared with any other pack).",
                 "required": [
                   "type",
                   "url"
@@ -293,6 +321,28 @@
                   },
                   "ref": {
                     "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "description": "A plugin provided by a marketplace declared in the top-level marketplaces[] \u2014 use this when two or more packs share the same external source, instead of repeating {type, url, ref} on each.",
+                "required": [
+                  "type",
+                  "marketplace"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "marketplace-ref"
+                  },
+                  "marketplace": {
+                    "type": "string",
+                    "description": "Must name an entry in the top-level marketplaces[]."
+                  },
+                  "ref": {
+                    "type": "string",
+                    "description": "Overrides the named marketplace's own `ref` for this pack only."
                   }
                 }
               }

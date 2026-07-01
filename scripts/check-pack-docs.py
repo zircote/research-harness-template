@@ -59,16 +59,25 @@ def external_packs() -> dict[str, str]:
     """Packs consumed from an external source (ADR/#228): {name: source url}.
 
     A ``harness.config.json`` ``packs[]`` entry with an object ``source``
-    (``{"type": "git"|"marketplace", "url": ...}``) has no committed
-    ``packs/<family>/<name>/`` directory — its family membership is resolved by
-    whichever family page already documents it (see ``main``)."""
+    (``{"type": "git"|"marketplace", "url": ...}``, or ``{"type":
+    "marketplace-ref", "marketplace": <name>}`` resolved against the top-level
+    ``marketplaces[]``) has no committed ``packs/<family>/<name>/`` directory —
+    its family membership is resolved by whichever family page already
+    documents it (see ``main``)."""
     ids: dict[str, str] = {}
     cfg = REPO / "harness.config.json"
     if cfg.is_file():
         data = json.loads(cfg.read_text(encoding="utf-8"))
+        marketplaces = {m["name"]: m for m in data.get("marketplaces", []) if isinstance(m, dict) and "name" in m}
         for p in data.get("packs", []):
             src = p.get("source")
-            if isinstance(src, dict) and isinstance(src.get("url"), str):
+            if not isinstance(src, dict):
+                continue
+            if src.get("type") == "marketplace-ref":
+                mkt = marketplaces.get(src.get("marketplace"), {})
+                if isinstance(mkt.get("url"), str):
+                    ids[p["name"]] = mkt["url"]
+            elif isinstance(src.get("url"), str):
                 ids[p["name"]] = src["url"]
     return ids
 

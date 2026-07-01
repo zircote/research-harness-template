@@ -396,6 +396,28 @@ gate_m5() {
   fi
   rm -rf "$T"
 
+  # 5d2. A declared marketplaces[] entry lets two+ packs share one external
+  #      source (type/url/ref) instead of repeating it per pack; a pack-local
+  #      ref overrides the marketplace's ref for that pack only.
+  T=$(mktemp -d)
+  cp .claude/settings.json "$T/settings-mkt.json"
+  jq '.marketplaces = [{"name":"demo-mkt","url":"https://example.com/demo-mkt.git","ref":"main-sha"}]
+      | .packs += [
+          {"name":"mkt-demo-a","enabled":true,"source":{"type":"marketplace-ref","marketplace":"demo-mkt"}},
+          {"name":"mkt-demo-b","enabled":true,"source":{"type":"marketplace-ref","marketplace":"demo-mkt","ref":"pack-b-sha"}}
+        ]' harness.config.json > "$T/mkt.cfg.json"
+  if ajv_plain harness.config.schema.json "$T/mkt.cfg.json" \
+     && scripts/sync-packs.sh "$T/mkt.cfg.json" "$T/mkt.json" "$T/settings-mkt.json" >/dev/null 2>&1 \
+     && [ "$(jq -r '.packs[]|select(.name=="mkt-demo-a")|.url' "$T/mkt.json")" = "https://example.com/demo-mkt.git" ] \
+     && [ "$(jq -r '.packs[]|select(.name=="mkt-demo-a")|.ref' "$T/mkt.json")" = "main-sha" ] \
+     && [ "$(jq -r '.packs[]|select(.name=="mkt-demo-b")|.ref' "$T/mkt.json")" = "pack-b-sha" ] \
+     && [ "$(jq -r '.enabledPlugins | has("mkt-demo-a@research-harness") and has("mkt-demo-b@research-harness")' "$T/settings-mkt.json")" = "true" ]; then
+    ok "marketplaces[] is shared across packs; a pack-local ref overrides it"
+  else
+    bad "marketplace-ref resolution failed"
+  fi
+  rm -rf "$T"
+
   # 5e. Every bundled per-skill plugin is registered in the marketplace, and its
   #     source path resolves to a real plugin.json.
   local reg_ok

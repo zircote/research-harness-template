@@ -39,6 +39,7 @@ import json, sys
 cfg_path, out_path, settings_path, market = sys.argv[1:5]
 cfg = json.load(open(cfg_path))
 enabled = [p for p in cfg.get("packs", []) if p.get("enabled")]
+marketplaces_by_name = {m["name"]: m for m in cfg.get("marketplaces", []) if isinstance(m, dict) and "name" in m}
 
 # Each bundled plugin is one skill nested under its pack (packs/<pack>/<skill>/);
 # resolve its directory from the marketplace's source path by plugin name rather
@@ -66,6 +67,14 @@ for p in enabled:
             entry["skills"] = []
             entry["error"] = f"unreadable manifest {mf}: {e}"
         packs.append(entry)
+    elif isinstance(src, dict) and src.get("type") == "marketplace-ref":
+        # Resolve against the declared marketplaces[] entry by name; a pack-local
+        # `ref` overrides the marketplace's own ref for this pack only.
+        mkt = marketplaces_by_name.get(src.get("marketplace"), {})
+        packs.append({"name": name, "source": "external",
+                      "marketplace": src.get("marketplace"), "url": mkt.get("url"),
+                      "ref": src.get("ref", mkt.get("ref")),
+                      "skills": []})
     else:
         packs.append({"name": name, "source": "external",
                       "type": (src or {}).get("type"), "url": (src or {}).get("url"),

@@ -97,12 +97,39 @@ exemption is for orthogonal *formats*, never for genres (see
 ## Control plane
 
 `harness.config.json` `packs[]` is the single control plane. Each entry names a
-plugin with an `enabled` flag and a `source` (`bundled`, or an external
-git/marketplace plugin).
+plugin with an `enabled` flag and a `source` (`bundled`, an inline external
+git/marketplace plugin, or a reference into `marketplaces[]`).
 
 ```json
-{ "name": "engineering", "enabled": true, "source": "bundled" }
+{ "name": "briefing", "enabled": true, "source": "bundled" }
 ```
+
+### Declared marketplaces — one dependency, many packs
+
+`harness.config.json` `marketplaces[]` declares an external plugin source
+**once** (`name`, `url`, a pinned `ref`); any number of `packs[]` entries then
+reference it by name instead of each repeating an identical `{type, url, ref}`
+object. Use this whenever two or more packs come from the same external
+plugin (e.g. every genre skill `mif-docs-plugin` ships), or to declare a
+dependency on an external plugin before any pack references it (e.g. adding
+`human-voice` as a marketplace ahead of consuming one of its skills).
+
+```json
+{
+  "marketplaces": [
+    { "name": "mif-docs", "url": "https://github.com/modeled-information-format/mif-docs-plugin", "ref": "<pinned-sha>" }
+  ],
+  "packs": [
+    { "name": "engineering", "enabled": true, "source": { "type": "marketplace-ref", "marketplace": "mif-docs" } }
+  ]
+}
+```
+
+A pack's own `source.ref` overrides the marketplace's `ref` for that one pack,
+for the rare case a specific skill needs a newer (or older) pin than the rest
+of the marketplace. Declaring a marketplace does not enable anything by
+itself — a `packs[]` entry's `enabled` flag still controls that per pack, same
+as any other source.
 
 | Operation | Command |
 | --- | --- |
