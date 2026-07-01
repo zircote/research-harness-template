@@ -55,7 +55,7 @@ def declared_ontologies() -> list[str]:
     return sorted(ids)
 
 
-def external_packs() -> dict[str, str]:
+def external_packs() -> tuple[dict[str, str], list[str]]:
     """Packs consumed from an external source (ADR/#228): {name: source url}.
 
     A ``harness.config.json`` ``packs[]`` entry with an object ``source``
@@ -63,8 +63,14 @@ def external_packs() -> dict[str, str]:
     "marketplace-ref", "marketplace": <name>}`` resolved against the top-level
     ``marketplaces[]``) has no committed ``packs/<family>/<name>/`` directory —
     its family membership is resolved by whichever family page already
-    documents it (see ``main``)."""
+    documents it (see ``main``).
+
+    Also returns a list of error strings for ``marketplace-ref`` entries whose
+    ``marketplace`` name has no matching ``marketplaces[]`` declaration, so a
+    typo surfaces as its own diagnostic instead of a misleading downstream
+    "cannot resolve its family" error."""
     ids: dict[str, str] = {}
+    errors: list[str] = []
     cfg = REPO / "harness.config.json"
     if cfg.is_file():
         data = json.loads(cfg.read_text(encoding="utf-8"))
@@ -74,12 +80,18 @@ def external_packs() -> dict[str, str]:
             if not isinstance(src, dict):
                 continue
             if src.get("type") == "marketplace-ref":
-                mkt = marketplaces.get(src.get("marketplace"), {})
-                if isinstance(mkt.get("url"), str):
+                mkt_name = src.get("marketplace")
+                mkt = marketplaces.get(mkt_name)
+                if mkt is not None and isinstance(mkt.get("url"), str):
                     ids[p["name"]] = mkt["url"]
+                else:
+                    errors.append(
+                        f"pack '{p.get('name')}' references marketplace '{mkt_name}' "
+                        f"which is not declared in harness.config.json marketplaces[]"
+                    )
             elif isinstance(src.get("url"), str):
                 ids[p["name"]] = src["url"]
-    return ids
+    return ids, errors
 
 
 def components() -> dict[str, list[str]]:
@@ -128,13 +140,12 @@ def shared_ontology_layers() -> set[str]:
 def main() -> int:
     comps = components()
     layers = shared_ontology_layers()
-    errors: list[str] = []
+    ext, errors = external_packs()
 
     # External packs (ADR/#228) have no packs/<family>/<name>/ directory. Resolve
     # each one's family from whichever family page already documents it (a family
     # page must exist and carry the `## <name>` section — checked below like any
     # other component), then fold it into that family's component list.
-    ext = external_packs()
     ext_unresolved = set(ext)
     for fam in FAMILIES:
         if fam == "ontologies":

@@ -70,11 +70,18 @@ for p in enabled:
     elif isinstance(src, dict) and src.get("type") == "marketplace-ref":
         # Resolve against the declared marketplaces[] entry by name; a pack-local
         # `ref` overrides the marketplace's own ref for this pack only.
-        mkt = marketplaces_by_name.get(src.get("marketplace"), {})
-        packs.append({"name": name, "source": "external",
-                      "marketplace": src.get("marketplace"), "url": mkt.get("url"),
-                      "ref": src.get("ref", mkt.get("ref")),
-                      "skills": []})
+        mkt_name = src.get("marketplace")
+        mkt = marketplaces_by_name.get(mkt_name)
+        entry = {"name": name, "source": "external", "type": "marketplace-ref",
+                 "marketplace": mkt_name, "skills": []}
+        if mkt is None:
+            entry["url"] = None
+            entry["ref"] = None
+            entry["error"] = f"unresolved marketplace {mkt_name!r}: not declared in marketplaces[]"
+        else:
+            entry["url"] = mkt.get("url")
+            entry["ref"] = src.get("ref", mkt.get("ref"))
+        packs.append(entry)
     else:
         packs.append({"name": name, "source": "external",
                       "type": (src or {}).get("type"), "url": (src or {}).get("url"),
