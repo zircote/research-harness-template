@@ -31,7 +31,7 @@
 # Usage: check-relationship-targets.sh [--reports-dir <path>]
 #   exit 0 = every relationships[].target resolves to an active finding @id
 #   exit 1 = one or more orphaned targets found (each printed as
-#            "<source-file>\t<orphaned-target>")
+#            "ORPHAN\t<source-file>\t<orphaned-target>")
 #   exit 2 = usage/environment error (missing jq, missing reports dir, or a
 #            finding file that jq cannot parse — see below for why this must
 #            be a hard failure rather than a silent skip)
@@ -86,15 +86,27 @@ if ! xargs -0 jq -r 'input_filename as $f | (.relationships // [])[]?.target // 
   exit 2
 fi
 
-fail=0; checked=0
-while IFS=$'\t' read -r src target; do
-  [ -z "$target" ] && continue
-  checked=$((checked+1))
-  if ! grep -qxF "$target" "$IDS"; then
-    printf 'ORPHAN\t%s\t%s\n' "$src" "$target"
-    fail=1
-  fi
-done < "$TARGETS"
+# A per-target `grep -qxF "$IDS"` here would be O(targets x ids) — noticeably
+# slow once a corpus reaches thousands of findings with hundreds of
+# relationships. Instead, resolve the whole target set against the whole id
+# set as a single sorted-merge set difference (comm), then re-join only the
+# resulting orphan VALUES back against $TARGETS to name their source files.
+# This repo's own scripts stay bash-3.2-compatible (macOS's bundled
+# /usr/bin/env bash), so no `declare -A` associative array here.
+TVALS="$(mktemp)"; ORPHANS="$(mktemp)"
+trap 'rm -f "$FILES" "$IDS" "$TARGETS" "$JQERR" "$TVALS" "$ORPHANS"' EXIT
+cut -f2 "$TARGETS" | grep -v '^$' | sort -u > "$TVALS"
+comm -23 "$TVALS" "$IDS" > "$ORPHANS"
+
+checked=$(awk -F'\t' '$2!=""' "$TARGETS" | wc -l | tr -d ' ')
+fail=0
+if [ -s "$ORPHANS" ]; then
+  fail=1
+  # Column-matched join (ORPHANS is target values only, one per line) —
+  # avoids grep -F substring false positives against the src\ttarget rows.
+  awk -F'\t' 'NR==FNR { orphan[$1]=1; next } $2 in orphan { printf "ORPHAN\t%s\t%s\n", $1, $2 }' \
+    "$ORPHANS" "$TARGETS"
+fi
 
 if [ "$fail" != 0 ]; then
   echo "check-relationship-targets: one or more relationships[].target values do not resolve to any active finding @id (see ORPHAN lines above)" >&2
