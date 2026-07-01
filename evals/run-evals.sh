@@ -190,6 +190,12 @@ run "models-authoring" python3 evals/test_models.py
 # gating + copier reports-activation (the reports-as-primary-delivery surface).
 run "site-toggle" bash evals/site-toggle.sh
 
+# Relationship-graph integrity (2026-07): every relationships[].target must
+# resolve to a real, active finding @id. See scripts/check-relationship-targets.sh
+# for the two root causes (bare/guessed target slugs; quarantine never cascaded
+# to inbound references) that let orphaned targets land in the corpus unnoticed.
+run "relationship-targets" bash evals/relationship-targets.sh
+
 # 7. Progress-log markdownlint conformance (issue #85 Defect 2): a multi-session
 #    research-progress.md built per orchestrator.md's template — one H1 (file
 #    creation only) + date-qualified per-session H2s — lints clean, while each old
