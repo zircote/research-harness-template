@@ -9,9 +9,15 @@
 # deterministic engine behind the /ontology-review tool; the tool adds the agent
 # enrichment (bind an ontology to an unbound topic, retro-classify untyped findings).
 #
+# Also runs check-relationship-targets.sh once, corpus-wide, after the
+# per-topic loop: proves every relationships[].target resolves to a real,
+# active finding @id (catches dangling references left by bare/guessed target
+# slugs or by a quarantine that was never cascaded — see that script's header).
+#
 # Usage: ontology-review.sh [--topic <id>] [--strict] [--reports-dir <p>]
 #                           [--config <p>] [--catalog <p>]
-#   exit 0 = reviewed; with --strict, non-zero if any finding is unresolved/invalid.
+#   exit 0 = reviewed; with --strict, non-zero if any finding is unresolved/invalid
+#            or any relationships[].target is orphaned.
 
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -71,12 +77,24 @@ for topic in $topics; do
   printf '%-28s %-22s %6s %6s %8s %9s\n' "$topic" "$(printf '%s' "$bound" | cut -c1-22)" "$local_total" "$typed" "$untyped" "$bad"
   g_total=$((g_total+local_total)); g_typed=$((g_typed+typed)); g_untyped=$((g_untyped+untyped)); g_bad=$((g_bad+bad))
 done
+# Relationship-graph integrity: every relationships[].target must resolve to a
+# real, active finding @id (corpus-wide, not per-topic — see
+# check-relationship-targets.sh for the root-cause history and known limits).
+# Runs (and prints) before the coverage summary below, which callers treat as
+# the final line of output.
+rel_bad=0
+if ! "$ROOT/scripts/check-relationship-targets.sh" --reports-dir "$RD"; then
+  rel_bad=1
+  any_bad=1
+fi
+
 echo "---"
 printf 'ontology-review: %d topic(s); %d findings — %d typed, %d untyped, %d invalid/unresolved\n' \
   "$g_topics" "$g_total" "$g_typed" "$g_untyped" "$g_bad"
 
 if [ "$STRICT" = 1 ] && [ "$any_bad" = 1 ]; then
-  echo "ontology-review: --strict and $g_bad finding(s) have an invalid/unresolved mapping — failing" >&2
+  [ "$g_bad" -gt 0 ] && echo "ontology-review: --strict and $g_bad finding(s) have an invalid/unresolved mapping — failing" >&2
+  [ "$rel_bad" = 1 ] && echo "ontology-review: --strict and one or more relationships[].target values are orphaned — failing" >&2
   exit 1
 fi
 exit 0
