@@ -43,18 +43,7 @@ CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 # resolves fine. The plugin honors an explicit `slug:` frontmatter field over its
 # own computation, so stamp one here — the file's own path relative to the repo
 # root, which is exactly the route the content collection already resolves to.
-# $OUT itself may be passed absolute (report-synthesizer.md's own examples use
-# an absolute $REPORTS_DIR) or relative; normalize with realpath -m (works even
-# though the target file/dir doesn't exist yet) before stripping the repo root,
-# so SLUGPATH is repo-root-relative for every current caller (all of which
-# resolve $OUT under the repo root). If $OUT ever resolves OUTSIDE the repo
-# root (an absolute path elsewhere, or a symlink escape), the prefix-strip
-# below is a silent no-op and SLUGPATH falls back to the full absolute path —
-# no caller does this today, but a future one that does would need a guard here.
-REPO_ROOT="$(pwd -P)"
-OUT_ABS="$(realpath -m "$OUT")"
-OUT_REL="${OUT_ABS#"$REPO_ROOT"/}"
-SLUGPATH="$(dirname "$OUT_REL")/$SLUG"
+SLUGPATH="$(dirname "$OUT")/$SLUG"
 
 # Version indicator: a genre re-rendered for the same topic overwrites its file
 # in place (this harness keeps no automatic history), so a real, extractable
