@@ -84,6 +84,8 @@ jobs:
           private-key: ${{ secrets.PAGES_CLIENT_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: modeled-information-format.github.io
+          # Down-scope the minted token: the repository_dispatch only needs contents:write.
+          permission-contents: write
 
       - name: Trigger the org Pages redeploy
         env:

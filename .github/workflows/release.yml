@@ -91,6 +91,8 @@ jobs:
           private-key: ${{ secrets.RELEASE_CLIENT_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
+          # Down-scope the minted token: the release upload only needs contents:write.
+          permission-contents: write
 
       - name: Upload attested artifact to the release
         if: github.event_name == 'release'
