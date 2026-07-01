@@ -13,6 +13,15 @@ Checks, all of which must pass (exit 0):
 3. Inbound cross-links: each component dir carries a ``README.md`` linking back to
    its published doc anchor. Count must equal the component count.
 
+A pack whose ``harness.config.json`` ``packs[]`` entry declares an external
+``source`` (``{"type": "git"|"marketplace", "url": ...}`` — see ADR/discussion
+#228's genre-consolidation migration) has no ``packs/<family>/<name>/``
+directory. It is still required to carry a ``## <name>`` doc section (whichever
+family page already documents it establishes its family), but is exempt from the
+outbound in-repo source link (its section must instead link to the declared
+external ``url``) and from the inbound ``README.md`` back-link (there is no local
+directory to carry one).
+
 Run from the repository root. Prints a report and exits non-zero on any gap.
 """
 
@@ -44,6 +53,45 @@ def declared_ontologies() -> list[str]:
     if local.is_dir():
         ids |= {p.name for p in local.iterdir() if p.is_dir()}
     return sorted(ids)
+
+
+def external_packs() -> tuple[dict[str, str], list[str]]:
+    """Packs consumed from an external source (ADR/#228): {name: source url}.
+
+    A ``harness.config.json`` ``packs[]`` entry with an object ``source``
+    (``{"type": "git"|"marketplace", "url": ...}``, or ``{"type":
+    "marketplace-ref", "marketplace": <name>}`` resolved against the top-level
+    ``marketplaces[]``) has no committed ``packs/<family>/<name>/`` directory —
+    its family membership is resolved by whichever family page already
+    documents it (see ``main``).
+
+    Also returns a list of error strings for ``marketplace-ref`` entries whose
+    ``marketplace`` name has no matching ``marketplaces[]`` declaration, so a
+    typo surfaces as its own diagnostic instead of a misleading downstream
+    "cannot resolve its family" error."""
+    ids: dict[str, str] = {}
+    errors: list[str] = []
+    cfg = REPO / "harness.config.json"
+    if cfg.is_file():
+        data = json.loads(cfg.read_text(encoding="utf-8"))
+        marketplaces = {m["name"]: m for m in data.get("marketplaces", []) if isinstance(m, dict) and "name" in m}
+        for p in data.get("packs", []):
+            src = p.get("source")
+            if not isinstance(src, dict):
+                continue
+            if src.get("type") == "marketplace-ref":
+                mkt_name = src.get("marketplace")
+                mkt = marketplaces.get(mkt_name)
+                if mkt is not None and isinstance(mkt.get("url"), str):
+                    ids[p["name"]] = mkt["url"]
+                else:
+                    errors.append(
+                        f"pack '{p.get('name')}' references marketplace '{mkt_name}' "
+                        f"which is not declared in harness.config.json marketplaces[]"
+                    )
+            elif isinstance(src.get("url"), str):
+                ids[p["name"]] = src["url"]
+    return ids, errors
 
 
 def components() -> dict[str, list[str]]:
@@ -91,12 +139,35 @@ def shared_ontology_layers() -> set[str]:
 
 def main() -> int:
     comps = components()
-    total = sum(len(v) for v in comps.values())
     layers = shared_ontology_layers()
-    errors: list[str] = []
+    ext, errors = external_packs()
+
+    # External packs (ADR/#228) have no packs/<family>/<name>/ directory. Resolve
+    # each one's family from whichever family page already documents it (a family
+    # page must exist and carry the `## <name>` section — checked below like any
+    # other component), then fold it into that family's component list.
+    ext_unresolved = set(ext)
+    for fam in FAMILIES:
+        if fam == "ontologies":
+            continue
+        page = PACK_DOCS / f"{fam}.md"
+        if not page.is_file():
+            continue
+        heads = set(headings(page))
+        for name in list(ext_unresolved):
+            if name in heads and name not in comps[fam]:
+                comps[fam] = sorted([*comps[fam], name])
+                ext_unresolved.discard(name)
+    for name in sorted(ext_unresolved):
+        errors.append(
+            f"external pack '{name}' (harness.config.json packs[]) has no '## {name}' "
+            f"section in any family page — cannot resolve its family"
+        )
+
+    total = sum(len(v) for v in comps.values())
 
     print("=== Pack documentation coverage ===")
-    print(f"Components on disk: {total}")
+    print(f"Components tracked: {total} ({len(ext) - len(ext_unresolved)} external)")
     for fam, names in comps.items():
         print(f"  {fam}: {len(names)}")
 
@@ -136,10 +207,12 @@ def main() -> int:
         documented = [n for n in names if n in heads]
         documented_total += len(documented)
 
-        # Outbound link per component section.
+        # Outbound link per component section: an external pack must link its
+        # declared source url instead of an (absent) in-repo packs/ path.
         for n in names:
-            if f"packs/{fam}/{n}" not in text:
-                errors.append(f"[{fam}] section '{n}' missing source link to packs/{fam}/{n}")
+            target = ext.get(n, f"packs/{fam}/{n}")
+            if target not in text:
+                errors.append(f"[{fam}] section '{n}' missing source link to {target}")
             else:
                 outbound_total += 1
 
@@ -166,12 +239,15 @@ def main() -> int:
     # Inbound: each component dir has a README.md linking to the doc site. The
     # ontologies family is vendored on demand (#224) — its packs are not committed, so
     # there is no in-repo README to back-link; the registry copy carries provenance.
+    # External packs (ADR/#228) are likewise not committed here — same exemption.
     inbound_total = 0
-    inbound_expected = total - len(comps.get("ontologies", []))
+    inbound_expected = total - len(comps.get("ontologies", [])) - (len(ext) - len(ext_unresolved))
     for fam, names in comps.items():
         if fam == "ontologies":
             continue
         for n in names:
+            if n in ext:
+                continue
             readme = PACKS / fam / n / "README.md"
             if not readme.is_file():
                 errors.append(f"[{fam}] component '{n}' has no README.md back-link")
@@ -187,7 +263,7 @@ def main() -> int:
     print("\n=== Cross-link tallies ===")
     print(f"Documented components (section present): {documented_total}/{total}")
     print(f"Outbound doc -> pack source links:       {outbound_total}/{total}")
-    print(f"Inbound pack -> doc back-links:          {inbound_total}/{inbound_expected} (ontologies vendored on demand)")
+    print(f"Inbound pack -> doc back-links:          {inbound_total}/{inbound_expected} (ontologies vendored on demand; external packs exempt)")
 
     print("\n=== Result ===")
     if errors:

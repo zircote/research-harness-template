@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-01
+
+### Added
+
+- **`harness.config.json` `marketplaces[]`** — declare an external Claude Code
+  plugin source once (`name`, `url`, a pinned `ref`); any number of `packs[]`
+  entries reference it via `source: {type: "marketplace-ref", marketplace:
+  <name>}` instead of each repeating an identical `{type, url, ref}` object. A
+  pack's own `ref` overrides the marketplace's for that pack only.
+  `scripts/sync-packs.sh` and `scripts/check-pack-docs.py` resolve it; a new
+  `verify.sh` gate (5d2) proves the sharing and the per-pack override.
+- The `engineering` pack's source is migrated from an inline external object
+  to a `mif-docs` marketplace reference, ahead of migrating the harness's
+  remaining report genres onto it.
+
+## [0.9.0] - 2026-06-30
+
+### Changed
+
+- The `engineering` report genre is now consumed externally from
+  [`mif-docs-plugin`](https://github.com/modeled-information-format/mif-docs-plugin)
+  (SHA-pinned via `harness.config.json` `packs[]`) instead of the bundled
+  `packs/reports/engineering` pack, which is retired. This is the pilot genre
+  for the genre-consolidation migration onto `mif-docs` as the single genre
+  and conformance authority
+  (research-harness-template#228). The genre's capability, including the
+  optional Mermaid architecture-diagram figure, is unchanged; its MIF
+  frontmatter authoring and conformance now go through `mif-docs`' shared
+  `mif-frontmatter` / `mif-validate` substrate.
+
 ## [0.8.1] - 2026-06-30
 
 ### Changed
