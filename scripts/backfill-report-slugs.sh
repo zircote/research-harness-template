@@ -54,8 +54,12 @@ for t in "${TOPICS[@]}"; do
     head -n1 "$f" | grep -q '^---$' || continue
 
     fm=$(sed -n '/^---$/,/^---$/p' "$f" 2>/dev/null)
-    has_slug=$(printf '%s' "$fm" | grep -c -E '^[[:space:]]*slug:[[:space:]]*[^[:space:]]' || true)
-    has_version=$(printf '%s' "$fm" | grep -c -E '^[[:space:]]*version:[[:space:]]*[0-9]+' || true)
+    # Anchored at column 0: slug/version are always top-level keys in the
+    # frontmatter this tool and render-artifact.sh emit. An indented match
+    # (e.g. a nested "ontology: { version: 1.0.0 }") is a DIFFERENT field and
+    # must not be mistaken for this report's own slug/version.
+    has_slug=$(printf '%s' "$fm" | grep -c -E '^slug:[[:space:]]*[^[:space:]]' || true)
+    has_version=$(printf '%s' "$fm" | grep -c -E '^version:[[:space:]]*[0-9]+' || true)
     if [ "$has_slug" -gt 0 ] && [ "$has_version" -gt 0 ]; then
       SKIPPED=$((SKIPPED + 1))
       continue

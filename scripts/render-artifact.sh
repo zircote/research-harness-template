@@ -52,8 +52,12 @@ SLUGPATH="$(dirname "$OUT")/$SLUG"
 # increment; otherwise this is version 1.
 VERSION=1
 if [ -f "$OUT" ]; then
+  # Anchored at column 0: version is always a top-level key here. An indented
+  # match (e.g. a nested "ontology: { version: 1.0.0 }" on a hand-authored
+  # doc) is a DIFFERENT field and must not be mistaken for this report's own
+  # revision counter.
   PREV=$(sed -n '/^---$/,/^---$/p' "$OUT" 2>/dev/null \
-    | grep -m1 -E '^[[:space:]]*version:[[:space:]]*[0-9]+' | grep -oE '[0-9]+')
+    | grep -m1 -E '^version:[[:space:]]*[0-9]+' | grep -oE '[0-9]+')
   [ -n "$PREV" ] && VERSION=$((PREV + 1))
 fi
 

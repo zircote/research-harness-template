@@ -250,11 +250,13 @@ file_genre() {
 # Extract a deliverable's version: the frontmatter `version:` integer (stamped by
 # render-artifact.sh, incremented every time the same genre is re-rendered for
 # this topic, since a re-render overwrites its file in place with no automatic
-# history). Empty on a file with no version field (not yet backfilled, or a
-# non-genre deliverable like a falsification report).
+# history). Anchored at column 0 (a top-level key) so a nested field of the same
+# name (e.g. "ontology: { version: 1.0.0 }" on a hand-authored doc) is never
+# mistaken for it. Empty on a file with no top-level version field (not yet
+# backfilled, or a non-genre deliverable like a falsification report).
 file_version() {
   local fp="$1" v
-  v=$(sed -n '/^---$/,/^---$/p' "$fp" 2>/dev/null | grep -m1 -E '^[[:space:]]*version:[[:space:]]*[0-9]+' \
+  v=$(sed -n '/^---$/,/^---$/p' "$fp" 2>/dev/null | grep -m1 -E '^version:[[:space:]]*[0-9]+' \
         | grep -oE '[0-9]+')
   printf '%s' "$v"
 }
