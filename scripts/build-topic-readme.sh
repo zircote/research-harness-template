@@ -233,8 +233,7 @@ file_title() {
 # write a genre frontmatter key, and this script has no separate "build-spec
 # channel"; other genre-authoring tooling stamps its own genre: key directly),
 # else a filename-derived fallback for files rendered before/without that
-# stamp — the
-# final dot-delimited segment before ".md" in a "<slug>.<genre>.md" filename
+# stamp — the final dot-delimited segment before ".md" in a "<slug>.<genre>.md" filename
 # (${g##*.} strips everything up to and including the last remaining dot, so a
 # "my.slug.genre.md" filename yields "genre", not a literal middle segment), or
 # (report_type()'s own "report-<genre>.md" convention) the segment between
