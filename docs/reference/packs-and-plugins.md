@@ -171,7 +171,11 @@ before `harness.config.json` can reference it by name.
 
 The harness bundles **27 pack plugins** across four families. Each family has a
 dedicated reference page documenting every component's purpose, constraints, and
-goals; the counts below match `ls packs/<family>/` exactly.
+goals; for channels, market-research, and trend-modeling, the counts below
+match `ls packs/<family>/` exactly. Report genres are the exception: all 18
+are consumed externally from `mif-docs-plugin` (no `packs/reports/`
+directory exists to `ls`), so that count instead matches the family's
+reference page and `harness.config.json` `packs[]`.
 
 **Channels** — render adapters ([`packs/channels/`](packs/channels.md), 9 plugins):
 `book`, `diataxis`, `ectd`, `github-discuss`, `github-issues`, `jats`,
