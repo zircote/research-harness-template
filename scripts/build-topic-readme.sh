@@ -231,9 +231,11 @@ file_title() {
 # Extract a deliverable's genre: the frontmatter `genre:` top-level key (stamped
 # by render-artifact.sh's report channel and the blog/build-spec channels), else a
 # filename-derived fallback for files rendered before that stamp existed — the
-# middle segment of a "<slug>.<genre>.md" filename, or (report_type()'s own
-# "report-<genre>.md" convention) the segment between "report-" and ".md". Empty
-# when neither source has one.
+# final dot-delimited segment before ".md" in a "<slug>.<genre>.md" filename
+# (${g##*.} strips everything up to and including the last remaining dot, so a
+# "my.slug.genre.md" filename yields "genre", not a literal middle segment), or
+# (report_type()'s own "report-<genre>.md" convention) the segment between
+# "report-" and ".md". Empty when neither source has one.
 file_genre() {
   local fp="$1" base g
   g=$(sed -n '/^---$/,/^---$/p' "$fp" 2>/dev/null | grep -m1 -E '^[[:space:]]*genre:[[:space:]]*[^[:space:]]' \
