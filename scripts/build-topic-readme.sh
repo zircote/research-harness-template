@@ -228,12 +228,12 @@ file_title() {
   printf '%s' "$t"
 }
 
-# Extract a deliverable's genre: the frontmatter `genre:` key at any nesting depth
-# (e.g. top-level on a report, or nested under extensions.harness.genre), else the
-# middle segment of a "<slug>.<genre>.md" filename (this harness's real naming
-# convention — report_type()'s literal "report-<genre>.md" patterns do not match
-# it, so most deliverables fall through to the generic "Document" label; this is
-# the actual genre a reader wants to see). Empty when neither source has one.
+# Extract a deliverable's genre: the frontmatter `genre:` top-level key (stamped
+# by render-artifact.sh's report channel and the blog/build-spec channels), else a
+# filename-derived fallback for files rendered before that stamp existed — the
+# middle segment of a "<slug>.<genre>.md" filename, or (report_type()'s own
+# "report-<genre>.md" convention) the segment between "report-" and ".md". Empty
+# when neither source has one.
 file_genre() {
   local fp="$1" base g
   g=$(sed -n '/^---$/,/^---$/p' "$fp" 2>/dev/null | grep -m1 -E '^[[:space:]]*genre:[[:space:]]*[^[:space:]]' \
@@ -242,6 +242,7 @@ file_genre() {
     base=$(basename "$fp")
     case "$base" in
       *.*.md) g="${base%.md}"; g="${g##*.}" ;;
+      report-*.md) g="${base#report-}"; g="${g%.md}" ;;
     esac
   fi
   printf '%s' "$g"

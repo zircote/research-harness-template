@@ -33,18 +33,18 @@ Decide whether MIF should serve as the modeling, provenance, and temporal spine 
 
 | Type | Genre | Title |
 | --- | --- | --- |
-| Executive Summary | — | [Executive Summary: Should MIF Be the Spine Beneath OKF for a Research Knowledge Spine?](report-exec-summary.md) |
-| Briefing Report | — | [Decision Briefing: OKF+MIF as a Foundational Research Knowledge Spine](report-briefing.md) |
+| Executive Summary | exec-summary (v1) | [Executive Summary: Should MIF Be the Spine Beneath OKF for a Research Knowledge Spine?](report-exec-summary.md) |
+| Briefing Report | briefing (v1) | [Decision Briefing: OKF+MIF as a Foundational Research Knowledge Spine](report-briefing.md) |
 | Synthesis | blog (v1) | [Should MIF be the spine and OKF the packaging for a research knowledge layer?](synthesis-okf-mif-knowledge-spine.md) |
-| Market Research Report | — | [Market Research Report: An OKF+MIF Knowledge-Spine Offering](report-market-research-report.md) |
-| Market Sizing | — | [Market Sizing: The Structured Knowledge-Spine (OKF+MIF) Opportunity](report-market-sizing.md) |
-| Competitive Analysis | — | [Competitive Analysis: OKF+MIF vs Knowledge-Representation Prior Art](report-competitive-analysis.md) |
-| Competitive Quadrant | — | [Competitive Quadrant: Structured-vs-Accessible Knowledge Formats](report-competitive-quadrant.md) |
-| Trend Analysis | — | [Trend Analysis: Adoption & Standards Momentum for an OKF+MIF Spine](report-trend-analysis.md) |
-| Trend Modeling | — | [Trend Modeling: Trajectories & Scenarios for OKF+MIF Knowledge Persistence](report-trend-modeling.md) |
-| Engineering Report | — | [Engineering Report: Feasibility of Layering MIF over OKF (Extension Seam, Conflicts, Round-Trip)](report-engineering.md) |
-| Academic Paper | — | [Layering MIF Provenance and Temporal Semantics over the Open Knowledge Format: A Feasibility and Differentiation Study](report-academic.md) |
-| Computing Paper | — | [Toward a Layered Knowledge Spine: MIF Provenance/Temporal Semantics over OKF Markdown Packaging](report-computing-paper.md) |
+| Market Research Report | market-research-report (v1) | [Market Research Report: An OKF+MIF Knowledge-Spine Offering](report-market-research-report.md) |
+| Market Sizing | market-sizing (v1) | [Market Sizing: The Structured Knowledge-Spine (OKF+MIF) Opportunity](report-market-sizing.md) |
+| Competitive Analysis | competitive-analysis (v1) | [Competitive Analysis: OKF+MIF vs Knowledge-Representation Prior Art](report-competitive-analysis.md) |
+| Competitive Quadrant | competitive-quadrant (v1) | [Competitive Quadrant: Structured-vs-Accessible Knowledge Formats](report-competitive-quadrant.md) |
+| Trend Analysis | trend-analysis (v1) | [Trend Analysis: Adoption & Standards Momentum for an OKF+MIF Spine](report-trend-analysis.md) |
+| Trend Modeling | trend-modeling (v1) | [Trend Modeling: Trajectories & Scenarios for OKF+MIF Knowledge Persistence](report-trend-modeling.md) |
+| Engineering Report | engineering (v1) | [Engineering Report: Feasibility of Layering MIF over OKF (Extension Seam, Conflicts, Round-Trip)](report-engineering.md) |
+| Academic Paper | academic (v1) | [Layering MIF Provenance and Temporal Semantics over the Open Knowledge Format: A Feasibility and Differentiation Study](report-academic.md) |
+| Computing Paper | computing-paper (v1) | [Toward a Layered Knowledge Spine: MIF Provenance/Temporal Semantics over OKF Markdown Packaging](report-computing-paper.md) |
 | Falsification Report | — | [Falsification Report — example-okf-mif-knowledge-spine](2026-06-28-falsification-report.md) |
 | Research Progress | — | [Research Progress: Example: OKF+MIF as a foundational research knowledge spine](research-progress.md) |
 | Document | architecture-spec (v1) | [OKF+MIF Knowledge-Spine Build Spec — an AI-ready architecture spec for layering MIF's modeling/provenance/temporal spine on OKF packaging](example-okf-mif-knowledge-spine-build-spec.md) |

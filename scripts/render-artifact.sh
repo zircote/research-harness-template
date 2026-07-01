@@ -175,6 +175,7 @@ case "$CHANNEL" in
         conceptType: "semantic",
         namespace: $ns,
         title: .title,
+        genre: (.genre // "general"),
         created: $created,
         provenance: { "@type": "Provenance", sourceType: "system_generated", confidence: 0.9, trustLevel: "moderate_confidence" },
         citations: [ .sources[] | { "@type": "Citation", citationType: .citationType, citationRole: .citationRole, title: .title, url: .url } + (if .note then {note: .note} else {} end) ],

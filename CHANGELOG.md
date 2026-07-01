@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-07-01
+
+### Fixed
+
+- **Genre-suffixed report filenames (`<slug>.<genre>.md`) no longer 404 on the
+  served site.** `astro-rehype-relative-markdown-links` slugifies each link's
+  path segment with `github-slugger` — a heading-anchor algorithm that strips
+  embedded `.` without inserting a separator, producing a mismatched href
+  (`fooengineering` instead of `foo.engineering`) even though Astro's own
+  content-collection route (which keeps the dot) resolves fine. `render-
+  artifact.sh` now stamps an explicit `slug:` frontmatter field — the route the
+  content collection already resolves to — which the plugin honors over its own
+  computation.
+- Added `scripts/backfill-report-slugs.sh`: idempotent, `--dry-run`-capable
+  remediation for reports rendered before this fix, across every topic.
+- The Reports table's Genre column showed `—` for every canonically-named
+  `report-<genre>.md` deliverable (10 of 15 in the example corpus) because
+  `render-artifact.sh` never stamped the artifact's own `genre` field into the
+  rendered frontmatter, and `build-topic-readme.sh`'s filename fallback only
+  recognized the dotted `<slug>.<genre>.md` convention, not `report-<genre>.md`.
+  `render-artifact.sh`'s report channel now stamps `genre:` directly (schema-
+  required by `artifact.schema.json`); `file_genre()` also gained a
+  `report-<genre>.md` filename fallback for reports rendered before the stamp
+  existed.
+
+### Added
+
+- `render-artifact.sh` now stamps a `version:` frontmatter field on every
+  rendered report/blog/book, auto-incremented from the file's own prior value
+  when a genre is re-rendered for the same topic (previously silently
+  overwritten with no on-disk indicator of revision).
+- `build-topic-readme.sh`'s Reports table gained a **Genre** column (`Type |
+  Genre | Title`), extracted from the deliverable's own `genre:` frontmatter
+  (falling back to a dotted-filename convention), with the `version:` field
+  appended as `(vN)` when present. Previously every non-canonically-named
+  deliverable fell into the generic "Document" `Type` bucket with no way to
+  tell genres apart.
+
 ## [0.11.0] - 2026-07-01
 
 ### Changed
@@ -60,35 +98,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   optional Mermaid architecture-diagram figure, is unchanged; its MIF
   frontmatter authoring and conformance now go through `mif-docs`' shared
   `mif-frontmatter` / `mif-validate` substrate.
-
-## [0.8.2] - 2026-07-01
-
-### Fixed
-
-- **Genre-suffixed report filenames (`<slug>.<genre>.md`) no longer 404 on the
-  served site.** `astro-rehype-relative-markdown-links` slugifies each link's
-  path segment with `github-slugger` — a heading-anchor algorithm that strips
-  embedded `.` without inserting a separator, producing a mismatched href
-  (`fooengineering` instead of `foo.engineering`) even though Astro's own
-  content-collection route (which keeps the dot) resolves fine. `render-
-  artifact.sh` now stamps an explicit `slug:` frontmatter field — the route the
-  content collection already resolves to — which the plugin honors over its own
-  computation.
-- Added `scripts/backfill-report-slugs.sh`: idempotent, `--dry-run`-capable
-  remediation for reports rendered before this fix, across every topic.
-
-### Added
-
-- `render-artifact.sh` now stamps a `version:` frontmatter field on every
-  rendered report/blog/book, auto-incremented from the file's own prior value
-  when a genre is re-rendered for the same topic (previously silently
-  overwritten with no on-disk indicator of revision).
-- `build-topic-readme.sh`'s Reports table gained a **Genre** column (`Type |
-  Genre | Title`), extracted from the deliverable's own `genre:` frontmatter
-  (falling back to a dotted-filename convention), with the `version:` field
-  appended as `(vN)` when present. Previously every non-canonically-named
-  deliverable fell into the generic "Document" `Type` bucket with no way to
-  tell genres apart.
 
 ## [0.8.1] - 2026-06-30
 

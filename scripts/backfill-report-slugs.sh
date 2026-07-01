@@ -11,8 +11,9 @@
 # computation, so this backfills one — plus `version: 1`, since a file already
 # on disk with no version field is, by definition, the only known revision.
 #
-# Idempotent: a file that already carries a `slug:` (or `version:`) key is left
-# untouched. Only touches files with real YAML frontmatter (a leading `---`
+# Idempotent: a file that already carries BOTH a `slug:` and a `version:` key
+# is left untouched; a file missing only one of the two gets just that key
+# added. Only touches files with real YAML frontmatter (a leading `---`
 # line) — plain-markdown deliverables (research-progress.md, falsification
 # reports) have no frontmatter and are skipped automatically.
 #
@@ -67,7 +68,10 @@ for t in "${TOPICS[@]}"; do
 
     rel="${f%.md}"
     if [ "$DRY" -eq 1 ]; then
-      echo "would stamp slug: $rel  version: 1  -> $f"
+      msg=""
+      [ "$has_slug" -gt 0 ] || msg+=" slug: $rel"
+      [ "$has_version" -gt 0 ] || msg+=" version: 1"
+      echo "would stamp$msg  -> $f"
       FIXED=$((FIXED + 1))
       continue
     fi
