@@ -106,10 +106,12 @@ state=$(jq -S --argjson nptw "$nptw" \
 # concordance key (keeps temp-dir fixtures byte-identical). Deterministic: no wall-clock
 # here; validated_at lives only in the sidecar. untyped_shippable mirrors the ship gate
 # (scripts/check-shippable-typing.sh): count UNIQUE shippable (survived|weakened) findings
-# whose ontology-map record is missing/invalid/untyped/unresolved. Dedupe by @id so a finding
-# present in both the canonical findings/ path and a flat finding-*.json counts once; a
-# missing/unparseable map means EVERY shippable finding is untyped (fail-closed, mirroring the
-# gate's exit 3), not zero.
+# whose ontology-map record is missing/invalid/untyped/unresolved/discovery-only (a
+# discovery-basis record is a content-pattern GUESS never written to the finding itself
+# — nothing durable exists on disk, so it counts exactly like untyped). Dedupe by @id so
+# a finding present in both the canonical findings/ path and a flat finding-*.json counts
+# once; a missing/unparseable map means EVERY shippable finding is untyped (fail-closed,
+# mirroring the gate's exit 3), not zero.
 CONC="$RD/../concordance.json"; CSTAT="$RD/../concordance-status.json"
 if [ -f "$CONC" ]; then
   mapok=false
@@ -133,7 +135,7 @@ if [ -f "$CONC" ]; then
       # no-@id OR unparseable finding -> gate blocks it -> untyped (count, do not look up the map)
       if [ "${key#noid:}" != "$key" ] || [ "${key#unreadable:}" != "$key" ]; then echo x; continue; fi
       if [ "$mapok" != true ]; then echo x; continue; fi
-      jq -e --arg id "$key" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved")' "$RD/ontology-map.json" >/dev/null 2>&1; jrc=$?
+      jq -e --arg id "$key" '(map(select(.finding_id==$id))|first) as $r | ($r==null) or ($r.valid!=true) or ($r.basis=="untyped") or ($r.basis=="unresolved") or ($r.basis=="discovery")' "$RD/ontology-map.json" >/dev/null 2>&1; jrc=$?
       # exit 0 = untyped (count); 1 = typed (skip); >1 = jq error -> fail closed, count as untyped
       # (a transient read/partial-write error must not silently undercount vs the gate).
       if [ "$jrc" -eq 0 ] || [ "$jrc" -gt 1 ]; then echo x; fi
