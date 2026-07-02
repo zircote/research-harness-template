@@ -67,9 +67,10 @@ invoking `yq`/`jq`/`ajv` per finding; and the harness has no live cross-topic
 semantic recall today. This RFC does not re-derive that motivation — it
 exists because AD-1 identified a specific, concrete reason Rust might be the
 right implementation language (local on-device embedding inference,
-avoiding a network dependency at gate time, per `ADR-0014`'s SDD-3), and that
-reason deserves a real design, not a deferred one-liner, before the language
-choice is settled.
+avoiding a network dependency at gate time, per `ai-architecture-doc.md`'s
+AD-1, echoing ADR-0014's SDD-2 requirement that no index be a required
+external service at gate time), and that reason deserves a real design, not
+a deferred one-liner, before the language choice is settled.
 
 ## Guide-level explanation
 
@@ -108,11 +109,15 @@ requirement for both frontends:
   directly, with no write access to `reports/` (per `feature-spec.md`'s
   acceptance criterion that `suggest_type` never auto-stamps a finding).
 
-**Parsing** — `serde` + `serde_yaml` for the YAML ontology packs (the direct
-in-process replacement for what `yq` does today, per finding, as a
-subprocess) and `serde_json` for findings/config (replacing `jq`). This is
-the single largest expected source of the speedup: N subprocess spawns per
-finding become N in-process deserializations in one long-lived process.
+**Parsing** — `serde` for the YAML ontology packs (the direct in-process
+replacement for what `yq` does today, per finding, as a subprocess) and
+`serde_json` for findings/config (replacing `jq`). Note: the obvious YAML
+choice, `serde_yaml`, was archived by its maintainer in March 2024 and is no
+longer maintained upstream; implementation should evaluate a maintained fork
+(e.g. `serde_yaml_ng` or `serde_norway`) rather than depending on the
+archived crate as-is. This is the single largest expected source of the
+speedup: N subprocess spawns per finding become N in-process deserializations
+in one long-lived process.
 
 **Schema validation** — the `jsonschema` crate validates each finding's
 `entity` block against its resolved type's schema in-process, replacing the
@@ -126,7 +131,7 @@ SQLite file, no separate service, rebuilt by `hoe review` exactly like
 **Embedding + similarity** — `candle-core`/`candle-transformers` for local
 on-device embedding inference, loading a small sentence-embedding model
 (a distilled/quantized model in the tens-of-MB range, not a full LLM). This
-is the concrete reason AD-1 favored Rust: candle's local-inference maturity
+is the concrete reason AD-1 flagged as favoring Rust: candle's local-inference maturity
 avoids a network dependency at gate time, unlike an API-based embedding
 call. Cosine similarity over the resulting vectors runs over a flat
 in-memory/on-disk store (matching AD-2's "no vector DB needed at this
@@ -182,11 +187,25 @@ expected behavior during the parity-proof phase, never two forks of what
 API-based embedding call (rather than local inference), Go and Rust are
 roughly equivalent, and Go iterates faster for a team without deep Rust
 experience. This RFC picks Rust to detail specifically because of the
-local-inference argument — candle's maturity for on-device embedding
-inference — not because Go was rejected. AD-1 remains formally undecided
-until this RFC (or a parallel Go-specific RFC, not yet written) is reviewed
-against it. Doing nothing (status quo) is Option 1 in `ADR-0014` and is
-already rejected there on its own terms; this RFC does not re-argue that.
+local-inference argument, and that argument deserves more than a restated
+conclusion: Go's local-inference options are real but materially thinner
+than candle's. `onnxruntime_go` (cgo bindings to Microsoft's ONNX Runtime)
+can run a pre-exported ONNX embedding model locally, but it depends on a
+non-Rust, non-Go C library shipped and version-matched per platform — a
+harder-to-vendor, harder-to-statically-link dependency than a pure-Rust
+crate, working against this RFC's single-static-binary goal (see Prior
+art). `gorgonia` is a pure-Go tensor/autodiff library, but it is not itself
+a model-loading or embedding-inference framework — using it for embedding
+inference would mean hand-porting a model's forward pass, not loading a
+pretrained one, a materially larger implementation lift than candle's
+`candle-transformers` model-loading support. Neither Go option is
+disqualifying, but neither is a like-for-like match to what candle offers
+today; this is the concrete basis for Rust being the more mature choice
+for local inference specifically, not because Go was rejected. AD-1
+remains formally undecided until this RFC (or a parallel Go-specific RFC,
+not yet written) is reviewed against it. Doing nothing (status quo) is
+Option 1 in `ADR-0014` and is already rejected there on its own terms;
+this RFC does not re-argue that.
 
 ## Prior art
 
