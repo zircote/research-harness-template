@@ -140,8 +140,8 @@ done
 if [ -n "$FOLLOWUP" ]; then
   mkdir -p "$(dirname "$FOLLOWUP")"
   if jq -S -n --argjson t "$followup_all" \
-    '{topics: $t, total_needs_followup: ([$t[] | length] | add // 0)}' > "$FOLLOWUP.tmp"; then
-    mv "$FOLLOWUP.tmp" "$FOLLOWUP"
+    '{topics: $t, total_needs_followup: ([$t[] | length] | add // 0)}' > "$FOLLOWUP.tmp" \
+    && mv "$FOLLOWUP.tmp" "$FOLLOWUP"; then
     echo "ontology-review: followup backlog written to $FOLLOWUP ($(jq -r '.total_needs_followup' "$FOLLOWUP") finding(s) across $(jq -r '.topics | length' "$FOLLOWUP") topic(s))"
   else
     rm -f "$FOLLOWUP.tmp"

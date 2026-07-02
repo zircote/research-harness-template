@@ -1214,7 +1214,7 @@ JSON
   local fu_total fu_ids
   fu_total=$(jq -r '.total_needs_followup' "$T/followup.json" 2>/dev/null)
   fu_ids=$(jq -r '.topics.edu[].finding_id' "$T/followup.json" 2>/dev/null | sort | tr '\n' ',')
-  if printf '%s' "$rv" | grep -q "1 stamped, 1 discovery-only, 1 untyped, 1 invalid" && [ "$rvs" != 0 ] \
+  if printf '%s' "$rv" | grep -q "1 stamped, 1 discovery-only, 1 untyped, 1 invalid" && [ "$rvs" = 1 ] \
      && [ "$fu_total" = 3 ] && [ "$fu_ids" = "f-disc,f-missing,f-untyped," ]; then
     ok "ontology-review reports correct stamped/discovery/untyped/invalid coverage; --strict fails on invalid mappings only; --followup lists exactly the non-stamped findings"
   else
