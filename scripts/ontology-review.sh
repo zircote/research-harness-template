@@ -10,10 +10,11 @@
 # finding — re-running loses it, and a reader of the finding file sees no ontology
 # at all), UNTYPED (no entity/ontology, no discovery match either), and
 # unresolved/invalid (a stamped type that does not resolve or whose entity fails the
-# type schema). Read-only except the derived ontology-map.json. This is the
-# deterministic engine behind the /ontology-review tool; the tool adds the agent
-# enrichment (bind an ontology to an unbound topic, retro-classify untyped AND
-# discovery-basis findings).
+# type schema). Read-only except the derived ontology-map.json and, with
+# --followup, the backlog file it writes. This is the deterministic engine
+# behind the /ontology-review tool; the tool adds the agent enrichment (bind an
+# ontology to an unbound topic, retro-classify untyped AND discovery-basis
+# findings).
 #
 # DISCOVERY was previously folded into the same "typed" bucket as STAMPED, which
 # made a topic read as fully classified when in fact none of its findings carried a
@@ -107,18 +108,47 @@ for topic in $topics; do
   g_total=$((g_total+local_total)); g_stamped=$((g_stamped+stamped))
   g_discovery=$((g_discovery+discovery)); g_untyped=$((g_untyped+untyped)); g_bad=$((g_bad+bad))
 
-  if [ -n "$FOLLOWUP" ] && [ -f "$map" ]; then
+  if [ -n "$FOLLOWUP" ]; then
     idobj=$(jq -R -s 'split("\n") | map(select(length>0) | split("\t")) | map({(.[0]): .[1]}) | add // {}' "$idmap_tmp")
-    topic_followup=$(jq -c --argjson idobj "$idobj" '
-      [ .[] | select(.basis == "discovery" or .basis == "untyped" or .valid == false)
-        | {finding_id, file: ($idobj[.finding_id] // null), basis, entity_type,
-           resolved_ontology, valid}
-      ] | sort_by(.finding_id)' "$map")
+    map_content='[]'; [ -f "$map" ] && map_content=$(cat "$map")
+    known_ids=$(jq -c '[.[].finding_id]' <<<"$map_content")
+    # A finding whose file caused resolve-ontology.sh to exit before it ever
+    # called record() (invalid JSON, missing tool, unreadable ontology) has no
+    # map entry at all — it's exactly the "$gap" case folded into INVALID above.
+    # Without this, such a finding would be silently absent from the backlog
+    # even though the coverage line above already counts it as invalid.
+    topic_followup=$(jq -c -n --argjson map "$map_content" --argjson idobj "$idobj" --argjson known "$known_ids" '
+      ( $map
+        | map(select(.basis == "discovery" or .basis == "untyped" or .valid == false))
+        | map({finding_id, file: ($idobj[.finding_id] // null), basis, entity_type,
+               resolved_ontology, valid}) )
+      +
+      ( $idobj | to_entries
+        | map(select(.key as $k | ($known | index($k)) == null))
+        | map({finding_id: .key, file: .value, basis: "gap", entity_type: null,
+               resolved_ontology: null, valid: false}) )
+      | sort_by(.finding_id)')
     if [ "$(printf '%s' "$topic_followup" | jq 'length')" -gt 0 ]; then
       followup_all=$(jq -c --argjson add "$topic_followup" --arg t "$topic" '. + {($t): $add}' <<<"$followup_all")
     fi
   fi
 done
+
+# Write the followup backlog now, before the corpus-wide relationship check
+# below: that check can exit 2 (environment/parse failure) and abort the
+# script, which must not silently discard a backlog that's already computed.
+if [ -n "$FOLLOWUP" ]; then
+  mkdir -p "$(dirname "$FOLLOWUP")"
+  if jq -S -n --argjson t "$followup_all" \
+    '{topics: $t, total_needs_followup: ([$t[] | length] | add // 0)}' > "$FOLLOWUP.tmp"; then
+    mv "$FOLLOWUP.tmp" "$FOLLOWUP"
+    echo "ontology-review: followup backlog written to $FOLLOWUP ($(jq -r '.total_needs_followup' "$FOLLOWUP") finding(s) across $(jq -r '.topics | length' "$FOLLOWUP") topic(s))"
+  else
+    rm -f "$FOLLOWUP.tmp"
+    echo "ontology-review: failed to write followup backlog to $FOLLOWUP" >&2
+    exit 2
+  fi
+fi
 # Relationship-graph integrity: every relationships[].target must resolve to a
 # real, active finding @id (corpus-wide, not per-topic — see
 # check-relationship-targets.sh for the root-cause history and known limits).
@@ -144,14 +174,6 @@ if [ -d "$RD" ]; then
     echo "ontology-review: check-relationship-targets.sh failed (exit $rel_rc, not an orphan finding) — see its output above" >&2
     exit 2
   fi
-fi
-
-if [ -n "$FOLLOWUP" ]; then
-  mkdir -p "$(dirname "$FOLLOWUP")"
-  jq -S -n --argjson t "$followup_all" \
-    '{topics: $t, total_needs_followup: ([$t[] | length] | add // 0)}' > "$FOLLOWUP.tmp"
-  mv "$FOLLOWUP.tmp" "$FOLLOWUP"
-  echo "ontology-review: followup backlog written to $FOLLOWUP ($(jq -r '.total_needs_followup' "$FOLLOWUP") finding(s) across $(jq -r '.topics | length' "$FOLLOWUP") topic(s))"
 fi
 
 echo "---"
