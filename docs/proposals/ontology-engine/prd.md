@@ -97,8 +97,9 @@ itself cites).
   `evals/run-evals.sh`) fast and green as the template evolves.
 - **Instance operators** — engineers who instantiate their own research corpus
   from the template (e.g. a corpus the size of `~/Projects/zircote/research-harness`)
-  and run `ontology-review`/`/ontology-review` locally or in their own CI as their
-  corpus grows into the thousands of findings.
+  and run `scripts/ontology-review.sh` (or its future engine CLI equivalent)
+  locally or in their own CI as their corpus grows into the thousands of
+  findings.
 - **Claude Code agents operating inside an instantiated corpus** — the
   dimension-analyst / report-synthesizer / `/ontology-review --enrich` agents
   that author and retro-classify findings, and would benefit from a live

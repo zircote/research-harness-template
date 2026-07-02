@@ -124,8 +124,11 @@ implementation and fallback throughout this proof-of-concept phase.
 ## Edge Cases
 
 - **Zero-finding corpus (fresh instance)**: `<engine> review` produces the
-  same "0 topics" output the bash script produces today; every MCP tool
-  returns an empty result set, not an error.
+  same "0 topics" output the bash script produces today, and still builds an
+  (empty) index as part of that run. Once that empty index exists, every MCP
+  tool returns an empty result set, not an error — this is distinct from the
+  "index not built" case below, which is about the index never having been
+  built at all, not the index being built and legitimately empty.
 - **A finding file that fails to parse (invalid JSON)**: the CLI path
   matches today's fail-closed behavior exactly — counted as invalid/gap,
   never silently skipped. The index-build path skips it from the index with
