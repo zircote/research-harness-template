@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`ontology-review.sh` silently folded discovery-basis guesses into "typed", hiding
+  corpus-wide ontology gaps.** `resolve-ontology.sh`'s content-pattern discovery
+  fallback (for a finding with no `entity` block) records its guess with
+  `basis: "discovery"` and `valid: true`, but never writes that guess back to the
+  finding — nothing durable exists on disk. The review script counted any
+  `valid: true` record as typed regardless of `basis`, so a topic could read as 100%
+  classified while zero of its findings carried a real ontology stamp. The
+  ADR-0011 fail-closed shippable-typing gate (`check-shippable-typing.sh`) and its
+  `reconcile-session.sh` mirror had the same gap: both checked `basis` against only
+  `untyped`/`unresolved`, so a discovery-only shippable finding could ship with no
+  durable classification despite the gate's stated fail-closed contract.
+- `ontology-review.sh`'s coverage table and summary line now report STAMPED
+  (declared/resolved — a real `entity_type` on disk) separately from DISCOVERY
+  (guessed, unpersisted); `--strict` is unchanged (still fails only on
+  invalid/unresolved, not on discovery-only or untyped — those are backlog, not
+  corruption).
+- Added `ontology-review.sh --followup <path>`: writes a deterministic JSON backlog
+  of every finding that is not durably stamped (discovery-only, untyped, or
+  invalid/unresolved), grouped by topic, for tracking and retro-classification.
+- `check-shippable-typing.sh` and `reconcile-session.sh` now also block/count a
+  shippable finding whose ontology-map record is `basis: "discovery"`, matching
+  their existing treatment of `untyped`/`unresolved`.
 - **The site's deploy base path was a hardcoded literal (`/research-harness-template`)
   in `astro.config.mjs`, contradicting that file's own stated design** ("neither the
   template nor a clone hand-edits THIS file"). Every clone actually deploys somewhere

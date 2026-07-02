@@ -56,14 +56,17 @@ while IFS= read -r f; do
   esac
   id=$(jq -r '."@id" // empty' "$f" 2>/dev/null)
   # Block if the map has no record, the record is invalid, or it resolved to no type
-  # (basis untyped/unresolved). Same predicate reconcile-session.sh uses for untyped_shippable.
+  # (basis untyped/unresolved) OR to a type that is only a content-pattern GUESS never
+  # written to the finding itself (basis discovery — see resolve-ontology.sh; nothing
+  # durable exists on disk, so it must block exactly like untyped, not pass vacuously).
+  # Same predicate reconcile-session.sh uses for untyped_shippable.
   # Exit-check the lookup: with no `set -e`, a jq failure here would yield "" and silently
   # NOT block — fail closed by treating any lookup error itself as a blocker.
   if ! bad=$(jq -r --arg id "$id" '
     (map(select(.finding_id==$id)) | first) as $r
     | if   $r == null         then "missing"
       elif ($r.valid != true) then "invalid"
-      elif ($r.basis=="untyped" or $r.basis=="unresolved") then $r.basis
+      elif ($r.basis=="untyped" or $r.basis=="unresolved" or $r.basis=="discovery") then $r.basis
       else "" end' "$MAP" 2>/dev/null); then
     bad="map-lookup-error"
   fi

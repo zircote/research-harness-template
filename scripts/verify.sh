@@ -1197,17 +1197,28 @@ JSON
   fi
 
   # 12j. ontology-review.sh reviews/validates coverage across a topic's findings:
-  #      correct typed/untyped/invalid counts; --strict fails when invalid mappings exist.
+  #      correct stamped/discovery/untyped/invalid counts; --strict fails when
+  #      invalid mappings exist but NOT on discovery-only or untyped findings
+  #      (those are backlog, not corruption — --followup tracks them).
   mkdir -p "$T/reports/edu/findings"
   printf '{"@id":"f-good","entity":%s}\n' "$G" > "$T/reports/edu/findings/good.json"
   printf '{"@id":"f-untyped","content":"x"}\n' > "$T/reports/edu/findings/untyped.json"
   printf '{"@id":"f-missing","entity":{"name":"A","entity_type":"title","subject":"mathematics"}}\n' > "$T/reports/edu/findings/missing.json"
-  local rv; rv=$(scripts/ontology-review.sh --topic edu --reports-dir "$T/reports" --config "$T/rcfg.json" --catalog "$T/cat.json" 2>/dev/null | tail -1)
+  # No entity block, but content matches edu-fixture's discovery pattern (textbook/
+  # ISBN/workbook/edition) — resolve-ontology.sh guesses "title" via basis:discovery,
+  # never persisted to the finding itself. Must NOT count as stamped (the bug this
+  # milestone fixes: discovery guesses were silently folded into "typed").
+  printf '{"@id":"f-disc","content":"a great textbook, ISBN included"}\n' > "$T/reports/edu/findings/disc.json"
+  local rv; rv=$(scripts/ontology-review.sh --topic edu --reports-dir "$T/reports" --config "$T/rcfg.json" --catalog "$T/cat.json" --followup "$T/followup.json" 2>/dev/null | tail -1)
   scripts/ontology-review.sh --topic edu --strict --reports-dir "$T/reports" --config "$T/rcfg.json" --catalog "$T/cat.json" >/dev/null 2>&1; local rvs=$?
-  if printf '%s' "$rv" | grep -q "1 typed, 1 untyped, 1 invalid" && [ "$rvs" != 0 ]; then
-    ok "ontology-review reports correct typed/untyped/invalid coverage; --strict fails on invalid mappings"
+  local fu_total fu_ids
+  fu_total=$(jq -r '.total_needs_followup' "$T/followup.json" 2>/dev/null)
+  fu_ids=$(jq -r '.topics.edu[].finding_id' "$T/followup.json" 2>/dev/null | sort | tr '\n' ',')
+  if printf '%s' "$rv" | grep -q "1 stamped, 1 discovery-only, 1 untyped, 1 invalid" && [ "$rvs" != 0 ] \
+     && [ "$fu_total" = 3 ] && [ "$fu_ids" = "f-disc,f-missing,f-untyped," ]; then
+    ok "ontology-review reports correct stamped/discovery/untyped/invalid coverage; --strict fails on invalid mappings only; --followup lists exactly the non-stamped findings"
   else
-    bad "ontology-review wrong (summary='$rv' strict-exit=$rvs)"
+    bad "ontology-review wrong (summary='$rv' strict-exit=$rvs followup-total=$fu_total followup-ids=$fu_ids)"
   fi
 
   # 12k. Authoring: the ontology-manager skill scaffolds a NEW ontology that validates
@@ -2135,6 +2146,24 @@ JSON
     bad "untyped shippable finding did not block (rc=$rc)"
   fi
 
+  # 24a-ii. A shippable finding whose ontology-map record is basis:"discovery" (a
+  #         content-pattern GUESS resolve-ontology.sh never wrote back to the finding
+  #         itself — no real entity block on disk) MUST block exactly like untyped, not
+  #         pass vacuously just because valid==true. This is the gap the discovery-
+  #         followup fix closes: previously $r.basis was only checked against
+  #         "untyped"/"unresolved", so a discovery-only shippable finding shipped with
+  #         no durable ontology stamp.
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":"title","resolved_ontology":"edu-fixture@0.1.0","basis":"discovery","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  jq '.extensions.harness.verification.verdict="survived"' "$T/reports/edu/findings/f1.json" > "$T/f.tmp" && mv "$T/f.tmp" "$T/reports/edu/findings/f1.json"
+  local dmsg drc
+  dmsg=$(scripts/check-shippable-typing.sh "$T/reports/edu" 2>&1); drc=$?
+  if [ "$drc" = 1 ] && printf '%s' "$dmsg" | grep -q "discovery"; then
+    ok "a discovery-only (unstamped) shippable finding blocks synthesis (fail closed), not just untyped/unresolved"
+  else
+    bad "discovery-only shippable finding did not block (rc=$drc, msg='$dmsg')"
+  fi
+  echo '[{"finding_id":"urn:mif:concept:x/edu:f1","entity_type":null,"resolved_ontology":null,"basis":"untyped","valid":true}]' > "$T/reports/edu/ontology-map.json"
+
   # 24b. The SAME finding FALSIFIED does NOT block (only survived|weakened gate).
   jq '.extensions.harness.verification.verdict="falsified"' "$T/reports/edu/findings/f1.json" > "$T/f.tmp" && mv "$T/f.tmp" "$T/reports/edu/findings/f1.json"
   if scripts/check-shippable-typing.sh "$T/reports/edu" >/dev/null 2>&1; then
@@ -2284,6 +2313,19 @@ JSON
     ok "reconcile untyped_shippable counts an unparseable finding (matches the gate's fail-closed block)"
   else
     bad "reconcile undercounted an unparseable finding vs the gate"
+  fi
+
+  # 24m. reconcile's untyped_shippable ALSO counts a discovery-only (guessed, unstamped)
+  #      shippable finding — mirrors the gate's 24a-ii fix; a valid==true discovery record
+  #      must not read as 0 while the gate itself would block it.
+  rm -f "$T/reports/edu/findings/corrupt.json"
+  printf '{"@id":"urn:mif:concept:x/edu:disc","extensions":{"harness":{"verification":{"verdict":"survived"}}}}' > "$T/reports/edu/findings/disc.json"
+  echo '[{"finding_id":"urn:mif:concept:x/edu:disc","entity_type":"title","resolved_ontology":"edu-fixture@0.1.0","basis":"discovery","valid":true}]' > "$T/reports/edu/ontology-map.json"
+  scripts/reconcile-session.sh "$T/reports/edu" >/dev/null 2>&1
+  if [ "$(jq -r '.concordance.untyped_shippable' "$T/reports/edu/state.json" 2>/dev/null)" = "1" ]; then
+    ok "reconcile untyped_shippable also counts a discovery-only (unstamped) shippable finding"
+  else
+    bad "reconcile undercounted a discovery-only shippable finding vs the gate"
   fi
 
   rm -rf "$T"

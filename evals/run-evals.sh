@@ -170,6 +170,19 @@ run_neg "ontology-unbound-for-topic" bash -c "scripts/resolve-ontology.sh evals/
 run_neg "ontology-ambiguous"        bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/ambiguous.json --topic eng $OC --map \"$TMP/o8.json\""
 run     "ontology-disambiguated"    bash -c "scripts/resolve-ontology.sh evals/fixtures/ontology/disambig.json  --topic eng $OC --map \"$TMP/o9.json\""
 run     "ontology-review-coverage"  bash -c "mkdir -p \"$TMP/rep/edu/findings\" && cp evals/fixtures/ontology/good.json \"$TMP/rep/edu/findings/\" && scripts/ontology-review.sh --topic edu --strict --reports-dir \"$TMP/rep\" $OC"
+
+# 5d-ii. Discovery-basis findings (no entity block; classified only by resolve-ontology.sh's
+#        content-pattern fallback) must NOT be counted as stamped/typed, and --followup must
+#        list them by finding_id — the exact gap that let a topic read as "fully typed" while
+#        no finding on disk carried a real ontology stamp.
+run     "ontology-review-discovery-not-stamped" bash -c "
+  rm -rf \"$TMP/rep2\"; mkdir -p \"$TMP/rep2/edu/findings\"
+  cp evals/fixtures/ontology/good.json evals/fixtures/ontology/discovery.json \"$TMP/rep2/edu/findings/\"
+  scripts/ontology-review.sh --topic edu --reports-dir \"$TMP/rep2\" $OC --followup \"$TMP/rep2/followup.json\" > \"$TMP/rep2/out.txt\" 2>&1
+  grep -q '1 stamped, 1 discovery-only, 0 untyped, 0 invalid' \"$TMP/rep2/out.txt\" &&
+  [ \"\$(jq -r '.total_needs_followup' \"$TMP/rep2/followup.json\")\" = 1 ] &&
+  [ \"\$(jq -r '.topics.edu[0].finding_id' \"$TMP/rep2/followup.json\")\" = f-discovery-only ] &&
+  [ \"\$(jq -r '.topics.edu[0].basis' \"$TMP/rep2/followup.json\")\" = discovery ]"
 run     "ontology-vendoring"        bash evals/ontology-vendoring.sh
 
 # 5e. Ontological spine (concordance, SPEC §8d): build over a topic corpus and validate
